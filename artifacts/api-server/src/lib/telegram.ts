@@ -8,14 +8,71 @@ export interface TelegramBooking {
   name: string;
   phone: string;
   pickup: string;
+  pickupDetails: string;
   dropoff: string;
+  dropoffDetails: string;
+  extraAddress: string;
   vanSize: string;
   helpOption: string;
+  peopleCount: string;
   estimatedPrice: string;
   estimatedTime: string;
   preferredDate: string;
   timeWindow: string;
+  wasteAddons: string;
+  uploadedFiles: string;
   notes: string;
+}
+
+function buildMessage(b: TelegramBooking): string {
+  // Only include a line if the value is non-empty
+  const line = (label: string, value: string): string | null =>
+    value.trim() ? `${label}: ${value.trim()}` : null;
+
+  const parts: (string | null)[] = [
+    "🚚 New Booking",
+    "",
+    line("Service", b.service),
+    line("Name", b.name),
+    line("Phone", b.phone),
+    "",
+    line("Pickup", b.pickup),
+    line("Pickup details", b.pickupDetails),
+    "",
+    line("Drop-off", b.dropoff),
+    line("Drop-off details", b.dropoffDetails),
+    "",
+    line("Extra address", b.extraAddress),
+    "",
+    line("Van", b.vanSize),
+    line("Help", b.helpOption),
+    line("People/helpers", b.peopleCount),
+    "",
+    line("Estimated price", b.estimatedPrice),
+    line("Estimated time", b.estimatedTime),
+    "",
+    line("Preferred date", b.preferredDate),
+    line("Preferred time", b.timeWindow),
+    "",
+    line("Waste add-ons", b.wasteAddons),
+    line("Pictures", b.uploadedFiles),
+    line("Notes", b.notes),
+  ];
+
+  // Remove null entries (empty fields), then collapse consecutive blank lines,
+  // then trim leading/trailing blank lines
+  const lines = parts
+    .filter((l): l is string => l !== null)
+    .reduce<string[]>((acc, l) => {
+      if (l === "" && acc.at(-1) === "") return acc;
+      acc.push(l);
+      return acc;
+    }, []);
+
+  while (lines.at(-1) === "") lines.pop();
+  while (lines[0] === "") lines.shift();
+
+  return lines.join("\n");
 }
 
 export async function sendBookingNotification(b: TelegramBooking): Promise<void> {
@@ -24,23 +81,7 @@ export async function sendBookingNotification(b: TelegramBooking): Promise<void>
     return;
   }
 
-  const text = [
-    "🚚 New Booking",
-    "",
-    `Service: ${b.service}`,
-    `Name: ${b.name}`,
-    `Phone: ${b.phone}`,
-    `Pickup: ${b.pickup || "—"}`,
-    `Drop-off: ${b.dropoff || "—"}`,
-    `Van: ${b.vanSize || "—"}`,
-    `Help: ${b.helpOption || "—"}`,
-    `Estimated price: ${b.estimatedPrice || "—"}`,
-    `Estimated time: ${b.estimatedTime || "—"}`,
-    `Preferred date: ${b.preferredDate || "—"}`,
-    `Preferred time: ${b.timeWindow || "—"}`,
-    `Notes: ${b.notes || "—"}`,
-  ].join("\n");
-
+  const text = buildMessage(b);
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
 
   const res = await fetch(url, {

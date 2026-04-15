@@ -12,13 +12,19 @@ bookingsRouter.post("/bookings", async (req, res) => {
       name = "",
       phone = "",
       pickup = "",
+      pickupDetails = "",
       dropoff = "",
+      dropoffDetails = "",
+      extraAddress = "",
       vanSize = "",
       helpOption = "",
+      peopleCount = "",
       estimatedPrice = "",
       estimatedTime = "",
       date = "",
       timeWindow = "",
+      wasteAddons = "",
+      uploadedFiles = "",
       notes = "",
     } = req.body as Record<string, string>;
 
@@ -41,19 +47,25 @@ bookingsRouter.post("/bookings", async (req, res) => {
       notes,
     });
 
-    // Send Telegram notification — runs after sheets, failure doesn't block response
+    // Send Telegram notification — failure does not block response
     sendBookingNotification({
       service,
       name,
       phone,
       pickup,
+      pickupDetails,
       dropoff,
+      dropoffDetails,
+      extraAddress,
       vanSize,
       helpOption,
+      peopleCount,
       estimatedPrice,
       estimatedTime,
       preferredDate: date,
       timeWindow,
+      wasteAddons,
+      uploadedFiles,
       notes,
     }).catch((err) => {
       logger.error({ err }, "Telegram notification failed");

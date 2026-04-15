@@ -3,13 +3,19 @@ export interface BookingPayload {
   name: string;
   phone: string;
   pickup: string;
+  pickupDetails: string;
   dropoff: string;
+  dropoffDetails: string;
+  extraAddress: string;
   vanSize: string;
   helpOption: string;
+  peopleCount: string;
   estimatedPrice: string;
   estimatedTime: string;
   date: string;
   timeWindow: string;
+  wasteAddons: string;
+  uploadedFiles: string;
   notes: string;
 }
 

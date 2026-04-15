@@ -163,6 +163,17 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
                 "driver-help": "Driver help",
                 "driver-plus-helper": "Driver + helper",
               };
+              const peopleCounts: Record<string, string> = {
+                "no-help": "1 (driver only)",
+                "driver-help": "2 (driver + you carry)",
+                "driver-plus-helper": "3 (driver + 1 helper)",
+              };
+              const floorLabels: Record<string, string> = {
+                none: "", ground: "Ground floor",
+                first: "1st floor (+£10)", second: "2nd floor (+£20)",
+                third: "3rd floor (+£30)", fourth: "4th floor (+£40)",
+                fifth_plus: "5+ floors", lift: "Lift available",
+              };
               const wholeHours = Math.floor(hours);
               const halfHour = hours % 1 !== 0;
               const estimatedTime = `${wholeHours}${halfHour ? ".5" : ""}h`;
@@ -171,13 +182,19 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
                 name,
                 phone,
                 pickup: pickupAddress,
+                pickupDetails: floorLabels[pickupFloor] ?? "",
                 dropoff: dropoffAddress,
+                dropoffDetails: floorLabels[dropoffFloor] ?? "",
+                extraAddress: "",
                 vanSize: vanLabel,
                 helpOption: helpLabels[helpOption] ?? helpOption,
+                peopleCount: peopleCounts[helpOption] ?? "",
                 estimatedPrice: `£${totalPrice.toFixed(0)}`,
                 estimatedTime,
                 date,
                 timeWindow,
+                wasteAddons: "",
+                uploadedFiles: photos.map((f) => f.name).join(", "),
                 notes,
               });
             }}

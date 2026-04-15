@@ -98,14 +98,20 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                   name,
                   phone,
                   pickup,
+                  pickupDetails: "",
                   dropoff: "",
+                  dropoffDetails: "",
+                  extraAddress: "",
                   vanSize: "",
                   helpOption: "",
+                  peopleCount: "",
                   estimatedPrice: `£${estimatedTotal}`,
                   estimatedTime: "",
                   date,
                   timeWindow,
-                  notes: [notes, extraLabels ? `Extra items: ${extraLabels}` : "", `Load: ${loadLabel}`].filter(Boolean).join(" | "),
+                  wasteAddons: extraLabels,
+                  uploadedFiles: photos.map((f) => f.name).join(", "),
+                  notes: [notes, `Load: ${loadLabel}`].filter(Boolean).join(" | "),
                 });
                 setStep("submitted");
               } catch {
