@@ -14,6 +14,13 @@ import { Link } from "wouter";
 import { ShieldCheck, Lock, CalendarCheck, CreditCard, ChevronLeft, CheckCircle, AlertCircle } from "lucide-react";
 import { CONTACT } from "@/data/constants";
 
+// ── STRIPE PAYMENT LINK ───────────────────────────────────────
+// Paste your Stripe Payment Link URL here.
+// Get it from: Stripe Dashboard → Payment Links → Copy link
+// It looks like: https://buy.stripe.com/xxxxxxxxxxxxxxxx
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/YOUR_LINK_HERE";
+// ─────────────────────────────────────────────────────────────
+
 // ── Editable text ─────────────────────────────────────────────
 const TEXT = {
   pageTitle: "Secure Your Booking",
@@ -99,26 +106,18 @@ export default function SecureBookingPage() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  async function handlePay() {
+  function handlePay() {
     if (!canSubmit) return;
-    setError("");
-    setSubmitting(true);
-
-    // ── STRIPE_CONNECT_HERE ──────────────────────────────────
-    // Replace the setTimeout below with your Stripe payment
-    // intent creation and confirmation logic. For example:
+    // Opens the Stripe Payment Link in a new tab.
+    // The customer completes payment on Stripe's hosted page.
     //
-    //   const { error } = await stripe.confirmPayment({
-    //     elements,
-    //     confirmParams: { return_url: window.location.href },
-    //   });
-    //   if (error) { setError(error.message ?? "Payment failed."); }
-    //   else { setSubmitted(true); }
-    //
-    // ── END STRIPE_CONNECT_HERE ──────────────────────────────
-    await new Promise((r) => setTimeout(r, 1200)); // placeholder delay — remove when Stripe is live
-    setSubmitted(true);
-    setSubmitting(false);
+    // NEXT STEP — webhook integration:
+    // When Stripe confirms payment it will POST to your webhook endpoint.
+    // That webhook should: update Google Sheets column N to "Deposit paid"
+    // and send a Telegram notification with the booking reference.
+    // Implement this in artifacts/api-server/src/routes/bookings.ts
+    // after the user confirms they want the webhook built.
+    window.open(STRIPE_PAYMENT_LINK, "_blank", "noopener,noreferrer");
   }
 
   if (submitted) {
