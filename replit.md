@@ -63,6 +63,11 @@ A professional, clean removals website for Move4U, a self-employed removals serv
 ### Stair/floor surcharges
 - **`artifacts/move4u/src/data/constants.ts`** — STAIR_CHARGES
 
+## Twilio SMS Integration (PENDING)
+<!-- NOTE: Twilio Replit integration was dismissed. Credentials must be provided as secrets manually. -->
+<!-- Required secrets: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER -->
+<!-- Once secrets are set, implement using the twilio npm package in the api-server -->
+
 ## Google Sheets Integration
 
 Every booking submission is saved automatically to a Google Sheet:
