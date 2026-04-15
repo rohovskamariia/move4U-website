@@ -46,6 +46,9 @@ const TEXT = {
     depositAmount: "e.g. 50",
   },
 
+  depositHelperText:
+    "Deposit is calculated automatically as 10% of the agreed quote (minimum £20).",
+
   paymentHeading: "Choose Payment Method",
   notSecuredNote:
     "Your booking is not fully secured until the deposit payment has been received.",
@@ -76,18 +79,21 @@ export default function SecureBookingPage() {
     name: "",
     phone: "",
     agreedQuote: "",
-    depositAmount: "",
   });
   const [payMethod, setPayMethod] = useState<PayMethod>("card");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
 
+  const quoteNum = parseFloat(form.agreedQuote) || 0;
+  const depositAmount = quoteNum > 0 ? Math.max(20, Math.round(quoteNum * 0.1)) : 0;
+  const depositDisplay = depositAmount > 0 ? `£${depositAmount}` : "—";
+
   const canSubmit =
     form.bookingRef.trim() &&
     form.name.trim() &&
     form.phone.trim() &&
-    form.depositAmount.trim();
+    depositAmount > 0;
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -190,7 +196,6 @@ export default function SecureBookingPage() {
                 { key: "name", type: "text" },
                 { key: "phone", type: "tel" },
                 { key: "agreedQuote", type: "number" },
-                { key: "depositAmount", type: "number" },
               ] as { key: keyof typeof form; type: string }[]
             ).map(({ key, type }) => (
               <div key={key}>
@@ -211,6 +216,19 @@ export default function SecureBookingPage() {
                 />
               </div>
             ))}
+
+            {/* Deposit — auto-calculated, read-only */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {TEXT.fieldLabels.depositAmount}
+              </label>
+              <div className="w-full border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 text-sm font-semibold text-purple-700">
+                {depositDisplay}
+              </div>
+              <p className="mt-1.5 text-xs text-gray-400">
+                {TEXT.depositHelperText}
+              </p>
+            </div>
           </div>
         </div>
 
