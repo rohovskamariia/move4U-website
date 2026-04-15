@@ -157,6 +157,7 @@ export default function AdminBookingsPage() {
   const [statusFilter,  setStatusFilter]  = useState("All");
   const [expandedRef,   setExpandedRef]   = useState<string | null>(null);
   const [editForms,     setEditForms]     = useState<Record<string, EditForm>>({});
+  const [depositOverridden, setDepositOverridden] = useState<Record<string, boolean>>({});
   const [savingRef,     setSavingRef]     = useState<string | null>(null);
   const [saveErrors,    setSaveErrors]    = useState<Record<string, string>>({});
   const [linkBusy,      setLinkBusy]      = useState<string | null>(null);
@@ -216,10 +217,14 @@ export default function AdminBookingsPage() {
   }
 
   function updateField(ref: string, field: keyof EditForm, value: string) {
+    if (field === "depositAmount") {
+      // Admin is manually typing a deposit — mark it as overridden
+      setDepositOverridden((prev) => ({ ...prev, [ref]: true }));
+    }
     setEditForms((prev) => {
       const form = { ...(prev[ref] ?? {}), [field]: value } as EditForm;
-      // Auto-suggest deposit when agreed quote changes
-      if (field === "agreedQuote" && !prev[ref]?.depositAmount) {
+      // Auto-recalculate deposit when agreed quote changes, unless admin overrode it
+      if (field === "agreedQuote" && !depositOverridden[ref]) {
         form.depositAmount = calcSuggestedDeposit(value);
       }
       return { ...prev, [ref]: form };
@@ -549,13 +554,7 @@ export default function AdminBookingsPage() {
                             label="Agreed Quote (£)"
                             value={form.agreedQuote}
                             type="number"
-                            onChange={(v) => {
-                              updateField(ref, "agreedQuote", v);
-                              // Auto-suggest deposit if empty
-                              if (!form.depositAmount) {
-                                updateField(ref, "depositAmount", calcSuggestedDeposit(v));
-                              }
-                            }}
+                            onChange={(v) => updateField(ref, "agreedQuote", v)}
                           />
                           <Field
                             label="Deposit Amount (£)"
