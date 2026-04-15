@@ -163,6 +163,7 @@ export default function AdminBookingsPage() {
   const [linkBusy,      setLinkBusy]      = useState<string | null>(null);
   const [linkErrors,    setLinkErrors]    = useState<Record<string, string>>({});
   const [copied,        setCopied]        = useState<string | null>(null);
+  const [copiedMsg,     setCopiedMsg]     = useState<string | null>(null);
 
   const apiFetch = useCallback(
     (path: string, init?: RequestInit) =>
@@ -355,6 +356,27 @@ export default function AdminBookingsPage() {
       setTimeout(() => setCopied(null), 2000);
     } catch {
       // fallback: select text
+    }
+  }
+
+  function buildWhatsAppMessage(booking: BookingRecord, payLink: string): string {
+    const deposit = booking.depositAmount ? `£${parseFloat(booking.depositAmount).toFixed(2)}` : "—";
+    return (
+      `Your booking is confirmed.\n\n` +
+      `Booking reference: ${booking.bookingReference}\n` +
+      `Deposit: ${deposit}\n\n` +
+      `Please complete your payment using the link below:\n` +
+      payLink
+    );
+  }
+
+  async function copyMessage(msg: string, ref: string) {
+    try {
+      await navigator.clipboard.writeText(msg);
+      setCopiedMsg(ref);
+      setTimeout(() => setCopiedMsg(null), 2500);
+    } catch {
+      // clipboard unavailable
     }
   }
 
@@ -627,38 +649,59 @@ export default function AdminBookingsPage() {
                     <section className="border-t border-gray-100 pt-4">
                       <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Personal Payment Link</h3>
 
-                      {payLink ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
-                            <p className="text-xs text-gray-600 truncate flex-1">{payLink}</p>
-                            <a
-                              href={payLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="shrink-0 text-purple-600 hover:text-purple-800"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </a>
+                      {payLink ? (() => {
+                        const whatsappMsg = buildWhatsAppMessage(booking, payLink);
+                        return (
+                          <div className="space-y-3">
+                            {/* Message preview */}
+                            <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                              <p className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">WhatsApp message preview</p>
+                              <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">{whatsappMsg}</pre>
+                            </div>
+
+                            {/* Pay now link row */}
+                            <div className="flex items-center gap-2 bg-purple-50 border border-purple-100 rounded-xl px-3 py-2">
+                              <span className="text-xs font-semibold text-purple-700 shrink-0">Pay now →</span>
+                              <p className="text-xs text-gray-500 truncate flex-1">{payLink}</p>
+                              <a
+                                href={payLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="shrink-0 text-purple-600 hover:text-purple-800"
+                                title="Open payment page"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            </div>
+
+                            {/* Action buttons */}
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                onClick={() => void copyMessage(whatsappMsg, ref)}
+                                className="flex items-center gap-1.5 px-4 py-2 bg-purple-700 text-white rounded-xl text-xs font-semibold hover:bg-purple-800 transition-colors"
+                              >
+                                {copiedMsg === ref ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                                {copiedMsg === ref ? "Message copied!" : "Copy message"}
+                              </button>
+                              <button
+                                onClick={() => void copyLink(payLink, ref)}
+                                className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-xl text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                {copied === ref ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                                {copied === ref ? "Copied!" : "Copy link only"}
+                              </button>
+                              <button
+                                onClick={() => void generatePaymentLink(ref)}
+                                disabled={isLinkBusy}
+                                className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-xl text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                              >
+                                {isLinkBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                                Refresh link
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => void copyLink(payLink, ref)}
-                              className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                              {copied === ref ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
-                              {copied === ref ? "Copied!" : "Copy link"}
-                            </button>
-                            <button
-                              onClick={() => void generatePaymentLink(ref)}
-                              disabled={isLinkBusy}
-                              className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                            >
-                              {isLinkBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                              Refresh link
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
+                        );
+                      })() : (
                         <div>
                           <p className="text-xs text-gray-500 mb-3">
                             No payment link yet. Enter the deposit amount above, then generate a personal Stripe link for this booking.
