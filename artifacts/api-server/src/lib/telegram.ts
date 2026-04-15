@@ -4,6 +4,7 @@ const BOT_TOKEN = process.env["TELEGRAM_BOT_TOKEN"];
 const CHAT_ID = process.env["TELEGRAM_CHAT_ID"];
 
 export interface TelegramBooking {
+  bookingReference: string;
   service: string;
   name: string;
   phone: string;
@@ -30,7 +31,7 @@ function buildMessage(b: TelegramBooking): string {
     value.trim() ? `${label}: ${value.trim()}` : null;
 
   const parts: (string | null)[] = [
-    "🚚 New Booking",
+    `🚚 New Booking – ${b.bookingReference}`,
     "",
     line("Service", b.service),
     line("Name", b.name),
@@ -94,5 +95,5 @@ export async function sendBookingNotification(b: TelegramBooking): Promise<void>
     throw new Error(`Telegram API error ${res.status}: ${body}`);
   }
 
-  logger.info({ name: b.name, service: b.service }, "Telegram notification sent");
+  logger.info({ name: b.name, service: b.service, ref: b.bookingReference }, "Telegram notification sent");
 }

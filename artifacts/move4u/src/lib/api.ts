@@ -20,7 +20,11 @@ export interface BookingPayload {
   notes: string;
 }
 
-export async function submitBooking(payload: BookingPayload): Promise<void> {
+export interface BookingResult {
+  bookingReference: string;
+}
+
+export async function submitBooking(payload: BookingPayload): Promise<BookingResult> {
   const res = await fetch("/api/bookings", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -30,4 +34,6 @@ export async function submitBooking(payload: BookingPayload): Promise<void> {
     const err = await res.json().catch(() => ({}));
     throw new Error((err as { error?: string }).error ?? "Failed to submit booking");
   }
+  const data = (await res.json()) as { success: boolean; bookingReference: string };
+  return { bookingReference: data.bookingReference };
 }

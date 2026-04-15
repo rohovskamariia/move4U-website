@@ -34,8 +34,8 @@ bookingsRouter.post("/bookings", async (req, res) => {
       return;
     }
 
-    // Save to Google Sheets
-    await appendBooking({
+    // Save to Google Sheets — returns the generated booking reference
+    const bookingReference = await appendBooking({
       service,
       name,
       phone,
@@ -51,6 +51,7 @@ bookingsRouter.post("/bookings", async (req, res) => {
 
     // Send Telegram notification — failure does not block response
     sendBookingNotification({
+      bookingReference,
       service,
       name,
       phone,
@@ -74,7 +75,7 @@ bookingsRouter.post("/bookings", async (req, res) => {
       logger.error({ err }, "Telegram notification failed");
     });
 
-    res.json({ success: true });
+    res.json({ success: true, bookingReference });
   } catch (err) {
     logger.error({ err }, "Failed to save booking");
     res.status(500).json({ error: "Failed to save booking" });

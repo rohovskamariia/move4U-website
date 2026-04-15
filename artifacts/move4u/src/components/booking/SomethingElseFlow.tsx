@@ -19,6 +19,7 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
   });
   const [photos, setPhotos] = useState<File[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const [bookingRef, setBookingRef] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -36,6 +37,10 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
         <h3 className="text-lg font-bold text-gray-900 mb-3">
           Thank you — we received your request.
         </h3>
+        <div className="inline-block bg-purple-50 border border-purple-200 rounded-xl px-5 py-3 mb-4">
+          <p className="text-xs text-purple-500 font-medium uppercase tracking-wide mb-0.5">Booking Reference</p>
+          <p className="text-xl font-bold text-purple-700">{bookingRef}</p>
+        </div>
         <p className="text-gray-600 text-sm leading-relaxed max-w-sm mx-auto mb-3">
           We will contact you shortly to confirm availability, final price, and booking details.
         </p>
@@ -116,7 +121,7 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
           setSubmitting(true);
           setSubmitError("");
           try {
-            await submitBooking({
+            const result = await submitBooking({
               service: "Something Else",
               name: form.name,
               phone: form.phone,
@@ -137,6 +142,7 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
               uploadedFiles: photos.map((f) => f.name).join(", "),
               notes: [form.what, form.notes].filter(Boolean).join(" | "),
             });
+            setBookingRef(result.bookingReference);
             setSubmitted(true);
           } catch {
             setSubmitError("Something went wrong. Please try again or contact us directly.");

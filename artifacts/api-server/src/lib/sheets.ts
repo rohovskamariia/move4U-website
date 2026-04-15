@@ -70,8 +70,7 @@ async function ensureSheet(): Promise<string> {
   return sheetId;
 }
 
-// Writes new column headers (L–O) to the existing live sheet on first use each session.
-// Uses a single range write so it's one API call and is safe to run repeatedly.
+// Writes column headers L–O to the existing live sheet on first use each session.
 async function patchNewHeaders(id: string): Promise<void> {
   if (headerPatched) return;
   try {
@@ -93,6 +92,25 @@ async function patchNewHeaders(id: string): Promise<void> {
   headerPatched = true;
 }
 
+// Reads column O to count existing MV4U-* references so the next one is always sequential.
+// Old rows without a reference don't affect the count, so the first real booking = MV4U-1001.
+async function getNextBookingRef(id: string): Promise<string> {
+  try {
+    const res = await connectors.proxy(
+      "google-sheet",
+      `/v4/spreadsheets/${id}/values/Bookings!O:O`,
+    );
+    const data = (await res.json()) as { values?: string[][] };
+    const existingRefs = (data.values ?? [])
+      .slice(1) // skip header row
+      .filter((row) => row[0]?.startsWith("MV4U-")).length;
+    return `MV4U-${1001 + existingRefs}`;
+  } catch {
+    // Fallback: use current minute as a disambiguator
+    return `MV4U-${1001 + (Math.floor(Date.now() / 60000) % 9000)}`;
+  }
+}
+
 export interface BookingRow {
   service: string;
   name: string;
@@ -107,28 +125,31 @@ export interface BookingRow {
   notes: string;
 }
 
-export async function appendBooking(row: BookingRow): Promise<void> {
+// Returns the generated booking reference so the route can send it to Telegram and the client.
+export async function appendBooking(row: BookingRow): Promise<string> {
   const id = await ensureSheet();
   await patchNewHeaders(id);
+
+  const bookingRef = await getNextBookingRef(id);
   const timestamp = new Date().toLocaleString("en-GB", { timeZone: "Europe/London" });
 
   const values = [
     [
-      timestamp,        // A – Timestamp
-      row.service,      // B – Service
-      row.name,         // C – Name
-      row.phone,        // D – Phone
-      row.pickup,       // E – Pickup Address
-      row.dropoff,      // F – Drop-off Address
-      row.vanSize,      // G – Van Size
-      row.helpOption,   // H – Help Option
+      timestamp,          // A – Timestamp
+      row.service,        // B – Service
+      row.name,           // C – Name
+      row.phone,          // D – Phone
+      row.pickup,         // E – Pickup Address
+      row.dropoff,        // F – Drop-off Address
+      row.vanSize,        // G – Van Size
+      row.helpOption,     // H – Help Option
       row.estimatedPrice, // I – Estimated Price (£)
-      row.date,         // J – Date
-      row.notes,        // K – Notes
+      row.date,           // J – Date
+      row.notes,          // K – Notes
       row.contactMethod,  // L – Preferred Contact Method
-      "New",            // M – Booking Status
-      "Unpaid",         // N – Payment Status
-      "",               // O – Booking Reference (set later)
+      "New",              // M – Booking Status
+      "Unpaid",           // N – Payment Status
+      bookingRef,         // O – Booking Reference
     ],
   ];
 
@@ -142,5 +163,6 @@ export async function appendBooking(row: BookingRow): Promise<void> {
     },
   );
 
-  logger.info({ name: row.name, service: row.service }, "Booking appended to Google Sheets");
+  logger.info({ name: row.name, service: row.service, bookingRef }, "Booking appended to Google Sheets");
+  return bookingRef;
 }

@@ -177,7 +177,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
               const wholeHours = Math.floor(hours);
               const halfHour = hours % 1 !== 0;
               const estimatedTime = `${wholeHours}${halfHour ? ".5" : ""}h`;
-              await submitBooking({
+              return await submitBooking({
                 service: serviceLabel,
                 name,
                 phone,

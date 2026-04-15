@@ -8,7 +8,7 @@ interface FinalDetailsStepProps {
     name: string;
     phone: string;
     contactMethod: string;
-  }) => Promise<void>;
+  }) => Promise<{ bookingReference: string }>;
 }
 
 const CONTACT_METHODS = ["Phone call", "WhatsApp", "Text message", "Any"];
@@ -20,7 +20,7 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [contactMethod, setContactMethod] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [bookingRef, setBookingRef] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -32,8 +32,8 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
     setLoading(true);
     setError("");
     try {
-      await onSubmit({ date, timeWindow, name, phone, contactMethod });
-      setSubmitted(true);
+      const result = await onSubmit({ date, timeWindow, name, phone, contactMethod });
+      setBookingRef(result.bookingReference);
     } catch {
       setError("Something went wrong. Please try again or contact us directly.");
     } finally {
@@ -41,7 +41,7 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
     }
   };
 
-  if (submitted) {
+  if (bookingRef) {
     return (
       <div className="text-center py-8">
         <div className="bg-green-100 text-green-700 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -50,6 +50,10 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
         <h3 className="text-lg font-bold text-gray-900 mb-3">
           Thank you — we received your request.
         </h3>
+        <div className="inline-block bg-purple-50 border border-purple-200 rounded-xl px-5 py-3 mb-4">
+          <p className="text-xs text-purple-500 font-medium uppercase tracking-wide mb-0.5">Booking Reference</p>
+          <p className="text-xl font-bold text-purple-700">{bookingRef}</p>
+        </div>
         <p className="text-gray-600 text-sm leading-relaxed max-w-sm mx-auto mb-3">
           We will contact you shortly to confirm availability, final price, and booking details.
         </p>
