@@ -1,0 +1,201 @@
+import { useState } from "react";
+import { ChevronLeft } from "lucide-react";
+import { STAIR_CHARGES } from "@/data/constants";
+import AddressStep from "./AddressStep";
+import VanStep from "./VanStep";
+import HelpStep from "./HelpStep";
+import TimeStep from "./TimeStep";
+import NotesStep from "./NotesStep";
+import SummaryStep from "./SummaryStep";
+import FinalDetailsStep from "./FinalDetailsStep";
+
+interface StandardBookingFlowProps {
+  serviceLabel: string;
+  serviceId: string;
+  onBack: () => void;
+}
+
+type Step = "pickup" | "dropoff" | "van" | "help" | "time" | "notes" | "summary" | "final";
+
+const STEP_LABELS: Record<Step, string> = {
+  pickup: "Pickup",
+  dropoff: "Drop-off",
+  van: "Van size",
+  help: "Help option",
+  time: "Time",
+  notes: "Notes",
+  summary: "Summary",
+  final: "Confirm",
+};
+
+const STEPS: Step[] = ["pickup", "dropoff", "van", "help", "time", "notes", "summary", "final"];
+
+function getFloorCharge(floorKey: string) {
+  if (floorKey === "lift" || floorKey === "none" || !floorKey) return 0;
+  return STAIR_CHARGES[floorKey] ?? 0;
+}
+
+// Standard booking flow — used for House Move, Commercial Move, Single Item, Small Move
+// Edit steps and flow logic here
+export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }: StandardBookingFlowProps) {
+  const [step, setStep] = useState<Step>("pickup");
+
+  // Pickup state
+  const [pickupAddress, setPickupAddress] = useState("");
+  const [pickupStairs, setPickupStairs] = useState("");
+  const [pickupLift, setPickupLift] = useState("");
+  const [pickupFloor, setPickupFloor] = useState("none");
+
+  // Drop-off state
+  const [dropoffAddress, setDropoffAddress] = useState("");
+  const [dropoffStairs, setDropoffStairs] = useState("");
+  const [dropoffLift, setDropoffLift] = useState("");
+  const [dropoffFloor, setDropoffFloor] = useState("none");
+
+  // Van, help, time
+  const [vanSize, setVanSize] = useState("medium");
+  const [helpOption, setHelpOption] = useState("driver-help");
+  const [hours, setHours] = useState(2);
+
+  // Notes and photos
+  const [notes, setNotes] = useState("");
+  const [photos, setPhotos] = useState<File[]>([]);
+
+  const currentIndex = STEPS.indexOf(step);
+
+  const goNext = () => {
+    const next = STEPS[currentIndex + 1];
+    if (next) setStep(next);
+  };
+
+  const goPrev = () => {
+    if (currentIndex === 0) {
+      onBack();
+      return;
+    }
+    const prev = STEPS[currentIndex - 1];
+    if (prev) setStep(prev);
+  };
+
+  const showPhotos = ["house-move", "waste-removal", "single-item", "small-move"].includes(serviceId);
+
+  const pickupCharge = getFloorCharge(pickupFloor);
+  const dropoffCharge = getFloorCharge(dropoffFloor);
+
+  const canProceed = () => {
+    if (step === "pickup") return !!pickupAddress;
+    if (step === "dropoff") return !!dropoffAddress;
+    if (step === "van") return !!vanSize;
+    if (step === "help") return !!helpOption;
+    return true;
+  };
+
+  const renderStep = () => {
+    switch (step) {
+      case "pickup":
+        return (
+          <AddressStep
+            label="Pickup address"
+            addressValue={pickupAddress}
+            onAddressChange={setPickupAddress}
+            stairsValue={pickupStairs}
+            onStairsChange={setPickupStairs}
+            liftValue={pickupLift}
+            onLiftChange={setPickupLift}
+            floorValue={pickupFloor}
+            onFloorChange={setPickupFloor}
+            extraCharge={pickupCharge}
+          />
+        );
+      case "dropoff":
+        return (
+          <AddressStep
+            label="Drop-off address"
+            addressValue={dropoffAddress}
+            onAddressChange={setDropoffAddress}
+            stairsValue={dropoffStairs}
+            onStairsChange={setDropoffStairs}
+            liftValue={dropoffLift}
+            onLiftChange={setDropoffLift}
+            floorValue={dropoffFloor}
+            onFloorChange={setDropoffFloor}
+            extraCharge={dropoffCharge}
+          />
+        );
+      case "van":
+        return <VanStep selected={vanSize} onSelect={setVanSize} />;
+      case "help":
+        return <HelpStep vanSize={vanSize} selected={helpOption} onSelect={setHelpOption} />;
+      case "time":
+        return <TimeStep hours={hours} onHoursChange={setHours} />;
+      case "notes":
+        return <NotesStep value={notes} onChange={setNotes} photos={photos} onPhotosChange={setPhotos} showPhotos={showPhotos} />;
+      case "summary":
+        return (
+          <SummaryStep
+            service={serviceLabel}
+            pickup={pickupAddress}
+            pickupFloor={pickupFloor}
+            dropoff={dropoffAddress}
+            dropoffFloor={dropoffFloor}
+            vanSize={vanSize}
+            helpOption={helpOption}
+            hours={hours}
+            notes={notes}
+            onContinue={() => setStep("final")}
+          />
+        );
+      case "final":
+        return <FinalDetailsStep onSubmit={() => {}} />;
+    }
+  };
+
+  return (
+    <div>
+      {/* Back button + service label */}
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={goPrev}
+          className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+          aria-label="Go back"
+          data-testid="booking-back"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <div>
+          <h2 className="text-base font-bold text-gray-900">{serviceLabel}</h2>
+          <p className="text-xs text-gray-400">
+            Step {currentIndex + 1} of {STEPS.length} — {STEP_LABELS[step]}
+          </p>
+        </div>
+      </div>
+
+      {/* Step progress bar */}
+      <div className="flex gap-1 mb-6">
+        {STEPS.map((s, i) => (
+          <div
+            key={s}
+            className={`h-1 flex-1 rounded-full transition-colors ${
+              i <= currentIndex ? "bg-purple-700" : "bg-gray-100"
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* Step content */}
+      <div>{renderStep()}</div>
+
+      {/* Next button — only show for steps before summary (summary has its own button) */}
+      {step !== "summary" && step !== "final" && (
+        <button
+          onClick={goNext}
+          disabled={!canProceed()}
+          className="mt-6 w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          data-testid="booking-next"
+        >
+          Continue
+        </button>
+      )}
+    </div>
+  );
+}

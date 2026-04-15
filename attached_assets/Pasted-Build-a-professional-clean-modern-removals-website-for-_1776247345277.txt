@@ -1,0 +1,491 @@
+Build a professional, clean, modern removals website for a self-employed service called Move4U (London, UK).
+
+IMPORTANT:
+- Do NOT make it futuristic, dark, flashy, or overly AI-generated
+- Use a light background with purple accents
+- Make it look like a real trusted UK service business
+- Keep it simple, clear, and easy to use
+- Frontend only for now (no backend, no payment, no SMS integration yet)
+- Clean editable code for later use in VS Code
+- Do not overcomplicate the logic
+
+GENERAL DESIGN:
+- Light background
+- Purple brand accents
+- Clean typography
+- Strong readability
+- Mobile-friendly
+- Professional, realistic business style
+- No space-like or “AI” look
+
+==================================================
+HOMEPAGE
+==================================================
+Create a homepage with:
+- Hero section
+- ONLY 2 main buttons:
+  1. Book Now
+  2. Get a Quote
+
+Add a floating WhatsApp button that is always visible on all pages, like a live chat button.
+
+==================================================
+HOMEPAGE SLIDER / CAROUSEL
+==================================================
+Add a clean automatic homepage slider / carousel.
+Requirements:
+- Use ONLY 3 slides
+- Autoplay every 4–5 seconds
+- Add navigation dots or arrows
+- Keep it professional, clean, and not flashy
+- This should feel like business promotion, not a cheap advert
+
+Use these exact slides:
+
+Slide 1:
+Title: "Book Now"
+Subtitle: "Get a free quote today"
+Text: "Professional removals, delivery and waste removal across London."
+Button: "Book Now"
+
+Slide 2:
+Title: "Need a house move?"
+Subtitle: "From £35/hour"
+Text: "Choose your van size, help option and estimated booking time."
+Button: "Get a Quote"
+
+Slide 3:
+Title: "Not sure what to choose?"
+Subtitle: "See our services or give us a call"
+Text: "We’ll help you find the best option for your move."
+Button: "Call Us"
+
+==================================================
+WHATSAPP
+==================================================
+WhatsApp number:
++447888355523
+
+Add floating WhatsApp button always visible on the website.
+
+Default message:
+"Hi Move4U, I need help with my move."
+
+If user is inside booking flow, prefill the WhatsApp message with:
+"Hi Move4U, I need help with my move.
+Service:
+Pickup:
+Drop-off:
+Van size:
+Help option:
+Estimated time:"
+
+==================================================
+FIRST SCREEN AFTER BOOK NOW / GET A QUOTE
+==================================================
+When the user clicks Book Now or Get a Quote, the FIRST screen must be:
+
+Title:
+"What would you like to do?"
+
+Subtitle:
+"Select the service that best matches your request"
+
+Show service cards:
+- House Move
+- Waste Removal
+- Commercial Move
+- Single Item Delivery
+- Small Move
+- International Moving
+- Something Else
+
+Each card should continue into the relevant booking flow.
+
+==================================================
+SERVICE OVERVIEW SECTION ON HOMEPAGE
+==================================================
+Create a services section on the homepage with cards for:
+- House Move
+- Waste Removal
+- Commercial Move
+- Single Item Delivery
+- Small Move
+- International Moving
+- Something Else
+
+Each service card should have:
+- title
+- short description
+- clean icon or image
+- button: "Book Now" or "Get a Quote"
+
+Use professional short descriptions:
+- House Move: "Reliable home moving service across London and surrounding areas."
+- Waste Removal: "Fast and affordable waste collection and disposal."
+- Commercial Move: "Business and office moving service with flexible booking."
+- Single Item Delivery: "Quick delivery for furniture, appliances, and individual items."
+- Small Move: "Ideal for lighter moves, boxes and smaller jobs."
+- International Moving: "Moving enquiries from the UK to Europe."
+- Something Else: "Need something different? Send us a custom enquiry."
+
+==================================================
+HOUSE MOVE / COMMERCIAL MOVE / SINGLE ITEM DELIVERY / SMALL MOVE
+==================================================
+Use the same main booking structure for these services for now.
+Keep the layout and logic the same, but make sure each service is selectable and clearly labelled.
+
+STEP 1 — PICKUP
+- Pickup address with autocomplete
+
+Directly under the pickup address field show:
+"Any stairs / flights?"
+Options:
+- No
+- Yes
+
+If Yes:
+Show:
+"Is there a lift?"
+Options:
+- Yes
+- No
+
+If Yes, there is a lift:
+- no extra charge
+- do not ask floor
+
+If No, there is no lift:
+Show floor dropdown:
+- Ground / few steps = £0
+- 1st floor = +£10
+- 2nd floor = +£20
+- 3rd floor = +£30
+- 4th floor = +£40
+- 5+ floors = contact us
+
+STEP 2 — DROP-OFF
+Use the same exact logic as pickup:
+- Delivery address with autocomplete
+- Any stairs / flights?
+- If yes → Is there a lift?
+- If no lift → floor dropdown with same pricing
+
+IMPORTANT:
+- Keep stairs / lift logic directly under each address field
+- Visually compact and simple
+
+STEP 3 — VAN SIZE
+Show 3 van cards with images:
+- Small Van = £40/hr
+- Medium Van = £45/hr
+- Large Van = £50/hr
+
+IMPORTANT:
+- Show only image + van name + hourly price
+- Do NOT describe what fits inside the van
+
+Under the van cards add:
+"Not sure what to choose? Select the closest option — we’ll review and confirm the best fit for your move."
+
+Also add:
+- "See our size guide"
+- Call us
+- WhatsApp us
+
+Create a separate van size guide section or modal:
+- Small Van
+- Medium Van
+- Large Van
+- Use van images
+- Show dimensions and short practical descriptions
+- Keep it clean and professional
+- This guide should help the customer choose, but should not be too long or overwhelming
+
+STEP 4 — HELP OPTION
+Show dynamic help pricing based on van size.
+
+Large:
+- No help needed = £45/hr
+- Driver help = £50/hr
+- Driver + helper = £80/hr
+
+Medium:
+- No help needed = £40/hr
+- Driver help = £45/hr
+- Driver + helper = £75/hr
+
+Small:
+- No help needed = £35/hr
+- Driver help = £40/hr
+- Driver + helper = £70/hr
+
+IMPORTANT:
+- Prices must update live when van size changes
+- The user should clearly see prices during selection
+
+STEP 5 — TIME SELECTOR
+Use plus / minus buttons for estimated booking time.
+Requirements:
+- Default = 2 hours
+- Minimum = 2 hours
+- Increase in 30-minute steps
+Examples:
+2h → 2.5h → 3h → 3.5h
+
+Do NOT use a dropdown.
+
+STEP 6 — NOTES
+Add optional field:
+"Anything else we need to know?"
+
+Use helpful placeholder text:
+"Tell us anything important about access, timing, item size, or special requirements..."
+
+STEP 7 — OPTIONAL PHOTO UPLOAD
+Add an optional image upload section.
+
+Label:
+"Would you like to attach pictures?"
+
+Upload field label:
+"Attach photos (optional)"
+
+Helper text:
+"Photos can help us confirm the right van size and pricing more accurately."
+
+This should be available especially for:
+- House Move
+- Waste Removal
+- Single Item Delivery
+- Small Move
+
+IMPORTANT:
+- Keep it optional
+- Keep it simple and clean
+- Frontend UI only for now if backend upload is not yet connected
+
+STEP 8 — LIVE SUMMARY
+Show live summary with:
+- Service
+- Pickup address
+- Drop-off address
+- Pickup stair charge if any
+- Drop-off stair charge if any
+- Van size
+- Help option
+- Estimated time
+- Estimated price
+
+Add note:
+"Final price will be confirmed after review if needed."
+
+STEP 9 — CONTINUE BOOKING
+Show button:
+- Continue booking
+
+STEP 10 — FINAL DETAILS
+If user continues, show:
+- Preferred date
+- Time window:
+  - Morning
+  - Afternoon
+  - Evening
+- Full name
+- Phone number
+
+Show message:
+"We will call or text you to confirm your booking and final price."
+
+==================================================
+WASTE REMOVAL
+==================================================
+Create a dedicated waste removal section / booking flow.
+
+Main load cards:
+- Minimum Load = £60
+- 1/4 Load = £120
+- 1/3 Load = £150
+- 1/2 Load = £200
+- 3/4 Load = £250
+- Full Load = £350–£400
+- Extra Large = £400+
+
+Below that add an "Additional items" section.
+
+Question:
+"Do you have any of these items?"
+
+Show image cards for:
+- Mattress = £30
+- Fridge = £30
+- Tyres = £30
+- Sofa (2–3 seat) = £45
+- Armchair = £25
+- Office chair / dining chair = £15
+
+IMPORTANT:
+- If selected, these must add automatically to the estimate
+- Keep pricing logic clearly editable in the code later
+- Make the additional items section visual and easy to understand
+
+Add notes field for waste removal too.
+Add optional photo upload for waste removal too.
+
+Show summary:
+- selected load size
+- selected extra items
+- estimated waste removal price
+
+Add note:
+"Final price will be confirmed after review if needed."
+
+==================================================
+COMMERCIAL MOVE
+==================================================
+Commercial Move must appear as its own service card and section.
+For now, use the same booking flow as House Move:
+- pickup
+- drop-off
+- van
+- help
+- time
+- notes
+- photo upload
+- summary
+- final details
+
+Text should clearly say this is suitable for:
+- office moving
+- shop moves
+- business relocations
+
+==================================================
+SINGLE ITEM DELIVERY
+==================================================
+Single Item Delivery must appear as its own service card and section.
+For now, use the same booking flow structure, but label it clearly for single-item jobs.
+
+Suitable examples:
+- sofa delivery
+- appliance delivery
+- furniture collection
+- one-item transport
+
+Keep the same booking logic for now.
+
+==================================================
+SMALL MOVE
+==================================================
+Small Move must appear as its own service card and section.
+For now, use the same booking flow structure, but label it clearly for lighter jobs and smaller moves.
+
+Suitable examples:
+- student move
+- boxes and bags
+- light furniture
+- short distance small move
+
+Keep the same booking logic for now.
+
+==================================================
+INTERNATIONAL MOVING
+==================================================
+Create a simpler enquiry flow for international moving.
+
+Fields:
+- Pickup location
+- Delivery location
+- Preferred date
+- Time window
+- Full name
+- Phone number
+- Notes
+
+Add optional photo upload here too.
+
+Do NOT auto-calculate full international price.
+
+Show text:
+"Please contact us directly for a final international moving quote."
+
+Still allow user to submit an enquiry.
+
+==================================================
+SOMETHING ELSE
+==================================================
+Create a simple enquiry form:
+- What do you need help with?
+- Pickup
+- Drop-off
+- Date
+- Name
+- Phone
+- Notes
+- Optional photo upload
+
+==================================================
+CONTACT SECTION
+==================================================
+Add a clean contact section with cards or blocks for:
+
+Driver:
++44 7888 355523
+
+Support / Admin:
++44 7946 259714
+
+Email:
+move4foru@gmail.com
+
+Add clear buttons:
+- Call Driver
+- WhatsApp Us
+- Support Line
+- Email Us
+
+==================================================
+REVIEWS
+==================================================
+Add a professional reviews section with 3–5 short realistic customer reviews.
+Keep them simple, believable, and professional.
+
+==================================================
+LEGAL PAGES
+==================================================
+Add placeholder pages or sections for:
+- Terms & Conditions
+- Privacy Policy
+
+==================================================
+CODE REQUIREMENTS
+==================================================
+- Clean project structure
+- Easy to edit later in VS Code
+- Beginner-friendly files
+- Reusable components
+- Add comments where I can easily change:
+  - homepage text
+  - service prices
+  - waste removal extra item prices
+  - phone numbers
+  - email
+  - images
+  - booking flow logic
+  - slider text
+
+==================================================
+AT THE END
+==================================================
+Explain clearly:
+1. File structure
+2. Which files to edit for homepage text
+3. Which files to edit for service pricing
+4. Which files to edit for waste removal extra item pricing
+5. Which files to edit for van images
+6. Which files to edit for phone numbers and email
+7. Which files to edit for booking flow logic
+8. Which files to edit for homepage slider content
+
+Do not add extra features I did not request.
+Keep the result professional, realistic, and easy to maintain.

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Move4U – Removals Website"
+version = "1.0.0"
+id = "artifacts/move4u"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24088
+
+[services.development]
+run = "pnpm --filter @workspace/move4u run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/move4u", "run", "build" ]
+publicDir = "artifacts/move4u/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24088"
+BASE_PATH = "/"
