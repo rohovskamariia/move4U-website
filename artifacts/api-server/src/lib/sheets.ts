@@ -10,7 +10,6 @@ const HEADERS = [
   "Service",
   "Name",
   "Phone",
-  "Preferred Contact",
   "Pickup Address",
   "Drop-off Address",
   "Van Size",
@@ -18,6 +17,7 @@ const HEADERS = [
   "Estimated Price (£)",
   "Date",
   "Notes",
+  "Preferred Contact Method",
 ];
 
 async function createSheet(): Promise<string> {
@@ -57,11 +57,35 @@ async function createSheet(): Promise<string> {
   return data.spreadsheetId;
 }
 
+let headerPatched = false;
+
 async function ensureSheet(): Promise<string> {
   if (!sheetId) {
     sheetId = await createSheet();
+    headerPatched = true; // fresh sheet already has correct headers
   }
   return sheetId;
+}
+
+// Writes the "Preferred Contact Method" header to L1 on the existing sheet
+// if it hasn't been written yet this session. Safe to call on every startup.
+async function patchContactMethodHeader(id: string): Promise<void> {
+  if (headerPatched) return;
+  try {
+    await connectors.proxy(
+      "google-sheet",
+      `/v4/spreadsheets/${id}/values/Bookings!L1?valueInputOption=USER_ENTERED`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ values: [["Preferred Contact Method"]] }),
+      },
+    );
+    logger.info("Patched Preferred Contact Method header in column L");
+  } catch (err) {
+    logger.warn({ err }, "Could not patch column L header — continuing");
+  }
+  headerPatched = true;
 }
 
 export interface BookingRow {
@@ -80,6 +104,7 @@ export interface BookingRow {
 
 export async function appendBooking(row: BookingRow): Promise<void> {
   const id = await ensureSheet();
+  await patchContactMethodHeader(id);
   const timestamp = new Date().toLocaleString("en-GB", { timeZone: "Europe/London" });
 
   const values = [
@@ -88,7 +113,6 @@ export async function appendBooking(row: BookingRow): Promise<void> {
       row.service,
       row.name,
       row.phone,
-      row.contactMethod,
       row.pickup,
       row.dropoff,
       row.vanSize,
@@ -96,6 +120,7 @@ export async function appendBooking(row: BookingRow): Promise<void> {
       row.estimatedPrice,
       row.date,
       row.notes,
+      row.contactMethod,
     ],
   ];
 
