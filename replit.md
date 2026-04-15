@@ -63,7 +63,22 @@ A professional, clean removals website for Move4U, a self-employed removals serv
 ### Stair/floor surcharges
 - **`artifacts/move4u/src/data/constants.ts`** — STAIR_CHARGES
 
+## Google Sheets Integration
+
+Every booking submission is saved automatically to a Google Sheet:
+- **Sheet**: https://docs.google.com/spreadsheets/d/1MkWV6T0aj3GD0RIF22X_yqSE-u5qWHN9nZNkwY7l8cE/edit
+- **Sheet ID env var**: `GOOGLE_SHEET_ID` (shared environment) — persists the sheet across restarts
+- **Integration**: Replit Google Sheets connector (`google-sheet`) via `@replit/connectors-sdk`
+- **API endpoint**: `POST /api/bookings` on the API server (port 8080)
+- **Columns**: Timestamp, Service, Name, Phone, Pickup Address, Drop-off Address, Van Size, Help Option, Estimated Price (£), Date, Notes
+- **Flows covered**: StandardBookingFlow (house/commercial/single-item/small-move), WasteRemovalFlow, InternationalFlow, SomethingElseFlow
+- **Helper file**: `artifacts/api-server/src/lib/sheets.ts`
+- **Route file**: `artifacts/api-server/src/routes/bookings.ts`
+- **Frontend API helper**: `artifacts/move4u/src/lib/api.ts`
+- **Vite proxy**: `/api` → `http://localhost:8080` (dev only)
+
 ## Key Commands
 
 - `pnpm --filter @workspace/move4u run dev` — run website locally
 - `pnpm --filter @workspace/move4u run build` — build for production
+- `pnpm --filter @workspace/api-server run dev` — run API server locally

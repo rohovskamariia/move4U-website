@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
 
 interface FinalDetailsStepProps {
   onSubmit: (data: {
@@ -7,22 +7,31 @@ interface FinalDetailsStepProps {
     timeWindow: string;
     name: string;
     phone: string;
-  }) => void;
+  }) => Promise<void>;
 }
 
-// Final step — preferred date, time window, name, phone
 export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
   const [date, setDate] = useState("");
   const [timeWindow, setTimeWindow] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!date || !timeWindow || !name || !phone) return;
-    setSubmitted(true);
-    onSubmit({ date, timeWindow, name, phone });
+    setLoading(true);
+    setError("");
+    try {
+      await onSubmit({ date, timeWindow, name, phone });
+      setSubmitted(true);
+    } catch {
+      setError("Something went wrong. Please try again or contact us directly.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {
@@ -49,7 +58,6 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Preferred date */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Preferred date</label>
           <input
@@ -63,7 +71,6 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
           />
         </div>
 
-        {/* Time window */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Preferred time</label>
           <div className="flex flex-col gap-2">
@@ -85,7 +92,6 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
           </div>
         </div>
 
-        {/* Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>
           <input
@@ -99,7 +105,6 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
           />
         </div>
 
-        {/* Phone */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone number</label>
           <input
@@ -113,12 +118,26 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
           />
         </div>
 
+        {error && (
+          <p className="text-red-600 text-sm bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+            {error}
+          </p>
+        )}
+
         <button
           type="submit"
-          className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm mt-2"
+          disabled={loading || !date || !timeWindow || !name || !phone}
+          className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           data-testid="submit-booking"
         >
-          Submit Enquiry
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Submitting…
+            </>
+          ) : (
+            "Submit Enquiry"
+          )}
         </button>
       </form>
     </div>

@@ -1,0 +1,110 @@
+import { ReplitConnectors } from "@replit/connectors-sdk";
+import { logger } from "./logger";
+
+const connectors = new ReplitConnectors();
+
+let sheetId: string | null = process.env["GOOGLE_SHEET_ID"] ?? null;
+
+const HEADERS = [
+  "Timestamp",
+  "Service",
+  "Name",
+  "Phone",
+  "Pickup Address",
+  "Drop-off Address",
+  "Van Size",
+  "Help Option",
+  "Estimated Price (£)",
+  "Date",
+  "Notes",
+];
+
+async function createSheet(): Promise<string> {
+  const res = await connectors.proxy("google-sheet", "/v4/spreadsheets", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      properties: { title: "Move4U Bookings" },
+      sheets: [
+        {
+          properties: { title: "Bookings" },
+          data: [
+            {
+              startRow: 0,
+              startColumn: 0,
+              rowData: [
+                {
+                  values: HEADERS.map((h) => ({
+                    userEnteredValue: { stringValue: h },
+                    userEnteredFormat: {
+                      textFormat: { bold: true },
+                      backgroundColor: { red: 0.486, green: 0.231, blue: 0.929 },
+                    },
+                  })),
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    }),
+  });
+
+  const data = (await res.json()) as { spreadsheetId: string; spreadsheetUrl: string };
+  logger.info(`Created Move4U Bookings sheet: ${data.spreadsheetUrl}`);
+  logger.info(`Set GOOGLE_SHEET_ID=${data.spreadsheetId} to reuse this sheet after restarts`);
+  return data.spreadsheetId;
+}
+
+async function ensureSheet(): Promise<string> {
+  if (!sheetId) {
+    sheetId = await createSheet();
+  }
+  return sheetId;
+}
+
+export interface BookingRow {
+  service: string;
+  name: string;
+  phone: string;
+  pickup: string;
+  dropoff: string;
+  vanSize: string;
+  helpOption: string;
+  estimatedPrice: string;
+  date: string;
+  notes: string;
+}
+
+export async function appendBooking(row: BookingRow): Promise<void> {
+  const id = await ensureSheet();
+  const timestamp = new Date().toLocaleString("en-GB", { timeZone: "Europe/London" });
+
+  const values = [
+    [
+      timestamp,
+      row.service,
+      row.name,
+      row.phone,
+      row.pickup,
+      row.dropoff,
+      row.vanSize,
+      row.helpOption,
+      row.estimatedPrice,
+      row.date,
+      row.notes,
+    ],
+  ];
+
+  await connectors.proxy(
+    "google-sheet",
+    `/v4/spreadsheets/${id}/values/Bookings!A:K:append?valueInputOption=USER_ENTERED`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ values }),
+    },
+  );
+
+  logger.info({ name: row.name, service: row.service }, "Booking appended to Google Sheets");
+}

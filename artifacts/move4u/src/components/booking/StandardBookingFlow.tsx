@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
-import { STAIR_CHARGES } from "@/data/constants";
+import { STAIR_CHARGES, HELP_PRICING, VAN_SIZES } from "@/data/constants";
+import { submitBooking } from "@/lib/api";
 import AddressStep from "./AddressStep";
 import VanStep from "./VanStep";
 import HelpStep from "./HelpStep";
@@ -146,7 +147,37 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
           />
         );
       case "final":
-        return <FinalDetailsStep onSubmit={() => {}} />;
+        return (
+          <FinalDetailsStep
+            onSubmit={async ({ date, name, phone }) => {
+              const pricing = HELP_PRICING[vanSize] || HELP_PRICING.medium;
+              let hourlyRate = pricing.noHelp;
+              if (helpOption === "driver-help") hourlyRate = pricing.driverHelp;
+              if (helpOption === "driver-plus-helper") hourlyRate = pricing.driverPlusHelper;
+              const pickupCharge = getFloorCharge(pickupFloor);
+              const dropoffCharge = getFloorCharge(dropoffFloor);
+              const totalPrice = hourlyRate * hours + pickupCharge + dropoffCharge;
+              const vanLabel = VAN_SIZES.find((v) => v.id === vanSize)?.name ?? vanSize;
+              const helpLabels: Record<string, string> = {
+                "no-help": "No help needed",
+                "driver-help": "Driver help",
+                "driver-plus-helper": "Driver + helper",
+              };
+              await submitBooking({
+                service: serviceLabel,
+                name,
+                phone,
+                pickup: pickupAddress,
+                dropoff: dropoffAddress,
+                vanSize: vanLabel,
+                helpOption: helpLabels[helpOption] ?? helpOption,
+                estimatedPrice: `£${totalPrice.toFixed(0)}`,
+                date,
+                notes,
+              });
+            }}
+          />
+        );
     }
   };
 

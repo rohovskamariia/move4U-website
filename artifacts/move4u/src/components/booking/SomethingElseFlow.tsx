@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
+import { submitBooking } from "@/lib/api";
 
 interface SomethingElseFlowProps {
   onBack: () => void;
@@ -17,6 +18,8 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
   });
   const [photos, setPhotos] = useState<File[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const handleChange = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -89,8 +92,38 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
         {photos.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{photos.map((f, i) => <span key={i} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-lg">{f.name}</span>)}</div>}
       </div>
 
-      <button onClick={() => setSubmitted(true)} disabled={!canSubmit} className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed">
-        Submit Enquiry
+      {submitError && (
+        <p className="text-red-600 text-sm bg-red-50 border border-red-100 rounded-xl px-4 py-3">{submitError}</p>
+      )}
+      <button
+        onClick={async () => {
+          if (!canSubmit) return;
+          setSubmitting(true);
+          setSubmitError("");
+          try {
+            await submitBooking({
+              service: "Something Else",
+              name: form.name,
+              phone: form.phone,
+              pickup: form.pickup,
+              dropoff: form.dropoff,
+              vanSize: "",
+              helpOption: "",
+              estimatedPrice: "Custom quote",
+              date: form.date,
+              notes: [form.what, form.notes].filter(Boolean).join(" | "),
+            });
+            setSubmitted(true);
+          } catch {
+            setSubmitError("Something went wrong. Please try again or contact us directly.");
+          } finally {
+            setSubmitting(false);
+          }
+        }}
+        disabled={!canSubmit || submitting}
+        className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        {submitting ? <><Loader2 className="w-4 h-4 animate-spin" />Submitting…</> : "Submit Enquiry"}
       </button>
     </div>
   );

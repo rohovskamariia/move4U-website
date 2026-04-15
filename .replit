@@ -14,6 +14,7 @@ runButton = "Project"
 [agent]
 stack = "PNPM_WORKSPACE"
 expertMode = true
+integrations = ["google-sheet:1.0.0"]
 
 [postMerge]
 path = "scripts/post-merge.sh"
@@ -34,3 +35,11 @@ externalPort = 80
 [[ports]]
 localPort = 24089
 externalPort = 3000
+
+[nix]
+channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+GOOGLE_SHEET_ID = "1MkWV6T0aj3GD0RIF22X_yqSE-u5qWHN9nZNkwY7l8cE"

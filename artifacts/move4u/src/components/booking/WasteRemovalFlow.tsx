@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle } from "lucide-react";
+import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2 } from "lucide-react";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS } from "@/data/constants";
+import { submitBooking } from "@/lib/api";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   BedDouble, Refrigerator, Circle, Armchair, Chair: Armchair,
@@ -24,6 +25,8 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   const [timeWindow, setTimeWindow] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const toggleItem = (id: string) => {
     setSelectedItems((prev) =>
@@ -79,7 +82,41 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone number</label>
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Your phone number" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" />
           </div>
-          <button onClick={() => setStep("submitted")} disabled={!date || !timeWindow || !name || !phone} className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed">Submit Enquiry</button>
+          {submitError && (
+            <p className="text-red-600 text-sm bg-red-50 border border-red-100 rounded-xl px-4 py-3">{submitError}</p>
+          )}
+          <button
+            onClick={async () => {
+              if (!date || !timeWindow || !name || !phone) return;
+              setSubmitting(true);
+              setSubmitError("");
+              try {
+                const loadLabel = WASTE_LOADS.find((l) => l.id === selectedLoad)?.label ?? selectedLoad;
+                const extraLabels = selectedItems.map((id) => WASTE_EXTRA_ITEMS.find((i) => i.id === id)?.label ?? id).join(", ");
+                await submitBooking({
+                  service: "Waste Removal",
+                  name,
+                  phone,
+                  pickup,
+                  dropoff: "",
+                  vanSize: "",
+                  helpOption: "",
+                  estimatedPrice: `£${estimatedTotal}`,
+                  date,
+                  notes: [notes, extraLabels ? `Extra items: ${extraLabels}` : "", `Load: ${loadLabel}`].filter(Boolean).join(" | "),
+                });
+                setStep("submitted");
+              } catch {
+                setSubmitError("Something went wrong. Please try again or contact us directly.");
+              } finally {
+                setSubmitting(false);
+              }
+            }}
+            disabled={!date || !timeWindow || !name || !phone || submitting}
+            className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {submitting ? <><Loader2 className="w-4 h-4 animate-spin" />Submitting…</> : "Submit Enquiry"}
+          </button>
         </div>
       </div>
     );
