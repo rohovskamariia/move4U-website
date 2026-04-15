@@ -86,8 +86,8 @@ export default function SecureBookingPage() {
   const [error, setError] = useState("");
 
   const quoteNum = parseFloat(form.agreedQuote) || 0;
-  const depositAmount = quoteNum > 0 ? Math.max(20, Math.round(quoteNum * 0.1)) : 0;
-  const depositDisplay = depositAmount > 0 ? `£${depositAmount}` : "—";
+  const depositAmount = quoteNum > 0 ? Math.max(20, Math.round(quoteNum * 0.1 * 100) / 100) : 0;
+  const depositDisplay = depositAmount > 0 ? `£${depositAmount.toFixed(2)}` : "—";
 
   const canSubmit =
     form.bookingRef.trim() &&
