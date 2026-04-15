@@ -6,18 +6,21 @@ const connectors = new ReplitConnectors();
 let sheetId: string | null = process.env["GOOGLE_SHEET_ID"] ?? null;
 
 const HEADERS = [
-  "Timestamp",
-  "Service",
-  "Name",
-  "Phone",
-  "Pickup Address",
-  "Drop-off Address",
-  "Van Size",
-  "Help Option",
-  "Estimated Price (£)",
-  "Date",
-  "Notes",
-  "Preferred Contact Method",
+  "Timestamp",           // A
+  "Service",             // B
+  "Name",                // C
+  "Phone",               // D
+  "Pickup Address",      // E
+  "Drop-off Address",    // F
+  "Van Size",            // G
+  "Help Option",         // H
+  "Estimated Price (£)", // I
+  "Date",                // J
+  "Notes",               // K
+  "Preferred Contact Method", // L
+  "Booking Status",      // M
+  "Payment Status",      // N
+  "Booking Reference",   // O
 ];
 
 async function createSheet(): Promise<string> {
@@ -67,23 +70,25 @@ async function ensureSheet(): Promise<string> {
   return sheetId;
 }
 
-// Writes the "Preferred Contact Method" header to L1 on the existing sheet
-// if it hasn't been written yet this session. Safe to call on every startup.
-async function patchContactMethodHeader(id: string): Promise<void> {
+// Writes new column headers (L–O) to the existing live sheet on first use each session.
+// Uses a single range write so it's one API call and is safe to run repeatedly.
+async function patchNewHeaders(id: string): Promise<void> {
   if (headerPatched) return;
   try {
     await connectors.proxy(
       "google-sheet",
-      `/v4/spreadsheets/${id}/values/Bookings!L1?valueInputOption=USER_ENTERED`,
+      `/v4/spreadsheets/${id}/values/Bookings!L1:O1?valueInputOption=USER_ENTERED`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ values: [["Preferred Contact Method"]] }),
+        body: JSON.stringify({
+          values: [["Preferred Contact Method", "Booking Status", "Payment Status", "Booking Reference"]],
+        }),
       },
     );
-    logger.info("Patched Preferred Contact Method header in column L");
+    logger.info("Patched column headers L–O on existing sheet");
   } catch (err) {
-    logger.warn({ err }, "Could not patch column L header — continuing");
+    logger.warn({ err }, "Could not patch column headers — continuing");
   }
   headerPatched = true;
 }
@@ -104,29 +109,32 @@ export interface BookingRow {
 
 export async function appendBooking(row: BookingRow): Promise<void> {
   const id = await ensureSheet();
-  await patchContactMethodHeader(id);
+  await patchNewHeaders(id);
   const timestamp = new Date().toLocaleString("en-GB", { timeZone: "Europe/London" });
 
   const values = [
     [
-      timestamp,
-      row.service,
-      row.name,
-      row.phone,
-      row.pickup,
-      row.dropoff,
-      row.vanSize,
-      row.helpOption,
-      row.estimatedPrice,
-      row.date,
-      row.notes,
-      row.contactMethod,
+      timestamp,        // A – Timestamp
+      row.service,      // B – Service
+      row.name,         // C – Name
+      row.phone,        // D – Phone
+      row.pickup,       // E – Pickup Address
+      row.dropoff,      // F – Drop-off Address
+      row.vanSize,      // G – Van Size
+      row.helpOption,   // H – Help Option
+      row.estimatedPrice, // I – Estimated Price (£)
+      row.date,         // J – Date
+      row.notes,        // K – Notes
+      row.contactMethod,  // L – Preferred Contact Method
+      "New",            // M – Booking Status
+      "Unpaid",         // N – Payment Status
+      "",               // O – Booking Reference (set later)
     ],
   ];
 
   await connectors.proxy(
     "google-sheet",
-    `/v4/spreadsheets/${id}/values/Bookings!A:L:append?valueInputOption=USER_ENTERED`,
+    `/v4/spreadsheets/${id}/values/Bookings!A:O:append?valueInputOption=USER_ENTERED`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
