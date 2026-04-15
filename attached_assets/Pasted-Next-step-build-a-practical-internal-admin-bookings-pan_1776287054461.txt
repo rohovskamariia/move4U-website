@@ -1,0 +1,205 @@
+Next step: build a practical internal admin bookings panel for the website and connect it properly to Stripe-generated personal payment links.
+
+Important:
+Do not rebuild the website.
+Do not break the existing booking form, Google Sheets integration, Telegram notifications, Stripe webhook, or secure booking page.
+
+Goal:
+We need an internal admin panel inside the website so we can manage all incoming bookings properly before payment.
+
+The system must work like this:
+1. A customer submits a booking request.
+2. The booking appears in the internal admin panel.
+3. Admin or driver reviews the booking and contacts the customer.
+4. Admin or driver can edit the agreed quote, deposit amount, confirmed date, and confirmed time.
+5. When admin or driver marks the booking as Confirmed, the system should generate a personal Stripe payment link for that specific booking.
+6. That payment link must be unique for that booking and connected to its booking reference.
+7. Later, Stripe webhook should be able to identify exactly which booking was paid and update the correct record.
+
+Build a simple but practical internal admin system.
+
+Requirements:
+
+1. Create an internal admin page, for example:
+- /admin/bookings
+
+2. Show all booking requests in a clean admin table or card list.
+
+For each booking show:
+- Booking Reference
+- Timestamp
+- Customer Name
+- Phone
+- Preferred contact method
+- Service
+- Pickup address
+- Drop-off address
+- Van size
+- Help option
+- Notes
+- Pictures if available
+- Driver Notes
+- Booking Status
+- Payment Status
+- Agreed Quote
+- Deposit Amount
+- Confirmed Date
+- Confirmed Time
+- Personal Payment Link
+
+3. Add editable admin fields for each booking:
+- Agreed Quote
+- Deposit Amount
+- Confirmed Date
+- Confirmed Time
+- Driver Notes
+
+4. Add booking status options:
+- New
+- Contacted
+- Confirmed
+- Denied
+- Booked
+- Completed
+
+5. Add payment status options:
+- Unpaid
+- Payment link ready
+- Paid
+
+6. Add admin action buttons:
+- Save changes
+- Confirm booking
+- Deny booking
+- Generate payment link
+- Refresh payment link
+- Copy payment link
+
+7. Confirmation logic:
+When admin or driver changes a booking to Confirmed:
+- save the agreed quote
+- save the confirmed date
+- save the confirmed time
+- save or calculate deposit amount
+- set Booking Status = Confirmed
+- set Payment Status = Payment link ready
+- generate a personal Stripe payment link for that specific booking
+
+8. Stripe payment link logic:
+Payment links must be generated using Stripe, not static or hardcoded links.
+
+Use Stripe API in test/sandbox mode for now.
+
+The payment flow must be booking-specific.
+Do not use one shared Stripe link for all customers.
+
+When generating a payment link, use Stripe Checkout Session or another Stripe API-based per-booking flow that creates a unique payment URL for that booking.
+
+Each Stripe payment link / checkout session must include:
+- Booking Reference
+- Agreed Quote
+- Deposit Amount
+
+Pass the booking reference to Stripe using:
+- client_reference_id
+or
+- metadata (booking_reference)
+
+This is required so Stripe webhook can later identify the correct booking.
+
+9. Personal payment link requirements:
+Each booking must have its own personal payment link.
+That link must be stored inside that booking record.
+
+When admin clicks Generate payment link:
+- call Stripe API
+- create a unique Stripe checkout/payment session for that booking
+- return the URL
+- save it to that booking
+
+When admin clicks Refresh payment link:
+- create a new Stripe checkout/payment session
+- update the stored link for that booking
+
+When admin clicks Copy payment link:
+- copy the stored Stripe link for that booking
+
+10. Admin workflow:
+The driver or admin must be able to:
+- open the booking
+- review the request
+- call the customer
+- agree the final quote
+- set the confirmed date
+- set the confirmed time
+- optionally edit deposit amount
+- mark the booking as Confirmed
+- then generate or refresh the personal Stripe payment link
+
+11. Customer-side logic:
+Do not overcomplicate this step.
+The customer does not need a complex dashboard yet.
+
+For now, the important thing is:
+- the admin panel manages the booking
+- the admin panel creates the personal Stripe payment link
+- the payment link can later be sent manually to the customer
+
+12. Google Sheets:
+Make sure admin panel changes are synced with Google Sheets or reflected in the same booking record if possible.
+
+The following fields should be updated and preserved:
+- Booking Reference
+- Booking Status
+- Payment Status
+- Agreed Quote
+- Deposit Amount
+- Confirmed Date
+- Confirmed Time
+- Driver Notes
+- Payment Link
+
+13. Telegram:
+Do not remove the current Telegram notifications.
+
+If possible, keep Telegram updates for:
+- new booking
+- payment received
+
+But do not overcomplicate this step if admin panel is the priority.
+
+14. Stripe webhook compatibility:
+The current Stripe webhook must later be able to update the correct booking.
+
+Make sure the booking can be matched by:
+- client_reference_id
+or
+- metadata.booking_reference
+
+Webhook should later be able to update:
+- Payment Status = Paid
+
+for the correct booking record.
+
+15. Access control:
+If possible, protect the admin page in a simple way so it is not public.
+Do not build a full complex multi-user auth system yet unless necessary.
+Keep it simple and lightweight.
+
+16. UI:
+Keep the admin panel simple, clean, and practical.
+This is an internal working dashboard, not a marketing page.
+
+17. Do not overengineer.
+Build the simplest realistic admin bookings panel first.
+We can improve roles, automation, sending messages, and permissions later.
+
+18. At the end, explain clearly:
+- which files contain the admin panel
+- how bookings are loaded
+- how booking status is updated
+- how payment status is updated
+- how Stripe personal payment links are generated for each booking
+- how the booking reference is passed to Stripe
+- how webhook will later match the correct booking
+- what still remains to connect later

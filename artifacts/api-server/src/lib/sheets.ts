@@ -167,6 +167,170 @@ export async function updatePaymentStatus(bookingRef: string, status: string): P
   }
 }
 
+// ── Admin columns P–U ─────────────────────────────────────────────────────────
+
+const ADMIN_HEADER_ROW = [
+  "Agreed Quote",   // P
+  "Deposit Amount", // Q
+  "Confirmed Date", // R
+  "Confirmed Time", // S
+  "Driver Notes",   // T
+  "Payment Link",   // U
+];
+
+let adminHeaderPatched = false;
+
+async function patchAdminHeaders(id: string): Promise<void> {
+  if (adminHeaderPatched) return;
+  try {
+    await connectors.proxy(
+      "google-sheet",
+      `/v4/spreadsheets/${id}/values/Bookings!P1:U1?valueInputOption=USER_ENTERED`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ values: [ADMIN_HEADER_ROW] }),
+      },
+    );
+    logger.info("Patched admin column headers P–U");
+  } catch (err) {
+    logger.warn({ err }, "Could not patch admin column headers — continuing");
+  }
+  adminHeaderPatched = true;
+}
+
+export interface BookingRecord {
+  rowNumber: number; // 1-based sheet row number
+  timestamp: string;
+  service: string;
+  name: string;
+  phone: string;
+  pickup: string;
+  dropoff: string;
+  vanSize: string;
+  helpOption: string;
+  estimatedPrice: string;
+  date: string;
+  notes: string;
+  contactMethod: string;
+  bookingStatus: string;
+  paymentStatus: string;
+  bookingReference: string;
+  // Admin fields
+  agreedQuote: string;
+  depositAmount: string;
+  confirmedDate: string;
+  confirmedTime: string;
+  driverNotes: string;
+  paymentLink: string;
+}
+
+export async function getAllBookings(): Promise<BookingRecord[]> {
+  const id = await ensureSheet();
+  await patchAdminHeaders(id);
+
+  const res = await connectors.proxy(
+    "google-sheet",
+    `/v4/spreadsheets/${id}/values/Bookings!A:U`,
+  );
+  const data = (await res.json()) as { values?: string[][] };
+  const rows = data.values ?? [];
+  if (rows.length <= 1) return [];
+
+  return rows
+    .slice(1) // skip header
+    .map((row, i) => ({
+      rowNumber:       i + 2,
+      timestamp:       row[0]  ?? "",
+      service:         row[1]  ?? "",
+      name:            row[2]  ?? "",
+      phone:           row[3]  ?? "",
+      pickup:          row[4]  ?? "",
+      dropoff:         row[5]  ?? "",
+      vanSize:         row[6]  ?? "",
+      helpOption:      row[7]  ?? "",
+      estimatedPrice:  row[8]  ?? "",
+      date:            row[9]  ?? "",
+      notes:           row[10] ?? "",
+      contactMethod:   row[11] ?? "",
+      bookingStatus:   row[12] ?? "",
+      paymentStatus:   row[13] ?? "",
+      bookingReference:row[14] ?? "",
+      agreedQuote:     row[15] ?? "",
+      depositAmount:   row[16] ?? "",
+      confirmedDate:   row[17] ?? "",
+      confirmedTime:   row[18] ?? "",
+      driverNotes:     row[19] ?? "",
+      paymentLink:     row[20] ?? "",
+    }))
+    .filter((b) => b.bookingReference)
+    .reverse(); // newest first
+}
+
+export interface BookingAdminUpdate {
+  bookingStatus?: string;
+  paymentStatus?: string;
+  agreedQuote?: string;
+  depositAmount?: string;
+  confirmedDate?: string;
+  confirmedTime?: string;
+  driverNotes?: string;
+  paymentLink?: string;
+}
+
+// Updates admin-editable fields for a booking identified by its reference.
+export async function updateBookingAdmin(
+  bookingRef: string,
+  fields: BookingAdminUpdate,
+): Promise<boolean> {
+  try {
+    const id = await ensureSheet();
+
+    // Locate row via column O
+    const refRes = await connectors.proxy(
+      "google-sheet",
+      `/v4/spreadsheets/${id}/values/Bookings!O:O`,
+    );
+    const refData = (await refRes.json()) as { values?: string[][] };
+    const rowIndex = (refData.values ?? []).findIndex((r) => r[0] === bookingRef);
+    if (rowIndex === -1) {
+      logger.warn({ bookingRef }, "Booking not found for admin update");
+      return false;
+    }
+    const sheetRow = rowIndex + 1;
+
+    const c = (col: string) => `Bookings!${col}${sheetRow}`;
+    const updates: Array<{ range: string; values: string[][] }> = [];
+
+    if (fields.bookingStatus  !== undefined) updates.push({ range: c("M"), values: [[fields.bookingStatus]] });
+    if (fields.paymentStatus  !== undefined) updates.push({ range: c("N"), values: [[fields.paymentStatus]] });
+    if (fields.agreedQuote    !== undefined) updates.push({ range: c("P"), values: [[fields.agreedQuote]] });
+    if (fields.depositAmount  !== undefined) updates.push({ range: c("Q"), values: [[fields.depositAmount]] });
+    if (fields.confirmedDate  !== undefined) updates.push({ range: c("R"), values: [[fields.confirmedDate]] });
+    if (fields.confirmedTime  !== undefined) updates.push({ range: c("S"), values: [[fields.confirmedTime]] });
+    if (fields.driverNotes    !== undefined) updates.push({ range: c("T"), values: [[fields.driverNotes]] });
+    if (fields.paymentLink    !== undefined) updates.push({ range: c("U"), values: [[fields.paymentLink]] });
+
+    if (updates.length === 0) return true;
+
+    await connectors.proxy(
+      "google-sheet",
+      `/v4/spreadsheets/${id}/values:batchUpdate`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ valueInputOption: "USER_ENTERED", data: updates }),
+      },
+    );
+
+    logger.info({ bookingRef, fields: Object.keys(fields) }, "Admin booking update saved to Sheets");
+    return true;
+  } catch (err) {
+    logger.error({ err, bookingRef }, "Failed to save admin booking update");
+    return false;
+  }
+}
+
 // Returns the generated booking reference so the route can send it to Telegram and the client.
 export async function appendBooking(row: BookingRow): Promise<string> {
   const id = await ensureSheet();
