@@ -18,7 +18,7 @@ import { CONTACT } from "@/data/constants";
 // Paste your Stripe Payment Link URL here.
 // Get it from: Stripe Dashboard → Payment Links → Copy link
 // It looks like: https://buy.stripe.com/xxxxxxxxxxxxxxxx
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/YOUR_LINK_HERE";
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_14AaEXdZR5Mm4cF6hd6g800";
 // ─────────────────────────────────────────────────────────────
 
 // ── Editable text ─────────────────────────────────────────────
@@ -112,7 +112,7 @@ export default function SecureBookingPage() {
     // Stripe receives this as `client_reference_id` on checkout.session.completed.
     const ref = encodeURIComponent(form.bookingRef.trim());
     const url = `${STRIPE_PAYMENT_LINK}?client_reference_id=${ref}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+    window.location.href = url;
   }
 
   if (submitted) {
