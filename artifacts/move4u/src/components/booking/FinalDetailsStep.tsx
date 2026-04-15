@@ -7,25 +7,32 @@ interface FinalDetailsStepProps {
     timeWindow: string;
     name: string;
     phone: string;
+    contactMethod: string;
   }) => Promise<void>;
 }
+
+const CONTACT_METHODS = ["Phone call", "WhatsApp", "Text message", "Any"];
+const TIME_WINDOWS = ["Morning (8am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–8pm)"];
 
 export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
   const [date, setDate] = useState("");
   const [timeWindow, setTimeWindow] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [contactMethod, setContactMethod] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const canSubmit = date && timeWindow && name && phone && contactMethod;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!date || !timeWindow || !name || !phone) return;
+    if (!canSubmit) return;
     setLoading(true);
     setError("");
     try {
-      await onSubmit({ date, timeWindow, name, phone });
+      await onSubmit({ date, timeWindow, name, phone, contactMethod });
       setSubmitted(true);
     } catch {
       setError("Something went wrong. Please try again or contact us directly.");
@@ -40,21 +47,24 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
         <div className="bg-green-100 text-green-700 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="w-7 h-7" />
         </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-2">Enquiry Submitted!</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-3">
+          Thank you — we received your request.
+        </h3>
+        <p className="text-gray-600 text-sm leading-relaxed max-w-sm mx-auto mb-3">
+          We will contact you shortly to confirm availability, final price, and booking details.
+        </p>
         <p className="text-gray-500 text-sm leading-relaxed max-w-sm mx-auto">
-          We will call or text you to confirm your booking and final price. Thank you for choosing Move4U.
+          Please keep your phone available. Our team will contact you shortly.
         </p>
       </div>
     );
   }
 
-  const timeWindows = ["Morning (8am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–8pm)"];
-
   return (
     <div>
       <h3 className="text-base font-semibold text-gray-900 mb-1">Final details</h3>
       <p className="text-gray-500 text-sm mb-5">
-        We will call or text you to confirm your booking and final price.
+        We will contact you to confirm your booking and final price.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -74,7 +84,7 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Preferred time</label>
           <div className="flex flex-col gap-2">
-            {timeWindows.map((tw) => (
+            {TIME_WINDOWS.map((tw) => (
               <button
                 key={tw}
                 type="button"
@@ -118,6 +128,29 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
           />
         </div>
 
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Preferred contact method
+          </label>
+          <div className="flex flex-col gap-2">
+            {CONTACT_METHODS.map((method) => (
+              <button
+                key={method}
+                type="button"
+                onClick={() => setContactMethod(method)}
+                className={`text-left px-4 py-2.5 text-sm rounded-xl border-2 transition-colors ${
+                  contactMethod === method
+                    ? "border-purple-700 bg-purple-50 text-purple-700 font-medium"
+                    : "border-gray-100 text-gray-700 hover:border-purple-300"
+                }`}
+                data-testid={`contact-method-${method.toLowerCase().replace(/\s/g, "-")}`}
+              >
+                {method}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {error && (
           <p className="text-red-600 text-sm bg-red-50 border border-red-100 rounded-xl px-4 py-3">
             {error}
@@ -126,7 +159,7 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
 
         <button
           type="submit"
-          disabled={loading || !date || !timeWindow || !name || !phone}
+          disabled={loading || !canSubmit}
           className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           data-testid="submit-booking"
         >

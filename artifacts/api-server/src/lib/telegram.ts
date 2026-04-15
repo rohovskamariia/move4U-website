@@ -7,6 +7,7 @@ export interface TelegramBooking {
   service: string;
   name: string;
   phone: string;
+  contactMethod: string;
   pickup: string;
   pickupDetails: string;
   dropoff: string;
@@ -25,7 +26,6 @@ export interface TelegramBooking {
 }
 
 function buildMessage(b: TelegramBooking): string {
-  // Only include a line if the value is non-empty
   const line = (label: string, value: string): string | null =>
     value.trim() ? `${label}: ${value.trim()}` : null;
 
@@ -35,6 +35,7 @@ function buildMessage(b: TelegramBooking): string {
     line("Service", b.service),
     line("Name", b.name),
     line("Phone", b.phone),
+    line("Contact via", b.contactMethod),
     "",
     line("Pickup", b.pickup),
     line("Pickup details", b.pickupDetails),
@@ -59,8 +60,6 @@ function buildMessage(b: TelegramBooking): string {
     line("Notes", b.notes),
   ];
 
-  // Remove null entries (empty fields), then collapse consecutive blank lines,
-  // then trim leading/trailing blank lines
   const lines = parts
     .filter((l): l is string => l !== null)
     .reduce<string[]>((acc, l) => {

@@ -10,6 +10,7 @@ const HEADERS = [
   "Service",
   "Name",
   "Phone",
+  "Preferred Contact",
   "Pickup Address",
   "Drop-off Address",
   "Van Size",
@@ -67,6 +68,7 @@ export interface BookingRow {
   service: string;
   name: string;
   phone: string;
+  contactMethod: string;
   pickup: string;
   dropoff: string;
   vanSize: string;
@@ -86,6 +88,7 @@ export async function appendBooking(row: BookingRow): Promise<void> {
       row.service,
       row.name,
       row.phone,
+      row.contactMethod,
       row.pickup,
       row.dropoff,
       row.vanSize,
@@ -98,7 +101,7 @@ export async function appendBooking(row: BookingRow): Promise<void> {
 
   await connectors.proxy(
     "google-sheet",
-    `/v4/spreadsheets/${id}/values/Bookings!A:K:append?valueInputOption=USER_ENTERED`,
+    `/v4/spreadsheets/${id}/values/Bookings!A:L:append?valueInputOption=USER_ENTERED`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

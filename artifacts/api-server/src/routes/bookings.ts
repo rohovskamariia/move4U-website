@@ -11,6 +11,7 @@ bookingsRouter.post("/bookings", async (req, res) => {
       service = "",
       name = "",
       phone = "",
+      contactMethod = "",
       pickup = "",
       pickupDetails = "",
       dropoff = "",
@@ -33,11 +34,12 @@ bookingsRouter.post("/bookings", async (req, res) => {
       return;
     }
 
-    // Save to Google Sheets — unchanged
+    // Save to Google Sheets
     await appendBooking({
       service,
       name,
       phone,
+      contactMethod,
       pickup,
       dropoff,
       vanSize,
@@ -52,6 +54,7 @@ bookingsRouter.post("/bookings", async (req, res) => {
       service,
       name,
       phone,
+      contactMethod,
       pickup,
       pickupDetails,
       dropoff,

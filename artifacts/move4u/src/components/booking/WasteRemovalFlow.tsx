@@ -25,6 +25,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   const [timeWindow, setTimeWindow] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [contactMethod, setContactMethod] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -47,9 +48,14 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
         <div className="bg-green-100 text-green-700 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="w-7 h-7" />
         </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-2">Enquiry Submitted!</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-3">
+          Thank you — we received your request.
+        </h3>
+        <p className="text-gray-600 text-sm leading-relaxed max-w-sm mx-auto mb-3">
+          We will contact you shortly to confirm availability, final price, and booking details.
+        </p>
         <p className="text-gray-500 text-sm leading-relaxed max-w-sm mx-auto">
-          We will call or text you to confirm your booking and final price.
+          Please keep your phone available. Our team will contact you shortly.
         </p>
       </div>
     );
@@ -82,12 +88,20 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone number</label>
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Your phone number" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Preferred contact method</label>
+            <div className="flex flex-col gap-2">
+              {["Phone call", "WhatsApp", "Text message", "Any"].map((method) => (
+                <button key={method} type="button" onClick={() => setContactMethod(method)} className={`text-left px-4 py-2.5 text-sm rounded-xl border-2 transition-colors ${contactMethod === method ? "border-purple-700 bg-purple-50 text-purple-700 font-medium" : "border-gray-100 text-gray-700 hover:border-purple-300"}`}>{method}</button>
+              ))}
+            </div>
+          </div>
           {submitError && (
             <p className="text-red-600 text-sm bg-red-50 border border-red-100 rounded-xl px-4 py-3">{submitError}</p>
           )}
           <button
             onClick={async () => {
-              if (!date || !timeWindow || !name || !phone) return;
+              if (!date || !timeWindow || !name || !phone || !contactMethod) return;
               setSubmitting(true);
               setSubmitError("");
               try {
@@ -110,6 +124,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                   date,
                   timeWindow,
                   wasteAddons: extraLabels,
+                  contactMethod,
                   uploadedFiles: photos.map((f) => f.name).join(", "),
                   notes: [notes, `Load: ${loadLabel}`].filter(Boolean).join(" | "),
                 });
@@ -120,7 +135,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                 setSubmitting(false);
               }
             }}
-            disabled={!date || !timeWindow || !name || !phone || submitting}
+            disabled={!date || !timeWindow || !name || !phone || !contactMethod || submitting}
             className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {submitting ? <><Loader2 className="w-4 h-4 animate-spin" />Submitting…</> : "Submit Enquiry"}

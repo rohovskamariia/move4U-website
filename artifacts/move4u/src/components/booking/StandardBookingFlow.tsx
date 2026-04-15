@@ -149,7 +149,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
       case "final":
         return (
           <FinalDetailsStep
-            onSubmit={async ({ date, timeWindow, name, phone }) => {
+            onSubmit={async ({ date, timeWindow, name, phone, contactMethod }) => {
               const pricing = HELP_PRICING[vanSize] || HELP_PRICING.medium;
               let hourlyRate = pricing.noHelp;
               if (helpOption === "driver-help") hourlyRate = pricing.driverHelp;
@@ -181,6 +181,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
                 service: serviceLabel,
                 name,
                 phone,
+                contactMethod,
                 pickup: pickupAddress,
                 pickupDetails: floorLabels[pickupFloor] ?? "",
                 dropoff: dropoffAddress,

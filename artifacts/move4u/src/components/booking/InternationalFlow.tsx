@@ -14,6 +14,7 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
     timeWindow: "",
     name: "",
     phone: "",
+    contactMethod: "",
     notes: "",
   });
   const [photos, setPhotos] = useState<File[]>([]);
@@ -26,7 +27,7 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
   const handleChange = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  const canSubmit = form.pickupLocation && form.deliveryLocation && form.name && form.phone;
+  const canSubmit = form.pickupLocation && form.deliveryLocation && form.name && form.phone && form.contactMethod;
 
   if (submitted) {
     return (
@@ -34,9 +35,14 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
         <div className="bg-green-100 text-green-700 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="w-7 h-7" />
         </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-2">Enquiry Submitted!</h3>
-        <p className="text-gray-500 text-sm max-w-sm mx-auto">
-          We'll be in touch to discuss your international move and provide a final quote.
+        <h3 className="text-lg font-bold text-gray-900 mb-3">
+          Thank you — we received your request.
+        </h3>
+        <p className="text-gray-600 text-sm leading-relaxed max-w-sm mx-auto mb-3">
+          We will contact you shortly to confirm availability, final price, and booking details.
+        </p>
+        <p className="text-gray-500 text-sm leading-relaxed max-w-sm mx-auto">
+          Please keep your phone available. Our team will contact you shortly.
         </p>
       </div>
     );
@@ -83,6 +89,15 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
       </div>
 
       <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Preferred contact method</label>
+        <div className="flex flex-col gap-2">
+          {["Phone call", "WhatsApp", "Text message", "Any"].map((method) => (
+            <button key={method} type="button" onClick={() => handleChange("contactMethod", method)} className={`text-left px-4 py-2.5 text-sm rounded-xl border-2 transition-colors ${form.contactMethod === method ? "border-purple-700 bg-purple-50 text-purple-700 font-medium" : "border-gray-100 text-gray-700 hover:border-purple-300"}`}>{method}</button>
+          ))}
+        </div>
+      </div>
+
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Notes <span className="text-gray-400 font-normal">(optional)</span></label>
         <textarea value={form.notes} onChange={(e) => handleChange("notes", e.target.value)} rows={3} placeholder="Tell us about your move, items, volume, or any special requirements..." className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none" />
       </div>
@@ -121,6 +136,7 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
               estimatedTime: "",
               date: form.date,
               timeWindow: form.timeWindow,
+              contactMethod: form.contactMethod,
               wasteAddons: "",
               uploadedFiles: photos.map((f) => f.name).join(", "),
               notes: form.notes,

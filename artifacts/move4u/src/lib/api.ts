@@ -2,6 +2,7 @@ export interface BookingPayload {
   service: string;
   name: string;
   phone: string;
+  contactMethod: string;
   pickup: string;
   pickupDetails: string;
   dropoff: string;
