@@ -125,6 +125,48 @@ export interface BookingRow {
   notes: string;
 }
 
+// Finds a row by booking reference (column O) and updates its Payment Status (column N).
+// Returns true if the row was found and updated, false if not found.
+export async function updatePaymentStatus(bookingRef: string, status: string): Promise<boolean> {
+  try {
+    const id = await ensureSheet();
+
+    // Read all values in column O to find the matching row
+    const res = await connectors.proxy(
+      "google-sheet",
+      `/v4/spreadsheets/${id}/values/Bookings!O:O`,
+    );
+    const data = (await res.json()) as { values?: string[][] };
+    const rows = data.values ?? [];
+
+    // Find the 0-based array index of the booking reference
+    const rowIndex = rows.findIndex((row) => row[0] === bookingRef);
+    if (rowIndex === -1) {
+      logger.warn({ bookingRef }, "Booking reference not found in sheet — cannot update payment status");
+      return false;
+    }
+
+    // Convert to 1-based Sheets row number
+    const sheetRow = rowIndex + 1;
+
+    await connectors.proxy(
+      "google-sheet",
+      `/v4/spreadsheets/${id}/values/Bookings!N${sheetRow}?valueInputOption=USER_ENTERED`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ values: [[status]] }),
+      },
+    );
+
+    logger.info({ bookingRef, status, sheetRow }, "Payment status updated in Google Sheets");
+    return true;
+  } catch (err) {
+    logger.error({ err, bookingRef }, "Failed to update payment status in Google Sheets");
+    return false;
+  }
+}
+
 // Returns the generated booking reference so the route can send it to Telegram and the client.
 export async function appendBooking(row: BookingRow): Promise<string> {
   const id = await ensureSheet();

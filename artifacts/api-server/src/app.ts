@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
+import webhookRouter from "./routes/webhook";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -26,6 +27,12 @@ app.use(
   }),
 );
 app.use(cors());
+
+// Stripe webhook router MUST be mounted before express.json().
+// express.raw() is applied inside the router at route level, so it only
+// buffers the body for /api/stripe-webhook — all other routes are unaffected.
+app.use("/api", webhookRouter);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

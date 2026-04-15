@@ -75,6 +75,34 @@ function buildMessage(b: TelegramBooking): string {
   return lines.join("\n");
 }
 
+// Sends a concise deposit-received notification.
+export async function sendDepositNotification(
+  bookingRef: string,
+  amount: string,
+  name: string,
+): Promise<void> {
+  if (!BOT_TOKEN || !CHAT_ID) {
+    logger.warn("Telegram env vars not set — skipping deposit notification");
+    return;
+  }
+
+  const text = `✅ Deposit received – ${bookingRef} | ${amount} | ${name}`;
+  const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: CHAT_ID, text }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Telegram API error ${res.status}: ${body}`);
+  }
+
+  logger.info({ bookingRef, amount, name }, "Telegram deposit notification sent");
+}
+
 export async function sendBookingNotification(b: TelegramBooking): Promise<void> {
   if (!BOT_TOKEN || !CHAT_ID) {
     logger.warn("Telegram env vars not set — skipping notification");

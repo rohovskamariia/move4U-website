@@ -108,16 +108,11 @@ export default function SecureBookingPage() {
 
   function handlePay() {
     if (!canSubmit) return;
-    // Opens the Stripe Payment Link in a new tab.
-    // The customer completes payment on Stripe's hosted page.
-    //
-    // NEXT STEP — webhook integration:
-    // When Stripe confirms payment it will POST to your webhook endpoint.
-    // That webhook should: update Google Sheets column N to "Deposit paid"
-    // and send a Telegram notification with the booking reference.
-    // Implement this in artifacts/api-server/src/routes/bookings.ts
-    // after the user confirms they want the webhook built.
-    window.open(STRIPE_PAYMENT_LINK, "_blank", "noopener,noreferrer");
+    // Appends the booking reference so Stripe passes it back in the webhook event.
+    // Stripe receives this as `client_reference_id` on checkout.session.completed.
+    const ref = encodeURIComponent(form.bookingRef.trim());
+    const url = `${STRIPE_PAYMENT_LINK}?client_reference_id=${ref}`;
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 
   if (submitted) {
