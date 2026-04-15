@@ -63,7 +63,7 @@ function initEditForm(b: BookingRecord): EditForm {
 function calcSuggestedDeposit(quote: string): string {
   const n = parseFloat(quote);
   if (!n || n <= 0) return "";
-  return Math.max(20, Math.round(n * 0.1 * 100) / 100).toFixed(2);
+  return (Math.round(n * 0.3 * 100) / 100).toFixed(2);
 }
 
 function statusBadge(status: string) {
@@ -562,7 +562,7 @@ export default function AdminBookingsPage() {
                             value={form.depositAmount}
                             type="number"
                             onChange={(v) => updateField(ref, "depositAmount", v)}
-                            helper="10% min £20"
+                            helper="30% of agreed quote"
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
