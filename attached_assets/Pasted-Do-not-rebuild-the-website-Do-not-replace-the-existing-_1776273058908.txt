@@ -1,0 +1,77 @@
+Do not rebuild the website.
+Do not replace the existing code.
+Do not change the current booking form, Google Sheets, or Telegram notifications.
+
+Add a new separate page called:
+Secure Your Booking
+
+Important logic:
+- This page is NOT for all visitors.
+- Customers should only use this page after the driver or team has confirmed availability, final details, and price.
+- The page should be accessible by direct link after confirmation.
+- Do not place this page as a main homepage step.
+
+Purpose:
+This page is for customers who have already been contacted after submitting a booking request and now need to pay a deposit to secure their booking.
+
+Add this content and structure:
+
+1. Page title:
+Secure Your Booking
+
+2. Intro text:
+"Your booking is only secured once the required deposit has been paid.
+After we confirm availability, final details, and price, you may be asked to pay a deposit to secure your slot."
+
+3. Add a short explanation / trust section:
+- secure payment
+- deposit secures the booking slot
+- remaining balance can be paid later
+- booking reference will be used for confirmation
+
+Use short, professional, trustworthy language.
+
+4. Add these fields:
+- Booking Reference
+- Customer Name
+- Phone Number
+- Agreed Quote
+- Deposit Amount
+
+5. Add a payment section UI only for now, ready for Stripe integration later.
+Show payment options visually:
+- Apple Pay
+- Google Pay
+- Card payment
+
+6. Add a main button:
+Pay Deposit
+
+7. Add a confirmation message placeholder after payment:
+"Thank you. Your deposit has been received and your booking is now secured."
+
+8. Add a second confirmation note:
+"You will receive confirmation of your secured booking and your booking reference."
+
+9. Add a clear note before payment:
+"The booking is not fully secured until the deposit is received."
+
+10. Add a support line section:
+"If you have any questions before paying your deposit, please contact us."
+
+11. Keep the design clean, modern, and professional.
+It should feel like a real trusted UK service business page.
+Do not make it dark, flashy, or futuristic.
+
+12. Add a small optional helper text or link somewhere on the page:
+"Already confirmed by our team? You can secure your booking here."
+
+13. Keep this page separate from the main booking form.
+Do not force all customers to see it before confirmation.
+
+14. Prepare the structure so Stripe can be connected later.
+
+15. At the end, explain:
+- which file contains this new page
+- where I can edit the text later
+- where Stripe can be connected later

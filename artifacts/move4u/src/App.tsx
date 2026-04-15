@@ -6,6 +6,7 @@ import HomePage from "@/pages/HomePage";
 import BookingPage from "@/pages/BookingPage";
 import TermsPage from "@/pages/TermsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
+import SecureBookingPage from "@/pages/SecureBookingPage";
 import NotFound from "@/pages/not-found";
 import WhatsAppButton from "@/components/WhatsAppButton";
 
@@ -20,6 +21,7 @@ function Router() {
         <Route path="/book/:service" component={BookingPage} />
         <Route path="/terms" component={TermsPage} />
         <Route path="/privacy" component={PrivacyPage} />
+        <Route path="/secure-booking" component={SecureBookingPage} />
         <Route component={NotFound} />
       </Switch>
       <WhatsAppButton />
