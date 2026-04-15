@@ -149,7 +149,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
       case "final":
         return (
           <FinalDetailsStep
-            onSubmit={async ({ date, name, phone }) => {
+            onSubmit={async ({ date, timeWindow, name, phone }) => {
               const pricing = HELP_PRICING[vanSize] || HELP_PRICING.medium;
               let hourlyRate = pricing.noHelp;
               if (helpOption === "driver-help") hourlyRate = pricing.driverHelp;
@@ -163,6 +163,9 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
                 "driver-help": "Driver help",
                 "driver-plus-helper": "Driver + helper",
               };
+              const wholeHours = Math.floor(hours);
+              const halfHour = hours % 1 !== 0;
+              const estimatedTime = `${wholeHours}${halfHour ? ".5" : ""}h`;
               await submitBooking({
                 service: serviceLabel,
                 name,
@@ -172,7 +175,9 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
                 vanSize: vanLabel,
                 helpOption: helpLabels[helpOption] ?? helpOption,
                 estimatedPrice: `£${totalPrice.toFixed(0)}`,
+                estimatedTime,
                 date,
+                timeWindow,
                 notes,
               });
             }}

@@ -114,7 +114,9 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
               vanSize: "",
               helpOption: "",
               estimatedPrice: "Custom quote",
+              estimatedTime: "",
               date: form.date,
+              timeWindow: form.timeWindow,
               notes: form.notes,
             });
             setSubmitted(true);

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { appendBooking } from "../lib/sheets";
+import { sendBookingNotification } from "../lib/telegram";
 import { logger } from "../lib/logger";
 
 const bookingsRouter = Router();
@@ -15,7 +16,9 @@ bookingsRouter.post("/bookings", async (req, res) => {
       vanSize = "",
       helpOption = "",
       estimatedPrice = "",
+      estimatedTime = "",
       date = "",
+      timeWindow = "",
       notes = "",
     } = req.body as Record<string, string>;
 
@@ -24,6 +27,7 @@ bookingsRouter.post("/bookings", async (req, res) => {
       return;
     }
 
+    // Save to Google Sheets — unchanged
     await appendBooking({
       service,
       name,
@@ -37,9 +41,27 @@ bookingsRouter.post("/bookings", async (req, res) => {
       notes,
     });
 
+    // Send Telegram notification — runs after sheets, failure doesn't block response
+    sendBookingNotification({
+      service,
+      name,
+      phone,
+      pickup,
+      dropoff,
+      vanSize,
+      helpOption,
+      estimatedPrice,
+      estimatedTime,
+      preferredDate: date,
+      timeWindow,
+      notes,
+    }).catch((err) => {
+      logger.error({ err }, "Telegram notification failed");
+    });
+
     res.json({ success: true });
   } catch (err) {
-    logger.error({ err }, "Failed to save booking to Google Sheets");
+    logger.error({ err }, "Failed to save booking");
     res.status(500).json({ error: "Failed to save booking" });
   }
 });

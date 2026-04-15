@@ -7,7 +7,9 @@ export interface BookingPayload {
   vanSize: string;
   helpOption: string;
   estimatedPrice: string;
+  estimatedTime: string;
   date: string;
+  timeWindow: string;
   notes: string;
 }
 

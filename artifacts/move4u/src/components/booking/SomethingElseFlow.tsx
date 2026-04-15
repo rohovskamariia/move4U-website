@@ -110,7 +110,9 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
               vanSize: "",
               helpOption: "",
               estimatedPrice: "Custom quote",
+              estimatedTime: "",
               date: form.date,
+              timeWindow: "",
               notes: [form.what, form.notes].filter(Boolean).join(" | "),
             });
             setSubmitted(true);

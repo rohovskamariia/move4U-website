@@ -102,7 +102,9 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                   vanSize: "",
                   helpOption: "",
                   estimatedPrice: `£${estimatedTotal}`,
+                  estimatedTime: "",
                   date,
+                  timeWindow,
                   notes: [notes, extraLabels ? `Extra items: ${extraLabels}` : "", `Load: ${loadLabel}`].filter(Boolean).join(" | "),
                 });
                 setStep("submitted");
