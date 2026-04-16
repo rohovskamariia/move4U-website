@@ -34,6 +34,8 @@ export type Slide = {
   image: string;
   /** CSS object-position value — keeps the subjects visible to the right of the text overlay */
   imagePosition?: string;
+  /** Optional CSS filter applied to the image for a softer/warmer feel */
+  imageFilter?: string;
   buttons: SlideButton[];
 };
 
@@ -45,6 +47,8 @@ export const SLIDES: Slide[] = [
     text: "House moves, deliveries and waste removal — done quickly, safely and professionally.",
     image: slide1Image, // two movers loading van in sunlight (landscape)
     imagePosition: "60% center",
+    // Softer, warmer, more premium look — gentle blur, slight contrast pull-back, mild warmth
+    imageFilter: "blur(0.6px) saturate(0.92) contrast(0.94) brightness(1.04)",
     buttons: [
       { text: "Get a Quote", action: "quote", variant: "primary" },
       { text: "Book Now", action: "book", variant: "secondary" },

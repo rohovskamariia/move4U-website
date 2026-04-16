@@ -45,7 +45,12 @@ export default function HeroSlider() {
               src={s.image}
               alt=""
               className="w-full h-full object-cover"
-              style={{ objectPosition: s.imagePosition ?? "center" }}
+              style={{
+                objectPosition: s.imagePosition ?? "center",
+                ...(s.imageFilter
+                  ? { filter: s.imageFilter, transform: "scale(1.015)" }
+                  : {}),
+              }}
               loading={i === 0 ? "eager" : "lazy"}
               decoding="async"
             />
