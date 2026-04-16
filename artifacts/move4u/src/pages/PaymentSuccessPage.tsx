@@ -25,7 +25,7 @@ export default function PaymentSuccessPage() {
           Thank you — your deposit has been received.
         </p>
         <p className="text-gray-500 text-sm mb-8">
-          Your booking is now secured. We'll be in touch shortly to confirm all the details.
+          Your booking is now secured.
           <br className="hidden sm:block" />
           If you need to make any changes, please contact us.
         </p>
