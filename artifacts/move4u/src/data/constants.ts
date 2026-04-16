@@ -32,6 +32,8 @@ export type Slide = {
   title: string;
   text: string;
   image: string;
+  /** CSS object-position value — keeps the subjects visible to the right of the text overlay */
+  imagePosition?: string;
   buttons: SlideButton[];
 };
 
@@ -41,7 +43,8 @@ export const SLIDES: Slide[] = [
     subtitle: "FROM £35/HOUR",
     title: "Fast & Reliable Removals in London",
     text: "House moves, deliveries and waste removal — done quickly, safely and professionally.",
-    image: slide1Image,
+    image: slide1Image, // workers with boxes (portrait — keep faces visible up top)
+    imagePosition: "70% 22%",
     buttons: [
       { text: "Get a Quote", action: "quote", variant: "primary" },
       { text: "Book Now", action: "book", variant: "secondary" },
@@ -51,7 +54,8 @@ export const SLIDES: Slide[] = [
     id: 2,
     title: "Professional Team You Can Trust",
     text: "Careful handling, fast service and flexible booking times. We treat your belongings like our own.",
-    image: slide2Image,
+    image: slide3Image, // loading van at sunset (square-ish — centred)
+    imagePosition: "60% 45%",
     buttons: [
       { text: "Get a Quote", action: "quote", variant: "primary" },
     ],
@@ -60,7 +64,8 @@ export const SLIDES: Slide[] = [
     id: 3,
     title: "Not Sure What You Need?",
     text: "Tell us your job — we'll recommend the best option and price instantly.",
-    image: slide3Image,
+    image: slide2Image, // couple unpacking at home (landscape — slight right bias for text space)
+    imagePosition: "70% 40%",
     buttons: [
       { text: "Call Us", action: "call", variant: "primary" },
       { text: "Get a Quote", action: "quote", variant: "secondary" },

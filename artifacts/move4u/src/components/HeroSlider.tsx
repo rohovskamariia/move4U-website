@@ -31,7 +31,7 @@ export default function HeroSlider() {
 
   return (
     <div className="relative bg-gray-900 text-white overflow-hidden">
-      {/* Stacked background images — crossfade between slides */}
+      {/* Stacked background images — crossfade between slides. No blur, sharp originals. */}
       <div className="absolute inset-0">
         {SLIDES.map((s, i) => (
           <div
@@ -45,19 +45,20 @@ export default function HeroSlider() {
               src={s.image}
               alt=""
               className="w-full h-full object-cover"
-              style={{ filter: "blur(2px)" }}
+              style={{ objectPosition: s.imagePosition ?? "center" }}
               loading={i === 0 ? "eager" : "lazy"}
+              decoding="async"
             />
           </div>
         ))}
       </div>
 
-      {/* Purple gradient overlay — left dark purple, fading to transparent on the right */}
+      {/* Purple gradient overlay — softer so the photo reads through clearly */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "linear-gradient(90deg, rgba(88,28,135,0.85) 0%, rgba(88,28,135,0.45) 60%, rgba(0,0,0,0) 100%)",
+            "linear-gradient(90deg, rgba(88,28,135,0.55) 0%, rgba(88,28,135,0.25) 55%, rgba(0,0,0,0) 100%)",
         }}
       />
 
