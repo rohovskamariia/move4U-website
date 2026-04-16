@@ -25,7 +25,7 @@ bookingsRouter.post("/bookings", async (req, res) => {
       date = "",
       timeWindow = "",
       wasteAddons = "",
-      uploadedFiles = "",
+      uploadedFiles = "", // comma-separated photo serving URLs (e.g. /api/storage/objects/...)
       notes = "",
     } = req.body as Record<string, string>;
 
@@ -41,10 +41,17 @@ bookingsRouter.post("/bookings", async (req, res) => {
       estimatedPrice, date, notes,
     });
 
-    // 2. Respond immediately — don't block on Telegram
+    // 2. Respond immediately — don't block on photo storage or Telegram
     res.json({ success: true, bookingReference });
 
-    // 3. Send Telegram notification, then store the returned message_id in Sheets
+    // 3. If photos were uploaded, save their URLs to column W (fire-and-forget)
+    if (uploadedFiles) {
+      updateBookingAdmin(bookingReference, { photoUrls: uploadedFiles }).catch((err) =>
+        logger.error({ err, bookingReference }, "Failed to save photo URLs to Sheets"),
+      );
+    }
+
+    // 4. Send Telegram notification, then store the returned message_id in Sheets
     //    so future status/payment changes can EDIT the same message rather than
     //    sending a new one. All failures are logged but do not affect the response.
     sendBookingNotification({

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { STAIR_CHARGES, HELP_PRICING, VAN_SIZES } from "@/data/constants";
-import { submitBooking } from "@/lib/api";
+import { submitBooking, uploadPhotos } from "@/lib/api";
 import AddressStep from "./AddressStep";
 import VanStep from "./VanStep";
 import HelpStep from "./HelpStep";
@@ -177,6 +177,8 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
               const wholeHours = Math.floor(hours);
               const halfHour = hours % 1 !== 0;
               const estimatedTime = `${wholeHours}${halfHour ? ".5" : ""}h`;
+              // Upload photos first, then submit the booking with their serving URLs
+              const photoUrls = await uploadPhotos(photos);
               return await submitBooking({
                 service: serviceLabel,
                 name,
@@ -195,7 +197,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
                 date,
                 timeWindow,
                 wasteAddons: "",
-                uploadedFiles: photos.map((f) => f.name).join(", "),
+                uploadedFiles: photoUrls.join(", "),
                 notes,
               });
             }}

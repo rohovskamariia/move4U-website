@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2 } from "lucide-react";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS } from "@/data/constants";
-import { submitBooking } from "@/lib/api";
+import { submitBooking, uploadPhotos } from "@/lib/api";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   BedDouble, Refrigerator, Circle, Armchair, Chair: Armchair,
@@ -112,6 +112,8 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
               try {
                 const loadLabel = WASTE_LOADS.find((l) => l.id === selectedLoad)?.label ?? selectedLoad;
                 const extraLabels = selectedItems.map((id) => WASTE_EXTRA_ITEMS.find((i) => i.id === id)?.label ?? id).join(", ");
+                // Upload photos first, then submit with their serving URLs
+                const photoUrls = await uploadPhotos(photos);
                 const result = await submitBooking({
                   service: "Waste Removal",
                   name,
@@ -130,7 +132,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                   date,
                   timeWindow,
                   wasteAddons: extraLabels,
-                  uploadedFiles: photos.map((f) => f.name).join(", "),
+                  uploadedFiles: photoUrls.join(", "),
                   notes: [notes, `Load: ${loadLabel}`].filter(Boolean).join(" | "),
                 });
                 setBookingRef(result.bookingReference);

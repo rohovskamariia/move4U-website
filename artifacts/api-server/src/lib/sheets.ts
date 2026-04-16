@@ -177,6 +177,7 @@ const ADMIN_HEADER_ROW = [
   "Driver Notes",        // T
   "Payment Link",        // U
   "Telegram Message ID", // V
+  "Photos",              // W
 ];
 
 let adminHeaderPatched = false;
@@ -186,14 +187,14 @@ async function patchAdminHeaders(id: string): Promise<void> {
   try {
     await connectors.proxy(
       "google-sheet",
-      `/v4/spreadsheets/${id}/values/Bookings!P1:V1?valueInputOption=USER_ENTERED`,
+      `/v4/spreadsheets/${id}/values/Bookings!P1:W1?valueInputOption=USER_ENTERED`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ values: [ADMIN_HEADER_ROW] }),
       },
     );
-    logger.info("Patched admin column headers P–V");
+    logger.info("Patched admin column headers P–W");
   } catch (err) {
     logger.warn({ err }, "Could not patch admin column headers — continuing");
   }
@@ -225,6 +226,7 @@ export interface BookingRecord {
   driverNotes: string;
   paymentLink: string;
   telegramMessageId: string; // V — stored so status updates can edit the same message
+  photoUrls: string;         // W — comma-separated serving URLs for uploaded photos
 }
 
 export async function getAllBookings(): Promise<BookingRecord[]> {
@@ -233,7 +235,7 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
 
   const res = await connectors.proxy(
     "google-sheet",
-    `/v4/spreadsheets/${id}/values/Bookings!A:V`,
+    `/v4/spreadsheets/${id}/values/Bookings!A:W`,
   );
   const data = (await res.json()) as { values?: string[][] };
   const rows = data.values ?? [];
@@ -242,29 +244,30 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
   return rows
     .slice(1) // skip header
     .map((row, i) => ({
-      rowNumber:       i + 2,
-      timestamp:       row[0]  ?? "",
-      service:         row[1]  ?? "",
-      name:            row[2]  ?? "",
-      phone:           row[3]  ?? "",
-      pickup:          row[4]  ?? "",
-      dropoff:         row[5]  ?? "",
-      vanSize:         row[6]  ?? "",
-      helpOption:      row[7]  ?? "",
-      estimatedPrice:  row[8]  ?? "",
-      date:            row[9]  ?? "",
-      notes:           row[10] ?? "",
-      contactMethod:   row[11] ?? "",
-      bookingStatus:   row[12] ?? "",
-      paymentStatus:   row[13] ?? "",
-      bookingReference:row[14] ?? "",
-      agreedQuote:     row[15] ?? "",
-      depositAmount:   row[16] ?? "",
-      confirmedDate:   row[17] ?? "",
-      confirmedTime:   row[18] ?? "",
-      driverNotes:        row[19] ?? "",
-      paymentLink:        row[20] ?? "",
-      telegramMessageId:  row[21] ?? "",
+      rowNumber:         i + 2,
+      timestamp:         row[0]  ?? "",
+      service:           row[1]  ?? "",
+      name:              row[2]  ?? "",
+      phone:             row[3]  ?? "",
+      pickup:            row[4]  ?? "",
+      dropoff:           row[5]  ?? "",
+      vanSize:           row[6]  ?? "",
+      helpOption:        row[7]  ?? "",
+      estimatedPrice:    row[8]  ?? "",
+      date:              row[9]  ?? "",
+      notes:             row[10] ?? "",
+      contactMethod:     row[11] ?? "",
+      bookingStatus:     row[12] ?? "",
+      paymentStatus:     row[13] ?? "",
+      bookingReference:  row[14] ?? "",
+      agreedQuote:       row[15] ?? "",
+      depositAmount:     row[16] ?? "",
+      confirmedDate:     row[17] ?? "",
+      confirmedTime:     row[18] ?? "",
+      driverNotes:       row[19] ?? "",
+      paymentLink:       row[20] ?? "",
+      telegramMessageId: row[21] ?? "",
+      photoUrls:         row[22] ?? "",
     }))
     .filter((b) => b.bookingReference)
     .reverse(); // newest first
@@ -280,6 +283,7 @@ export interface BookingAdminUpdate {
   driverNotes?:       string;
   paymentLink?:       string;
   telegramMessageId?: string; // column V
+  photoUrls?:         string; // column W — comma-separated photo serving URLs
 }
 
 // Updates admin-editable fields for a booking identified by its reference.
@@ -315,6 +319,7 @@ export async function updateBookingAdmin(
     if (fields.driverNotes    !== undefined) updates.push({ range: c("T"), values: [[fields.driverNotes]] });
     if (fields.paymentLink        !== undefined) updates.push({ range: c("U"), values: [[fields.paymentLink]] });
     if (fields.telegramMessageId  !== undefined) updates.push({ range: c("V"), values: [[fields.telegramMessageId]] });
+    if (fields.photoUrls          !== undefined) updates.push({ range: c("W"), values: [[fields.photoUrls]] });
 
     if (updates.length === 0) return true;
 

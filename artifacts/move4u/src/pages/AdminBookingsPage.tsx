@@ -30,6 +30,7 @@ interface BookingRecord {
   confirmedTime: string;
   driverNotes: string;
   paymentLink: string;
+  photoUrls: string; // comma-separated serving URLs for uploaded photos
 }
 
 interface EditForm {
@@ -636,6 +637,38 @@ export default function AdminBookingsPage() {
                           <span className="text-gray-400 text-xs">Notes: </span>{booking.notes}
                         </p>
                       )}
+
+                      {/* Customer-uploaded photos */}
+                      {booking.photoUrls && (() => {
+                        const urls = booking.photoUrls.split(",").map((u) => u.trim()).filter(Boolean);
+                        if (urls.length === 0) return null;
+                        return (
+                          <div className="mt-3">
+                            <p className="text-xs text-gray-400 mb-2 font-semibold uppercase tracking-wide">
+                              Photos ({urls.length})
+                            </p>
+                            <div className="grid grid-cols-3 gap-2">
+                              {urls.map((url, i) => (
+                                <a
+                                  key={i}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-50 hover:opacity-90 transition-opacity"
+                                  title={`Photo ${i + 1} — click to open full size`}
+                                >
+                                  <img
+                                    src={url}
+                                    alt={`Photo ${i + 1}`}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                  />
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </section>
 
                     {/* Status editors */}

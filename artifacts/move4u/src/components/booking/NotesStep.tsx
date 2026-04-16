@@ -1,3 +1,5 @@
+import { useCallback } from "react";
+
 interface NotesStepProps {
   value: string;
   onChange: (v: string) => void;
@@ -8,10 +10,14 @@ interface NotesStepProps {
 
 // Notes and optional photo upload step
 export default function NotesStep({ value, onChange, photos, onPhotosChange, showPhotos = true }: NotesStepProps) {
-  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    onPhotosChange(files);
-  };
+  const handleFiles = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const incoming = Array.from(e.target.files || []);
+    onPhotosChange([...photos, ...incoming]);
+  }, [photos, onPhotosChange]);
+
+  const removePhoto = useCallback((index: number) => {
+    onPhotosChange(photos.filter((_, i) => i !== index));
+  }, [photos, onPhotosChange]);
 
   return (
     <div className="space-y-5">
@@ -32,20 +38,55 @@ export default function NotesStep({ value, onChange, photos, onPhotosChange, sho
       {showPhotos && (
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Would you like to attach pictures? <span className="text-gray-400 font-normal">(optional)</span>
+            Attach photos <span className="text-gray-400 font-normal">(optional)</span>
           </label>
           <p className="text-xs text-gray-500 mb-3">
-            Photos can help us confirm the right van size and pricing more accurately.
+            Photos help us confirm the right van size and pricing. JPG or PNG, up to 10 MB each.
           </p>
+
+          {/* Existing photos grid */}
+          {photos.length > 0 && (
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              {photos.map((file, i) => {
+                const url = URL.createObjectURL(file);
+                return (
+                  <div key={i} className="relative group rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-50">
+                    <img
+                      src={url}
+                      alt={file.name}
+                      className="w-full h-full object-cover"
+                      onLoad={() => URL.revokeObjectURL(url)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(i)}
+                      className="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity leading-none"
+                      aria-label="Remove photo"
+                    >
+                      ×
+                    </button>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/40 px-1.5 py-0.5">
+                      <p className="text-white text-[10px] truncate">{file.name}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Upload drop zone */}
           <label
-            className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl py-6 px-4 cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-colors"
+            className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl py-5 px-4 cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-colors"
             data-testid="photo-upload-label"
           >
-            <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <svg className="w-7 h-7 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <span className="text-sm text-gray-600">Attach photos (optional)</span>
-            <span className="text-xs text-gray-400 mt-1">JPG, PNG up to 10MB each</span>
+            <span className="text-sm text-gray-600 font-medium">
+              {photos.length > 0 ? "Add more photos" : "Tap to add photos"}
+            </span>
+            <span className="text-xs text-gray-400 mt-1">Images only · multiple allowed</span>
             <input
               type="file"
               multiple
@@ -55,15 +96,6 @@ export default function NotesStep({ value, onChange, photos, onPhotosChange, sho
               data-testid="photo-upload-input"
             />
           </label>
-          {photos.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {photos.map((f, i) => (
-                <span key={i} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-lg">
-                  {f.name}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       )}
     </div>

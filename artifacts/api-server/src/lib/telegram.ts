@@ -51,7 +51,7 @@ export interface TelegramBooking {
   preferredDate:    string;
   timeWindow:       string;
   wasteAddons:      string;
-  uploadedFiles:    string;
+  uploadedFiles:    string; // comma-separated photo serving URLs
   notes:            string;
   // Status fields — optional for new bookings, required for edits
   bookingStatus?:  string;
@@ -96,6 +96,18 @@ function buildMessage(b: TelegramBooking): string {
     "",
     line("Waste add-ons",  b.wasteAddons),
     line("Notes",          b.notes),
+    "",
+    // Photo links — each on its own line, fully qualified with the site URL
+    ...(() => {
+      if (!b.uploadedFiles?.trim()) return [];
+      const photoUrls = b.uploadedFiles.split(",").map((u) => u.trim()).filter(Boolean);
+      if (photoUrls.length === 0) return [];
+      const photoLines = photoUrls.map((url, i) => {
+        const fullUrl = url.startsWith("http") ? url : `${SITE_URL}${url}`;
+        return `📷 Photo ${i + 1}: ${fullUrl}`;
+      });
+      return ["", `🖼 Photos (${photoUrls.length}):`, ...photoLines];
+    })(),
     "",
     `📋 Status: ${status}  |  ${payIcon} Payment: ${payment}`,
     (b.confirmedDate)
