@@ -55,7 +55,7 @@ export const SLIDES: Slide[] = [
     title: "Professional Team You Can Trust",
     text: "Careful handling, fast service and flexible booking times. We treat your belongings like our own.",
     image: slide3Image, // loading van at sunset
-    imagePosition: "60% 45%",
+    imagePosition: "60% 30%",
     buttons: [
       { text: "Get a Quote", action: "quote", variant: "primary" },
     ],
@@ -65,7 +65,7 @@ export const SLIDES: Slide[] = [
     title: "Not Sure What You Need?",
     text: "Tell us your job — we'll recommend the best option and price instantly.",
     image: slide2Image, // couple packing boxes on couch (landscape)
-    imagePosition: "65% center",
+    imagePosition: "65% 28%",
     buttons: [
       { text: "Call Us", action: "call", variant: "primary" },
       { text: "Get a Quote", action: "quote", variant: "secondary" },
