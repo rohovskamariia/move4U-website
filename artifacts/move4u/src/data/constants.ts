@@ -14,30 +14,57 @@ export const CONTACT = {
 };
 
 // HOMEPAGE SLIDER CONTENT — Edit slide text here
-export const SLIDES = [
+// Hero background images — imported so Vite hashes / optimises them.
+// To swap images, update the imports below.
+import slide1Image from "@assets/002E144F-3664-4FFE-BE90-3E1D819D7244_1776365847104.png";
+import slide2Image from "@assets/IMG_3276_1776365847104.jpeg";
+import slide3Image from "@assets/IMG_3287_1776365847104.jpeg";
+
+export type SlideButton = {
+  text: string;
+  action: "book" | "quote" | "call";
+  variant: "primary" | "secondary";
+};
+
+export type Slide = {
+  id: number;
+  subtitle?: string;
+  title: string;
+  text: string;
+  image: string;
+  buttons: SlideButton[];
+};
+
+export const SLIDES: Slide[] = [
   {
     id: 1,
-    title: "Book Now",
-    subtitle: "Get a free quote today",
-    text: "Professional removals, delivery and waste removal across London.",
-    buttonText: "Book Now",
-    buttonAction: "book",
+    subtitle: "FROM £35/HOUR",
+    title: "Fast & Reliable Removals in London",
+    text: "House moves, deliveries and waste removal — done quickly, safely and professionally.",
+    image: slide1Image,
+    buttons: [
+      { text: "Get a Quote", action: "quote", variant: "primary" },
+      { text: "Book Now", action: "book", variant: "secondary" },
+    ],
   },
   {
     id: 2,
-    title: "Need a house move?",
-    subtitle: "From £35/hour",
-    text: "Choose your van size, help option and estimated booking time.",
-    buttonText: "Get a Quote",
-    buttonAction: "quote",
+    title: "Professional Team You Can Trust",
+    text: "Careful handling, fast service and flexible booking times. We treat your belongings like our own.",
+    image: slide2Image,
+    buttons: [
+      { text: "Get a Quote", action: "quote", variant: "primary" },
+    ],
   },
   {
     id: 3,
-    title: "Not sure what to choose?",
-    subtitle: "See our services or give us a call",
-    text: "We'll help you find the best option for your move.",
-    buttonText: "Call Us",
-    buttonAction: "call",
+    title: "Not Sure What You Need?",
+    text: "Tell us your job — we'll recommend the best option and price instantly.",
+    image: slide3Image,
+    buttons: [
+      { text: "Call Us", action: "call", variant: "primary" },
+      { text: "Get a Quote", action: "quote", variant: "secondary" },
+    ],
   },
 ];
 

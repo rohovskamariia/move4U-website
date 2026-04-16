@@ -18,8 +18,30 @@ export default function HomePage() {
       {/* Hero slider */}
       <HeroSlider />
 
-      {/* CTA bar */}
-      <div className="bg-purple-700 text-white py-4">
+      {/* Trust signals */}
+      <section id="about" className="py-12 bg-gray-50 border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { icon: Truck, label: "All van sizes", text: "Small, medium and large" },
+              { icon: Clock, label: "Available 7 days", text: "Morning to evening slots" },
+              { icon: Shield, label: "Reliable service", text: "Professional and careful" },
+              { icon: Star, label: "Trusted locally", text: "Hundreds of moves done" },
+            ].map(({ icon: Icon, label, text }) => (
+              <div key={label} className="text-center">
+                <div className="bg-purple-100 text-purple-700 w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Icon className="w-5 h-5" />
+                </div>
+                <h3 className="font-semibold text-gray-900 text-sm">{label}</h3>
+                <p className="text-gray-500 text-xs mt-0.5">{text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA bar — moved below trust signals so it no longer overlaps the hero */}
+      <div className="bg-purple-700 text-white py-5">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-sm font-medium text-purple-100 text-center sm:text-left">
             Professional removals across London — available 7 days a week
@@ -42,28 +64,6 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-
-      {/* Trust signals */}
-      <section id="about" className="py-12 bg-gray-50 border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[
-              { icon: Truck, label: "All van sizes", text: "Small, medium and large" },
-              { icon: Clock, label: "Available 7 days", text: "Morning to evening slots" },
-              { icon: Shield, label: "Reliable service", text: "Professional and careful" },
-              { icon: Star, label: "Trusted locally", text: "Hundreds of moves done" },
-            ].map(({ icon: Icon, label, text }) => (
-              <div key={label} className="text-center">
-                <div className="bg-purple-100 text-purple-700 w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <Icon className="w-5 h-5" />
-                </div>
-                <h3 className="font-semibold text-gray-900 text-sm">{label}</h3>
-                <p className="text-gray-500 text-xs mt-0.5">{text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Services */}
       <ServicesSection />
