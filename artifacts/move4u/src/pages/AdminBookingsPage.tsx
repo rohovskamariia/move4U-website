@@ -748,9 +748,9 @@ export default function AdminBookingsPage() {
                       <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Personal Payment Link</h3>
 
                       {payLink ? (() => {
-                        const whatsappMsg = buildWhatsAppMessage(booking, payLink);
-                        let shortLink = payLink;
-                        try { shortLink = new URL(payLink).hostname + "/…"; } catch { /* keep original */ }
+                        // Short URL lives on our own domain — clean, booking-specific
+                        const shortPayUrl = `${window.location.origin}/pay/${booking.bookingReference}`;
+                        const whatsappMsg = buildWhatsAppMessage(booking, shortPayUrl);
                         return (
                           <div className="space-y-3">
                             {/* Message preview */}
@@ -759,14 +759,14 @@ export default function AdminBookingsPage() {
                               <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">{whatsappMsg}</pre>
                             </div>
 
-                            {/* Pay now row — no raw URL shown */}
+                            {/* Short pay link row */}
                             <div className="flex items-center justify-between gap-3 bg-purple-50 border border-purple-100 rounded-xl px-4 py-3">
                               <div>
-                                <p className="text-xs font-semibold text-purple-700">👉 Pay now</p>
-                                <p className="text-xs text-gray-400 mt-0.5">{shortLink}</p>
+                                <p className="text-xs font-semibold text-purple-700">👉 Pay now (short link)</p>
+                                <p className="text-xs text-gray-500 mt-0.5 font-mono break-all">{shortPayUrl}</p>
                               </div>
                               <a
-                                href={payLink}
+                                href={shortPayUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-purple-700 text-white rounded-lg text-xs font-semibold hover:bg-purple-800 transition-colors"
@@ -785,11 +785,11 @@ export default function AdminBookingsPage() {
                                 {copiedMsg === ref ? "Copied!" : "Copy message"}
                               </button>
                               <button
-                                onClick={() => void copyLink(payLink, ref)}
+                                onClick={() => void copyLink(shortPayUrl, ref)}
                                 className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-xl text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                               >
                                 {copied === ref ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
-                                {copied === ref ? "Copied!" : "Copy link only"}
+                                {copied === ref ? "Copied!" : "Copy short link"}
                               </button>
                               <button
                                 onClick={() => void generatePaymentLink(ref)}
