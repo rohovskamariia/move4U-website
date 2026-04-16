@@ -378,11 +378,12 @@ export default function AdminBookingsPage() {
       `📍 To: ${to}\n\n` +
       `Booking reference: ${booking.bookingReference}\n` +
       `Deposit required: ${deposit}\n\n` +
-      `Please complete your payment using the link below:\n\n` +
-      `👉 Pay now: ${payLink}\n\n` +
+      `Please complete your payment using the secure payment link below.\n\n` +
       `If you experience any issues with the payment, please contact us.\n\n` +
       `Thank you,\n` +
-      `Move4U`
+      `Move4U\n\n` +
+      `Secure payment link:\n` +
+      payLink
     );
   }
 
