@@ -45,12 +45,7 @@ export default function HeroSlider() {
               src={s.image}
               alt=""
               className="w-full h-full object-cover"
-              style={{
-                objectPosition: s.imagePosition ?? "center",
-                // Tiny softening so headline reads cleanly without obscuring detail
-                filter: "blur(1px)",
-                transform: "scale(1.02)", // hide blur edges
-              }}
+              style={{ objectPosition: s.imagePosition ?? "center" }}
               loading={i === 0 ? "eager" : "lazy"}
               decoding="async"
             />
