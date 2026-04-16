@@ -170,12 +170,13 @@ export async function updatePaymentStatus(bookingRef: string, status: string): P
 // ── Admin columns P–U ─────────────────────────────────────────────────────────
 
 const ADMIN_HEADER_ROW = [
-  "Agreed Quote",   // P
-  "Deposit Amount", // Q
-  "Confirmed Date", // R
-  "Confirmed Time", // S
-  "Driver Notes",   // T
-  "Payment Link",   // U
+  "Agreed Quote",        // P
+  "Deposit Amount",      // Q
+  "Confirmed Date",      // R
+  "Confirmed Time",      // S
+  "Driver Notes",        // T
+  "Payment Link",        // U
+  "Telegram Message ID", // V
 ];
 
 let adminHeaderPatched = false;
@@ -185,14 +186,14 @@ async function patchAdminHeaders(id: string): Promise<void> {
   try {
     await connectors.proxy(
       "google-sheet",
-      `/v4/spreadsheets/${id}/values/Bookings!P1:U1?valueInputOption=USER_ENTERED`,
+      `/v4/spreadsheets/${id}/values/Bookings!P1:V1?valueInputOption=USER_ENTERED`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ values: [ADMIN_HEADER_ROW] }),
       },
     );
-    logger.info("Patched admin column headers P–U");
+    logger.info("Patched admin column headers P–V");
   } catch (err) {
     logger.warn({ err }, "Could not patch admin column headers — continuing");
   }
@@ -223,6 +224,7 @@ export interface BookingRecord {
   confirmedTime: string;
   driverNotes: string;
   paymentLink: string;
+  telegramMessageId: string; // V — stored so status updates can edit the same message
 }
 
 export async function getAllBookings(): Promise<BookingRecord[]> {
@@ -231,7 +233,7 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
 
   const res = await connectors.proxy(
     "google-sheet",
-    `/v4/spreadsheets/${id}/values/Bookings!A:U`,
+    `/v4/spreadsheets/${id}/values/Bookings!A:V`,
   );
   const data = (await res.json()) as { values?: string[][] };
   const rows = data.values ?? [];
@@ -260,22 +262,24 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
       depositAmount:   row[16] ?? "",
       confirmedDate:   row[17] ?? "",
       confirmedTime:   row[18] ?? "",
-      driverNotes:     row[19] ?? "",
-      paymentLink:     row[20] ?? "",
+      driverNotes:        row[19] ?? "",
+      paymentLink:        row[20] ?? "",
+      telegramMessageId:  row[21] ?? "",
     }))
     .filter((b) => b.bookingReference)
     .reverse(); // newest first
 }
 
 export interface BookingAdminUpdate {
-  bookingStatus?: string;
-  paymentStatus?: string;
-  agreedQuote?: string;
-  depositAmount?: string;
-  confirmedDate?: string;
-  confirmedTime?: string;
-  driverNotes?: string;
-  paymentLink?: string;
+  bookingStatus?:     string;
+  paymentStatus?:     string;
+  agreedQuote?:       string;
+  depositAmount?:     string;
+  confirmedDate?:     string;
+  confirmedTime?:     string;
+  driverNotes?:       string;
+  paymentLink?:       string;
+  telegramMessageId?: string; // column V
 }
 
 // Updates admin-editable fields for a booking identified by its reference.
@@ -309,7 +313,8 @@ export async function updateBookingAdmin(
     if (fields.confirmedDate  !== undefined) updates.push({ range: c("R"), values: [[fields.confirmedDate]] });
     if (fields.confirmedTime  !== undefined) updates.push({ range: c("S"), values: [[fields.confirmedTime]] });
     if (fields.driverNotes    !== undefined) updates.push({ range: c("T"), values: [[fields.driverNotes]] });
-    if (fields.paymentLink    !== undefined) updates.push({ range: c("U"), values: [[fields.paymentLink]] });
+    if (fields.paymentLink        !== undefined) updates.push({ range: c("U"), values: [[fields.paymentLink]] });
+    if (fields.telegramMessageId  !== undefined) updates.push({ range: c("V"), values: [[fields.telegramMessageId]] });
 
     if (updates.length === 0) return true;
 
@@ -329,6 +334,12 @@ export async function updateBookingAdmin(
     logger.error({ err, bookingRef }, "Failed to save admin booking update");
     return false;
   }
+}
+
+// Fetches a single booking by its reference (column O). Returns null if not found.
+export async function getBookingByRef(bookingRef: string): Promise<BookingRecord | null> {
+  const all = await getAllBookings();
+  return all.find((b) => b.bookingReference === bookingRef) ?? null;
 }
 
 // Returns the generated booking reference so the route can send it to Telegram and the client.

@@ -13,7 +13,8 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Stripe = require("stripe").default ?? require("stripe");
-import { getAllBookings, updateBookingAdmin } from "../lib/sheets";
+import { getAllBookings, updateBookingAdmin, getBookingByRef } from "../lib/sheets";
+import { editBookingMessage } from "../lib/telegram";
 import { logger } from "../lib/logger";
 
 const adminRouter = Router();
@@ -82,6 +83,51 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
       return;
     }
     res.json({ success: true });
+
+    // If status or payment changed, edit the existing Telegram message (fire-and-forget)
+    const statusChanged = "bookingStatus" in update || "paymentStatus" in update
+      || "confirmedDate" in update || "confirmedTime" in update;
+
+    if (statusChanged) {
+      (async () => {
+        try {
+          const booking = await getBookingByRef(bookingRef);
+          if (!booking?.telegramMessageId) return;
+          const msgId = parseInt(booking.telegramMessageId, 10);
+          if (isNaN(msgId)) return;
+
+          await editBookingMessage(msgId, {
+            bookingReference: booking.bookingReference,
+            service:          booking.service,
+            name:             booking.name,
+            phone:            booking.phone,
+            contactMethod:    booking.contactMethod,
+            pickup:           booking.pickup,
+            pickupDetails:    "",
+            dropoff:          booking.dropoff,
+            dropoffDetails:   "",
+            extraAddress:     "",
+            vanSize:          booking.vanSize,
+            helpOption:       booking.helpOption,
+            peopleCount:      "",
+            estimatedPrice:   booking.estimatedPrice,
+            estimatedTime:    "",
+            preferredDate:    booking.date,
+            timeWindow:       "",
+            wasteAddons:      "",
+            uploadedFiles:    "",
+            notes:            booking.notes,
+            // Use incoming fields where provided, fall back to stored values
+            bookingStatus: update.bookingStatus ?? booking.bookingStatus,
+            paymentStatus: update.paymentStatus ?? booking.paymentStatus,
+            confirmedDate: update.confirmedDate ?? booking.confirmedDate,
+            confirmedTime: update.confirmedTime ?? booking.confirmedTime,
+          });
+        } catch (err) {
+          logger.error({ err, bookingRef }, "Failed to update Telegram message after admin status change");
+        }
+      })();
+    }
   } catch (err) {
     logger.error({ err, bookingRef }, "Failed to update booking via admin panel");
     res.status(500).json({ error: "Failed to update booking" });

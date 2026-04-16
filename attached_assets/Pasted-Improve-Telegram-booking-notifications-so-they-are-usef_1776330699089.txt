@@ -1,0 +1,57 @@
+Improve Telegram booking notifications so they are useful for the driver workflow.
+
+Current problems:
+- New booking form submissions are not reliably appearing in Telegram
+- Payment updates should not create too much noise
+- The driver needs a direct admin link from Telegram
+- Telegram should reflect booking status and payment status clearly
+
+Priority:
+The most important thing is that every new booking submission must appear in Telegram reliably.
+
+Requirements:
+
+1. When a new booking is submitted, send ONE Telegram message to the driver/admin Telegram chat.
+
+2. The Telegram message for a new booking must include:
+- Booking Reference
+- Customer Name
+- Phone
+- Service
+- Pickup
+- Drop-off
+- Preferred contact method
+- Booking Status
+- Payment Status
+- Direct admin link for that booking
+
+3. Add a direct admin link in the Telegram message so the driver can tap and open the booking in the admin panel quickly.
+
+4. Save the Telegram message ID for each booking so the system can later update the SAME Telegram message instead of always sending a new one.
+
+5. When booking status changes (for example Confirmed / Denied / Booked), update the existing Telegram message instead of sending a new one.
+
+6. When payment status changes to Paid, update the existing Telegram message to reflect:
+- Payment Status = Paid
+- Booking Status if relevant
+- Confirmed date/time if available
+
+7. Do not spam Telegram with multiple long messages for the same booking.
+
+8. Only send a separate new Telegram notification for payment if message editing is not possible.
+If a separate payment message must be sent, keep it short:
+"💰 Deposit received — {Booking Reference}"
+
+9. Fix the current issue where new booking submissions are not consistently appearing in Telegram.
+
+10. Keep Google Sheets and admin panel logic unchanged.
+Do not break existing Stripe or webhook flow.
+
+11. If editing Telegram messages requires storing telegram_message_id, add that to the booking record or admin data structure.
+
+12. At the end, explain clearly:
+- where Telegram message ID is stored
+- how the admin link is generated
+- how new booking notifications work
+- how payment updates now work
+- whether Telegram messages are edited or newly sent

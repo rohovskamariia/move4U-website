@@ -14,8 +14,8 @@
 
 import express, { Router, type Request, type Response } from "express";
 import { createHmac, timingSafeEqual } from "crypto";
-import { updatePaymentStatus } from "../lib/sheets";
-import { sendDepositNotification } from "../lib/telegram";
+import { updatePaymentStatus, getBookingByRef } from "../lib/sheets";
+import { editBookingMessage, sendDepositNotification } from "../lib/telegram";
 import { logger } from "../lib/logger";
 
 export const webhookRouter = Router();
@@ -117,10 +117,56 @@ webhookRouter.post("/stripe-webhook", express.raw({ type: "application/json", li
     // Update Google Sheets: Payment Status → "Deposit paid"
     await updatePaymentStatus(bookingRef, "Deposit paid");
 
-    // Send Telegram notification — failure does not block response
-    sendDepositNotification(bookingRef, depositFormatted, customerName).catch((err) => {
-      logger.error({ err }, "Telegram deposit notification failed");
-    });
+    // ── Telegram: edit existing message if possible, else short fallback ─────
+    // Failure does NOT block the webhook response
+    ;(async () => {
+      try {
+        const booking = await getBookingByRef(bookingRef);
+        const msgId = booking?.telegramMessageId
+          ? parseInt(booking.telegramMessageId, 10)
+          : NaN;
+
+        if (booking && !isNaN(msgId)) {
+          // Edit the existing message to show updated payment status
+          const edited = await editBookingMessage(msgId, {
+            bookingReference: booking.bookingReference,
+            service:          booking.service,
+            name:             booking.name,
+            phone:            booking.phone,
+            contactMethod:    booking.contactMethod,
+            pickup:           booking.pickup,
+            pickupDetails:    "",
+            dropoff:          booking.dropoff,
+            dropoffDetails:   "",
+            extraAddress:     "",
+            vanSize:          booking.vanSize,
+            helpOption:       booking.helpOption,
+            peopleCount:      "",
+            estimatedPrice:   booking.estimatedPrice,
+            estimatedTime:    "",
+            preferredDate:    booking.date,
+            timeWindow:       "",
+            wasteAddons:      "",
+            uploadedFiles:    "",
+            notes:            booking.notes,
+            bookingStatus:    booking.bookingStatus,
+            paymentStatus:    "Deposit paid",
+            confirmedDate:    booking.confirmedDate,
+            confirmedTime:    booking.confirmedTime,
+          });
+
+          if (!edited) {
+            // Edit failed (e.g. message too old) — fall back to short notification
+            await sendDepositNotification(bookingRef, depositFormatted, customerName);
+          }
+        } else {
+          // No stored message ID — send short notification
+          await sendDepositNotification(bookingRef, depositFormatted, customerName);
+        }
+      } catch (err) {
+        logger.error({ err, bookingRef }, "Telegram payment notification failed");
+      }
+    })();
   }
 
   res.json({ received: true });
