@@ -16,8 +16,8 @@ export const CONTACT = {
 // HOMEPAGE SLIDER CONTENT — Edit slide text here
 // Hero background images — imported so Vite hashes / optimises them.
 // To swap images, update the imports below.
-import slide1Image from "@assets/002E144F-3664-4FFE-BE90-3E1D819D7244_1776365847104.png";
-import slide2Image from "@assets/IMG_3276_1776365847104.jpeg";
+import slide1Image from "@assets/9B0EA994-18D8-4A3C-AD5B-C9572BF927CE_1776368081211.png";
+import slide2Image from "@assets/IMG_3293_1776368081211.jpeg";
 import slide3Image from "@assets/IMG_3287_1776365847104.jpeg";
 
 export type SlideButton = {
@@ -43,8 +43,8 @@ export const SLIDES: Slide[] = [
     subtitle: "FROM £35/HOUR",
     title: "Fast & Reliable Removals in London",
     text: "House moves, deliveries and waste removal — done quickly, safely and professionally.",
-    image: slide1Image, // workers with boxes (portrait — keep faces visible up top)
-    imagePosition: "70% 22%",
+    image: slide1Image, // two movers loading van in sunlight (landscape)
+    imagePosition: "60% center",
     buttons: [
       { text: "Get a Quote", action: "quote", variant: "primary" },
       { text: "Book Now", action: "book", variant: "secondary" },
@@ -54,7 +54,7 @@ export const SLIDES: Slide[] = [
     id: 2,
     title: "Professional Team You Can Trust",
     text: "Careful handling, fast service and flexible booking times. We treat your belongings like our own.",
-    image: slide3Image, // loading van at sunset (square-ish — centred)
+    image: slide3Image, // loading van at sunset
     imagePosition: "60% 45%",
     buttons: [
       { text: "Get a Quote", action: "quote", variant: "primary" },
@@ -64,8 +64,8 @@ export const SLIDES: Slide[] = [
     id: 3,
     title: "Not Sure What You Need?",
     text: "Tell us your job — we'll recommend the best option and price instantly.",
-    image: slide2Image, // couple unpacking at home (landscape — slight right bias for text space)
-    imagePosition: "70% 40%",
+    image: slide2Image, // couple packing boxes on couch (landscape)
+    imagePosition: "65% center",
     buttons: [
       { text: "Call Us", action: "call", variant: "primary" },
       { text: "Get a Quote", action: "quote", variant: "secondary" },
