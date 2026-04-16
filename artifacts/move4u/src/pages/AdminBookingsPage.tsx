@@ -360,13 +360,29 @@ export default function AdminBookingsPage() {
   }
 
   function buildWhatsAppMessage(booking: BookingRecord, payLink: string): string {
-    const deposit = booking.depositAmount ? `£${parseFloat(booking.depositAmount).toFixed(2)}` : "—";
+    const deposit = booking.depositAmount
+      ? `£${parseFloat(booking.depositAmount).toFixed(2)}`
+      : "—";
+    const date = booking.confirmedDate || booking.date || "TBC";
+    const time = booking.confirmedTime || "TBC";
+    const from = booking.pickup  || "—";
+    const to   = booking.dropoff || "—";
+    const name = booking.name    || "there";
+
     return (
-      `Your booking is confirmed.\n\n` +
+      `Hi ${name},\n\n` +
+      `Your booking is confirmed ✅\n\n` +
+      `📅 Date: ${date}\n` +
+      `⏰ Time: ${time}\n\n` +
+      `📍 From: ${from}\n` +
+      `📍 To: ${to}\n\n` +
       `Booking reference: ${booking.bookingReference}\n` +
-      `Deposit: ${deposit}\n\n` +
-      `Please complete your payment using the link below:\n` +
-      payLink
+      `Deposit required: ${deposit}\n\n` +
+      `Please complete your payment using the link below:\n\n` +
+      `👉 Pay now: ${payLink}\n\n` +
+      `If you experience any issues with the payment, please contact us.\n\n` +
+      `Thank you,\n` +
+      `Move4U`
     );
   }
 
@@ -651,26 +667,29 @@ export default function AdminBookingsPage() {
 
                       {payLink ? (() => {
                         const whatsappMsg = buildWhatsAppMessage(booking, payLink);
+                        let shortLink = payLink;
+                        try { shortLink = new URL(payLink).hostname + "/…"; } catch { /* keep original */ }
                         return (
                           <div className="space-y-3">
                             {/* Message preview */}
                             <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-                              <p className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">WhatsApp message preview</p>
+                              <p className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">Message preview</p>
                               <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">{whatsappMsg}</pre>
                             </div>
 
-                            {/* Pay now link row */}
-                            <div className="flex items-center gap-2 bg-purple-50 border border-purple-100 rounded-xl px-3 py-2">
-                              <span className="text-xs font-semibold text-purple-700 shrink-0">Pay now →</span>
-                              <p className="text-xs text-gray-500 truncate flex-1">{payLink}</p>
+                            {/* Pay now row — no raw URL shown */}
+                            <div className="flex items-center justify-between gap-3 bg-purple-50 border border-purple-100 rounded-xl px-4 py-3">
+                              <div>
+                                <p className="text-xs font-semibold text-purple-700">👉 Pay now</p>
+                                <p className="text-xs text-gray-400 mt-0.5">{shortLink}</p>
+                              </div>
                               <a
                                 href={payLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="shrink-0 text-purple-600 hover:text-purple-800"
-                                title="Open payment page"
+                                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-purple-700 text-white rounded-lg text-xs font-semibold hover:bg-purple-800 transition-colors"
                               >
-                                <ExternalLink className="w-3.5 h-3.5" />
+                                <ExternalLink className="w-3 h-3" /> Open
                               </a>
                             </div>
 
@@ -681,7 +700,7 @@ export default function AdminBookingsPage() {
                                 className="flex items-center gap-1.5 px-4 py-2 bg-purple-700 text-white rounded-xl text-xs font-semibold hover:bg-purple-800 transition-colors"
                               >
                                 {copiedMsg === ref ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                                {copiedMsg === ref ? "Message copied!" : "Copy message"}
+                                {copiedMsg === ref ? "Copied!" : "Copy message"}
                               </button>
                               <button
                                 onClick={() => void copyLink(payLink, ref)}
