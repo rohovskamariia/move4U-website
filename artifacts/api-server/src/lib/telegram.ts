@@ -22,11 +22,9 @@ function getCredentials(): { botToken: string | undefined; chatId: string | unde
   };
 }
 
-const SITE_URL =
-  process.env["SITE_URL"] ??
-  (process.env["REPLIT_DEV_DOMAIN"]
-    ? `https://${process.env["REPLIT_DEV_DOMAIN"]}`
-    : "https://move4u.replit.app");
+// Must match the deployed domain. Set SITE_URL env var to override.
+// Do NOT fall back to REPLIT_DEV_DOMAIN — that is the dev-preview URL.
+const SITE_URL = process.env["SITE_URL"] ?? "https://move4u.replit.app";
 
 export const ADMIN_PANEL_URL = `${SITE_URL}/admin/bookings`;
 

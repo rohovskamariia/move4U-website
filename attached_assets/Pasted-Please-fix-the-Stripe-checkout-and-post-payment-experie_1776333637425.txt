@@ -1,0 +1,63 @@
+Please fix the Stripe checkout and post-payment experience.
+
+There are 2 problems to fix.
+
+1. Post-payment success page is wrong
+Current problem:
+After successful payment, the customer is redirected to a default Replit page that says:
+"Run this app to see the results here."
+
+This is incorrect and confusing.
+
+Please fix it so that after successful payment the customer is redirected to a proper page on our site.
+
+Requirements:
+- Create or fix a real frontend route for payment success
+- Make sure the success URL used in Stripe points to the correct deployed domain, not a temporary dev/spock URL
+- Do not use a dev preview domain for Stripe success redirect
+- The customer must see a proper confirmation page after payment
+
+Success page content:
+Title:
+Payment successful ✅
+
+Text:
+Thank you, your deposit has been received.
+
+Optional text:
+Your booking is now secured.
+If you need to make any changes, please contact us.
+
+Make sure this route works in the live deployed app after publish.
+
+2. Improve payment methods shown in Stripe checkout
+Current problem:
+Stripe checkout currently shows Link, Klarna, Amazon Pay, etc., but Apple Pay is not clearly available or not prioritized.
+
+Please improve the Stripe checkout/payment method setup.
+
+Requirements:
+- Enable Apple Pay if Stripe and domain requirements allow it
+- Enable Google Pay if available
+- Keep Card payments enabled
+- Keep useful payment methods only
+- Remove or disable payment methods that are not needed for this business if possible
+- Make checkout look clean and customer-friendly
+
+Important:
+- If Apple Pay requires additional Stripe/domain configuration, tell me exactly what must be done
+- If domain verification is needed, explain the exact steps clearly
+- If Apple Pay is not available in sandbox/dev but will work on live verified domain, explain that clearly
+
+3. Very important
+- Do not break webhook logic
+- Do not break admin panel logic
+- Do not break Google Sheets updates
+- Do not break Telegram payment notifications
+
+4. At the end, explain clearly:
+- which success URL is now used
+- which cancel URL is now used
+- why the old Replit page was appearing
+- whether Apple Pay is now enabled
+- if not, exactly what still needs to be configured in Stripe or on the domain

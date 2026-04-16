@@ -24,11 +24,16 @@ if (!process.env["ADMIN_PASSWORD"]) {
   logger.warn("ADMIN_PASSWORD env var not set — using default 'move4u-admin' (change this in production)");
 }
 
-const SITE_URL =
-  process.env["SITE_URL"] ??
-  (process.env["REPLIT_DEV_DOMAIN"]
-    ? `https://${process.env["REPLIT_DEV_DOMAIN"]}`
-    : "https://move4u.replit.app");
+// SITE_URL must be set to your deployed domain (e.g. https://yourdomain.replit.app).
+// DO NOT let this fall back to REPLIT_DEV_DOMAIN — that is the dev-preview URL and
+// will redirect Stripe customers to "Run this app to see the results here."
+const SITE_URL = process.env["SITE_URL"] ?? "https://move4u.replit.app";
+if (!process.env["SITE_URL"]) {
+  logger.warn(
+    "SITE_URL env var is not set — Stripe redirect URLs will use the default 'https://move4u.replit.app'. " +
+    "Set SITE_URL to your exact deployed domain to avoid broken post-payment redirects."
+  );
+}
 
 // Lazily initialise Stripe — only if STRIPE_SECRET_KEY is set
 function getStripe() {
@@ -179,8 +184,14 @@ adminRouter.post("/admin/bookings/:ref/payment-link", requireAdmin, async (req: 
           quantity: 1,
         },
       ],
-      success_url: `${SITE_URL}/secure-booking?status=paid`,
-      cancel_url:  `${SITE_URL}/secure-booking`,
+      // {CHECKOUT_SESSION_ID} is a Stripe template variable — it is replaced
+      // with the real session ID at redirect time (not a JS template literal).
+      success_url: `${SITE_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${SITE_URL}/pay/${bookingRef}`,
+      // Show only card payments (which automatically includes Apple Pay on Safari
+      // and Google Pay on Chrome/Android via Stripe's wallet detection).
+      // This removes Klarna, Link, Amazon Pay, etc.
+      payment_method_types: ["card"],
     });
 
     const paymentLink: string = session.url ?? "";
