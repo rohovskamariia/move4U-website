@@ -1,0 +1,37 @@
+uploads = []
+
+[[generated]]
+id = "1ydY7qdXbgYP2gjcH7lOi"
+uri = "file://artifacts/move4u/src/assets/hero/move4u_hero_v1.png"
+type = "image"
+title = "move4u_hero_v1"
+
+[[generated]]
+id = "vLt2XkClmEcDz2FWyAybn"
+uri = "file://artifacts/move4u/src/assets/hero/move4u_hero_v2.png"
+type = "image"
+title = "move4u_hero_v2"
+
+[[generated]]
+id = "6K8NyJgQN-s3WMzCskKj5"
+uri = "file://artifacts/move4u/src/assets/hero/move4u_hero_v3.png"
+type = "image"
+title = "move4u_hero_v3"
+
+[[outputs]]
+id = "TLaqR2zwqYo7bZyQ2hYHo"
+uri = "file://artifacts/move4u/src/assets/hero/move4u_hero_v1.png"
+type = "image"
+title = "Variation 1 — Posed behind open van (text space on right)"
+
+[[outputs]]
+id = "s_TtzHCflmnHL6UClBYTB"
+uri = "file://artifacts/move4u/src/assets/hero/move4u_hero_v2.png"
+type = "image"
+title = "Variation 2 — Walking toward van, side angle (text space on left)"
+
+[[outputs]]
+id = "_5u5Yz52usWdE4N11SzbG"
+uri = "file://artifacts/move4u/src/assets/hero/move4u_hero_v3.png"
+type = "image"
+title = "Variation 3 — Loading scene, wide composition (text space on right)"
