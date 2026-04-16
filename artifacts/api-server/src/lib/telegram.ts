@@ -7,12 +7,20 @@
 // editBookingMessage — edits an existing message when status changes.
 //
 // sendDepositNotification — short fallback if no stored message_id.
+//
+// testTelegram — sends a one-line test message; used by GET /api/test-telegram.
 // ============================================================
 
 import { logger } from "./logger";
 
-const BOT_TOKEN = process.env["TELEGRAM_BOT_TOKEN"];
-const CHAT_ID   = process.env["TELEGRAM_CHAT_ID"];
+// ── Read credentials lazily (inside each function) so that env vars set after
+// module load are always picked up correctly. Never read at module scope.
+function getCredentials(): { botToken: string | undefined; chatId: string | undefined } {
+  return {
+    botToken: process.env["TELEGRAM_BOT_TOKEN"],
+    chatId:   process.env["TELEGRAM_CHAT_ID"],
+  };
+}
 
 const SITE_URL =
   process.env["SITE_URL"] ??
@@ -114,32 +122,80 @@ function buildMessage(b: TelegramBooking): string {
 
 // ── Low-level Telegram helpers ────────────────────────────────
 
-// Sends a new message. Returns message_id on success, null on any failure.
-async function tgSend(text: string): Promise<number | null> {
-  if (!BOT_TOKEN || !CHAT_ID) return null;
+export interface TgSendResult {
+  ok: boolean;
+  messageId: number | null;
+  httpStatus: number | null;
+  responseBody: string | null;
+  error: string | null;
+}
+
+// Sends a new message. Returns a rich result object for debugging.
+async function tgSend(text: string): Promise<TgSendResult> {
+  const { botToken, chatId } = getCredentials();
+
+  logger.info(
+    {
+      botTokenPresent: !!botToken,
+      chatIdPresent:   !!chatId,
+      chatId:          chatId ?? "(not set)",
+    },
+    "tgSend: starting Telegram sendMessage",
+  );
+
+  if (!botToken) {
+    logger.error("tgSend: TELEGRAM_BOT_TOKEN is not set — cannot send");
+    return { ok: false, messageId: null, httpStatus: null, responseBody: null, error: "TELEGRAM_BOT_TOKEN not set" };
+  }
+  if (!chatId) {
+    logger.error("tgSend: TELEGRAM_CHAT_ID is not set — cannot send");
+    return { ok: false, messageId: null, httpStatus: null, responseBody: null, error: "TELEGRAM_CHAT_ID not set" };
+  }
+
   try {
     const res = await fetch(
-      `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+      `https://api.telegram.org/bot${botToken}/sendMessage`,
       {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          chat_id: CHAT_ID,
+          chat_id: chatId,
           text,
           disable_web_page_preview: true,
         }),
       },
     );
+
+    const responseBody = await res.text();
+    logger.info(
+      { httpStatus: res.status, responseBody },
+      "tgSend: received Telegram API response",
+    );
+
     if (!res.ok) {
-      const body = await res.text();
-      logger.error({ status: res.status, body }, "Telegram sendMessage failed");
-      return null;
+      logger.error(
+        { httpStatus: res.status, responseBody },
+        "tgSend: Telegram API returned non-OK status",
+      );
+      return { ok: false, messageId: null, httpStatus: res.status, responseBody, error: `Telegram API error ${res.status}: ${responseBody}` };
     }
-    const data = (await res.json()) as { result?: { message_id?: number } };
-    return data.result?.message_id ?? null;
+
+    let parsed: { result?: { message_id?: number } };
+    try {
+      parsed = JSON.parse(responseBody) as typeof parsed;
+    } catch {
+      logger.error({ responseBody }, "tgSend: failed to parse Telegram response JSON");
+      return { ok: false, messageId: null, httpStatus: res.status, responseBody, error: "Failed to parse response JSON" };
+    }
+
+    const messageId = parsed.result?.message_id ?? null;
+    logger.info({ messageId }, "tgSend: message sent successfully");
+    return { ok: true, messageId, httpStatus: res.status, responseBody, error: null };
+
   } catch (err) {
-    logger.error({ err }, "Telegram sendMessage threw an error");
-    return null;
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.error({ err }, "tgSend: fetch threw an exception");
+    return { ok: false, messageId: null, httpStatus: null, responseBody: null, error: errMsg };
   }
 }
 
@@ -149,27 +205,71 @@ async function tgSend(text: string): Promise<number | null> {
 // Returns the Telegram message_id so callers can store it for later edits.
 // Returns null if Telegram is not configured or the send failed.
 export async function sendBookingNotification(b: TelegramBooking): Promise<number | null> {
-  if (!BOT_TOKEN || !CHAT_ID) {
-    logger.warn("TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set — skipping booking notification");
+  const { botToken, chatId } = getCredentials();
+
+  logger.info(
+    {
+      ref:             b.bookingReference,
+      botTokenPresent: !!botToken,
+      chatIdPresent:   !!chatId,
+      chatId:          chatId ?? "(not set)",
+    },
+    "sendBookingNotification: called",
+  );
+
+  if (!botToken || !chatId) {
+    logger.warn(
+      {
+        botTokenPresent: !!botToken,
+        chatIdPresent:   !!chatId,
+      },
+      "sendBookingNotification: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set — skipping",
+    );
     return null;
   }
 
   const text = buildMessage(b);
-  const messageId = await tgSend(text);
+  const result = await tgSend(text);
 
-  if (messageId !== null) {
+  if (result.ok && result.messageId !== null) {
     logger.info(
-      { ref: b.bookingReference, name: b.name, messageId },
-      "Telegram booking notification sent",
+      { ref: b.bookingReference, name: b.name, messageId: result.messageId },
+      "sendBookingNotification: Telegram booking notification sent",
     );
   } else {
     logger.warn(
-      { ref: b.bookingReference },
-      "Telegram booking notification failed — no message_id returned",
+      { ref: b.bookingReference, error: result.error, responseBody: result.responseBody },
+      "sendBookingNotification: Telegram booking notification failed",
     );
   }
 
-  return messageId;
+  return result.messageId;
+}
+
+// Sends a plain test message. Returns the full result for caller to inspect.
+export async function testTelegram(): Promise<TgSendResult> {
+  const { botToken, chatId } = getCredentials();
+
+  logger.info(
+    {
+      botTokenPresent: !!botToken,
+      chatIdPresent:   !!chatId,
+      chatId:          chatId ?? "(not set)",
+    },
+    "testTelegram: called",
+  );
+
+  if (!botToken || !chatId) {
+    const error = !botToken && !chatId
+      ? "Both TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are missing"
+      : !botToken
+        ? "TELEGRAM_BOT_TOKEN is missing"
+        : "TELEGRAM_CHAT_ID is missing";
+    logger.error({ botTokenPresent: !!botToken, chatIdPresent: !!chatId }, `testTelegram: ${error}`);
+    return { ok: false, messageId: null, httpStatus: null, responseBody: null, error };
+  }
+
+  return tgSend("✅ Telegram test message from Move4U");
 }
 
 // Edits an existing Telegram message (e.g. when booking status or payment changes).
@@ -179,18 +279,19 @@ export async function editBookingMessage(
   messageId: number,
   b: TelegramBooking,
 ): Promise<boolean> {
-  if (!BOT_TOKEN || !CHAT_ID) return false;
+  const { botToken, chatId } = getCredentials();
+  if (!botToken || !chatId) return false;
 
   const text = buildMessage(b);
 
   try {
     const res = await fetch(
-      `https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`,
+      `https://api.telegram.org/bot${botToken}/editMessageText`,
       {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          chat_id:    CHAT_ID,
+          chat_id:    chatId,
           message_id: messageId,
           text,
           disable_web_page_preview: true,
@@ -226,15 +327,14 @@ export async function sendDepositNotification(
   amount: string,
   name: string,
 ): Promise<void> {
-  if (!BOT_TOKEN || !CHAT_ID) {
+  const { botToken, chatId } = getCredentials();
+  if (!botToken || !chatId) {
     logger.warn("Telegram env vars not set — skipping deposit notification");
     return;
   }
 
-  const text = `💰 Deposit received — ${bookingRef} | ${amount} | ${name}`;
-  const id   = await tgSend(text);
-
-  if (id !== null) {
+  const result = await tgSend(`💰 Deposit received — ${bookingRef} | ${amount} | ${name}`);
+  if (result.ok) {
     logger.info({ bookingRef, amount, name }, "Telegram deposit notification sent");
   }
 }
