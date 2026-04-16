@@ -84,6 +84,61 @@ function payBadge(status: string) {
   return "bg-gray-100 text-gray-500";
 }
 
+// ── Waiting-time helpers ──────────────────────────────────────
+
+type Priority = "normal" | "warning" | "urgent" | "overdue";
+
+const NEEDS_ACTION = new Set(["", "New"]);
+
+function parseTimestamp(ts: string): number {
+  if (!ts) return 0;
+  let d = new Date(ts);
+  if (!isNaN(d.getTime())) return d.getTime();
+  // UK format DD/MM/YYYY HH:mm:ss → swap to MM/DD/YYYY
+  const m = ts.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(.*)/);
+  if (m) { d = new Date(`${m[2]}/${m[1]}/${m[3]}${m[4]}`); }
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+}
+
+function getWaitingInfo(timestamp: string): { label: string; priority: Priority; minutesAgo: number } {
+  const ts = parseTimestamp(timestamp);
+  if (!ts) return { label: "", priority: "normal", minutesAgo: 0 };
+  const minutesAgo = Math.max(0, Math.floor((Date.now() - ts) / 60000));
+  let label: string;
+  if (minutesAgo < 1)   label = "just now";
+  else if (minutesAgo < 60) label = `${minutesAgo}m ago`;
+  else {
+    const h = Math.floor(minutesAgo / 60), mn = minutesAgo % 60;
+    label = mn > 0 ? `${h}h ${mn}m ago` : `${h}h ago`;
+  }
+  const priority: Priority =
+    minutesAgo < 15 ? "normal" :
+    minutesAgo < 30 ? "warning" :
+    minutesAgo < 60 ? "urgent"  : "overdue";
+  return { label, priority, minutesAgo };
+}
+
+function priorityBadgeClass(p: Priority) {
+  if (p === "warning") return "bg-amber-100 text-amber-700";
+  if (p === "urgent")  return "bg-orange-100 text-orange-700";
+  if (p === "overdue") return "bg-red-100 text-red-700";
+  return "";
+}
+
+function priorityBadgeText(p: Priority) {
+  if (p === "warning") return "Attention";
+  if (p === "urgent")  return "Urgent";
+  if (p === "overdue") return "Overdue";
+  return "";
+}
+
+function priorityCardBorder(p: Priority) {
+  if (p === "overdue") return "border-red-300";
+  if (p === "urgent")  return "border-orange-300";
+  if (p === "warning") return "border-amber-300";
+  return "border-gray-200";
+}
+
 // ── Password gate ─────────────────────────────────────────────
 
 function PasswordGate({ onAuth }: { onAuth: (key: string) => void }) {
@@ -399,10 +454,24 @@ export default function AdminBookingsPage() {
 
   if (!authed) return <PasswordGate onAuth={handleAuth} />;
 
-  const filtered =
-    statusFilter === "All"
-      ? bookings
-      : bookings.filter((b) => b.bookingStatus === statusFilter);
+  const filtered = (() => {
+    const base =
+      statusFilter === "All"
+        ? bookings
+        : bookings.filter((b) => b.bookingStatus === statusFilter);
+
+    // Sort: unprocessed "New" bookings by oldest first (most urgent), rest keep existing order
+    return [...base].sort((a, b) => {
+      const aNew = NEEDS_ACTION.has(a.bookingStatus);
+      const bNew = NEEDS_ACTION.has(b.bookingStatus);
+      if (aNew && !bNew) return -1;
+      if (!aNew && bNew) return 1;
+      if (aNew && bNew) {
+        return parseTimestamp(a.timestamp) - parseTimestamp(b.timestamp); // oldest first
+      }
+      return 0; // preserve existing newest-first for processed
+    });
+  })();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -482,9 +551,12 @@ export default function AdminBookingsPage() {
             const isSaving = savingRef === ref;
             const isLinkBusy = linkBusy === ref;
             const payLink = booking.paymentLink;
+            const waitInfo = getWaitingInfo(booking.timestamp);
+            const needsAttention = NEEDS_ACTION.has(booking.bookingStatus) && waitInfo.minutesAgo > 0;
+            const cardBorder = needsAttention ? priorityCardBorder(waitInfo.priority) : "border-gray-200";
 
             return (
-              <div key={ref} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+              <div key={ref} className={`bg-white border rounded-2xl overflow-hidden ${cardBorder}`}>
                 {/* Card header — always visible */}
                 <button
                   onClick={() => toggleExpand(ref, booking)}
@@ -501,6 +573,11 @@ export default function AdminBookingsPage() {
                           {booking.paymentStatus}
                         </span>
                       )}
+                      {needsAttention && waitInfo.priority !== "normal" && (
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${priorityBadgeClass(waitInfo.priority)}`}>
+                          {priorityBadgeText(waitInfo.priority)}
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm font-medium text-gray-900 truncate">{booking.name}</p>
                     <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500 flex-wrap">
@@ -514,7 +591,11 @@ export default function AdminBookingsPage() {
                           <Phone className="w-3 h-3" />{booking.phone}
                         </a>
                       )}
-                      {booking.timestamp && <span className="text-gray-400">{booking.timestamp}</span>}
+                      {waitInfo.label && (
+                        <span className={needsAttention && waitInfo.priority !== "normal" ? priorityBadgeClass(waitInfo.priority).replace("bg-", "text-").split(" ")[1] : "text-gray-400"}>
+                          {waitInfo.label}
+                        </span>
+                      )}
                     </div>
                   </div>
                   {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400 shrink-0 mt-1" /> : <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-1" />}
