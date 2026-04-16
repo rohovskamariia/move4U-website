@@ -43,7 +43,7 @@ export const SLIDES: Slide[] = [
   {
     id: 1,
     subtitle: "FROM £35/HOUR",
-    title: "Fast & Reliable Removals in London",
+    title: "Fast & Reliable Moving Services in London",
     text: "House moves, deliveries and waste removal — done quickly, safely and professionally.",
     image: slide1Image, // two movers loading van in sunlight (landscape)
     imagePosition: "60% center",
@@ -66,13 +66,13 @@ export const SLIDES: Slide[] = [
   },
   {
     id: 3,
-    title: "Not Sure What You Need?",
-    text: "Tell us your job — we'll recommend the best option and price instantly.",
+    title: "Ready to Book Your Move?",
+    text: "Get a quick quote online or call us for instant help.",
     image: slide2Image, // couple packing boxes on couch (landscape)
     imagePosition: "65% 28%",
     buttons: [
-      { text: "Call Us", action: "call", variant: "primary" },
-      { text: "Get a Quote", action: "quote", variant: "secondary" },
+      { text: "Get a Quote", action: "quote", variant: "primary" },
+      { text: "Call Us", action: "call", variant: "secondary" },
     ],
   },
 ];
