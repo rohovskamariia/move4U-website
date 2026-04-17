@@ -24,19 +24,27 @@ export default function BookingPolicyPage() {
           </section>
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">3. Deposits</h2>
-            <p>For some bookings — including same-day, weekend, and large jobs — a small deposit may be required to secure your slot. Deposits are deducted from the final invoice.</p>
+            <p>A 30% deposit is required to secure a booking. The remaining balance will be confirmed with you before the job is finalised. Deposits are deducted from the final invoice.</p>
           </section>
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">4. Quotes</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">4. Same-Day and Last-Minute Bookings</h2>
+            <p>Same-day and last-minute bookings may be subject to an additional charge depending on timing, availability, and job details. Final pricing will always be confirmed by our team before the booking is finalised.</p>
+          </section>
+          <section>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">5. Minimum Booking Time</h2>
+            <p>All bookings have a minimum duration of 2 hours.</p>
+          </section>
+          <section>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">6. Quotes</h2>
             <p>All quotes are estimates based on the information provided. Final pricing may change if the job conditions differ on the day (extra items, additional stairs, parking issues, etc.).</p>
           </section>
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">5. Changes to Bookings</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">7. Changes to Bookings</h2>
             <p>If you need to change the date, time or address of a confirmed booking, please let us know as early as possible. We will do our best to accommodate changes subject to availability.</p>
           </section>
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">6. Contact</h2>
-            <p>For any booking questions, contact us at move4foru@gmail.com or call +44 7888 355523.</p>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">8. Contact</h2>
+            <p>For any booking questions, contact us at move4foru@gmail.com or call +44 7946 259714.</p>
           </section>
         </div>
       </div>

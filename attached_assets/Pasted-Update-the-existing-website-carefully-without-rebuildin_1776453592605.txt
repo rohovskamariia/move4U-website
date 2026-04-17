@@ -1,0 +1,122 @@
+Update the existing website carefully without rebuilding the whole layout.
+
+Please make these exact changes only.
+
+Important:
+- Do NOT rebuild the page from scratch
+- Do NOT create duplicate sections
+- Only update the existing content, booking wording, contact layout and policy text cleanly
+
+1. HOW IT WORKS SECTION
+
+In the “How It Works” section, update Step 3.
+
+Remove any wording about:
+- “Confirm Booking”
+- “may require a small deposit”
+
+Use this instead:
+
+Step 3  
+Confirm Your Details  
+We review your details and contact you to finalise the booking.
+
+Do not mention deposit in the “How It Works” section.
+
+2. TRUST / PURPLE SECTION TEXT
+
+In the purple section with the heading:
+“London's Trusted Moving Service”
+
+Remove the wording:
+“self-employed moving service based in London”
+
+Replace the paragraph with this:
+
+Move4U offers house moving, waste removal, single item delivery, commercial moving and international moving across London and surrounding areas. Clear pricing, flexible booking and professional service every time.
+
+3. CONTACT SECTION
+
+Remove the “Viber Us” card completely.
+
+Keep only:
+- WhatsApp Us
+- Call Us
+- Email Us
+
+Rebalance the layout so the remaining contact cards stay centered and clean.
+
+4. REMOVE PRICING FROM SERVICES LIST
+
+If “Pricing” appears inside the service list / service navigation / service links, remove it completely.
+
+Keep only real services there:
+- House Moving
+- Waste Removal
+- Single Item Delivery
+- Commercial Moving
+- International Moving
+- Custom Request
+
+Pricing should not appear as a service item.
+
+5. BOOKING FLOW — FINAL CONFIRMATION STEP
+
+Before the final booking confirmation / submit step, add a clear booking note.
+
+Use this wording:
+
+Please note:  
+A 30% deposit is required to secure your booking. By continuing, you agree to our booking and cancellation terms.
+
+Under this text, add a small clickable help link:
+
+Learn more about booking fees
+
+This should link to the Booking Policy section or page.
+
+Make the link subtle:
+- smaller text
+- not a big button
+- clearly visible
+
+6. SAME-DAY / LAST-MINUTE BOOKING NOTICE
+
+If the user selects a same-day booking or a last-minute booking, show a visible message in the booking flow.
+
+Use this wording:
+
+Please note:  
+Last-minute and same-day bookings may be subject to an extra charge. Final pricing will be confirmed by our team before the booking is finalised.
+
+Keep the wording professional and clear, not aggressive.
+
+7. BOOKING POLICY PAGE
+
+Update the Deposits section.
+
+Replace the current wording about:
+“For some bookings... a small deposit may be required...”
+
+Use this instead:
+
+3. Deposits  
+A 30% deposit is required to secure a booking. The remaining balance will be confirmed with you before the job is finalised. Deposits are deducted from the final invoice.
+
+Then add a new section after deposits:
+
+4. Same-Day and Last-Minute Bookings  
+Same-day and last-minute bookings may be subject to an additional charge depending on timing, availability, and job details. Final pricing will always be confirmed by our team before the booking is finalised.
+
+Then renumber the following sections correctly.
+
+8. WORDING RULES
+
+- Keep wording professional and clear
+- Do not use “small fees”
+- Do not use “may require” for the 30% deposit
+- Do not duplicate sections
+- Only update the current booking flow and Booking Policy text
+
+Goal:
+Clean up the wording, booking confirmation logic, deposit wording, same-day booking notice, contact section and trust section without breaking the existing layout.

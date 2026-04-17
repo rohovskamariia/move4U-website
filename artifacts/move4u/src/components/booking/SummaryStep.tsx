@@ -1,3 +1,4 @@
+import { Link } from "wouter";
 import { HELP_PRICING, VAN_SIZES, STAIR_CHARGES } from "@/data/constants";
 
 interface SummaryStepProps {
@@ -136,8 +137,20 @@ export default function SummaryStep({
         </div>
       )}
 
-      <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-5 text-xs text-amber-700">
-        Final price will be confirmed after review if needed.
+      {/* Booking notice — deposit + minimum time */}
+      <div className="bg-purple-50 border border-purple-100 rounded-xl px-4 py-3.5 mb-5 text-sm text-gray-700">
+        <p className="font-semibold text-gray-900 mb-1">Please note:</p>
+        <p className="leading-relaxed">
+          A 30% deposit is required to secure your booking. By continuing, you agree to our booking and cancellation terms.
+        </p>
+        <p className="text-xs text-gray-500 mt-2">Minimum booking time is 2 hours.</p>
+        <Link
+          href="/booking-policy"
+          className="text-xs text-purple-700 hover:text-purple-900 underline underline-offset-2 mt-1.5 inline-block"
+          data-testid="learn-more-booking-fees"
+        >
+          Learn more about booking fees
+        </Link>
       </div>
 
       <button

@@ -1,10 +1,9 @@
-import { Phone, Mail, MessageCircle, Send } from "lucide-react";
+import { Phone, Mail, MessageCircle } from "lucide-react";
 import { CONTACT } from "@/data/constants";
 
 // Edit contact details in src/data/constants.ts
 export default function ContactSection() {
   const waHref = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(CONTACT.whatsappDefaultMessage)}`;
-  const viberHref = `viber://chat?number=${encodeURIComponent(CONTACT.viber)}`;
 
   return (
     <section id="contact" className="py-20 bg-white">
@@ -17,7 +16,7 @@ export default function ContactSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-4xl mx-auto">
           {/* WhatsApp — primary */}
           <a
             href={waHref}
@@ -49,22 +48,6 @@ export default function ContactSection() {
             <p className="text-gray-500 text-xs mb-4">{CONTACT.driverDisplay}</p>
             <span className="inline-block text-xs font-semibold bg-purple-700 text-white py-2 px-4 rounded-full">
               Call Now
-            </span>
-          </a>
-
-          {/* Viber */}
-          <a
-            href={viberHref}
-            className="bg-purple-50 border border-purple-100 rounded-2xl p-6 text-center hover:shadow-md hover:border-purple-300 hover:-translate-y-1 transition-all group"
-            data-testid="contact-viber"
-          >
-            <div className="bg-[#7360f2] text-white w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-[#5d4ad9] transition-colors">
-              <Send className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-gray-900 mb-1">Viber Us</h3>
-            <p className="text-gray-500 text-xs mb-4">{CONTACT.driverDisplay}</p>
-            <span className="inline-block text-xs font-semibold bg-[#7360f2] text-white py-2 px-4 rounded-full">
-              Open Viber
             </span>
           </a>
 

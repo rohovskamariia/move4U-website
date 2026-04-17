@@ -26,6 +26,18 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
 
   const canSubmit = date && timeWindow && name && phone && contactMethod;
 
+  // Detect same-day or last-minute (within next 24h) bookings
+  const isSameDayOrLastMinute = (() => {
+    if (!date) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const selected = new Date(date);
+    selected.setHours(0, 0, 0, 0);
+    return selected.getTime() === today.getTime() || selected.getTime() === tomorrow.getTime();
+  })();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
@@ -83,6 +95,17 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
             data-testid="final-date"
           />
+          {isSameDayOrLastMinute && (
+            <div
+              className="mt-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800"
+              data-testid="same-day-notice"
+            >
+              <p className="font-semibold mb-1">Please note:</p>
+              <p className="leading-relaxed">
+                Last-minute and same-day bookings may be subject to an extra charge. Final pricing will be confirmed by our team before the booking is finalised.
+              </p>
+            </div>
+          )}
         </div>
 
         <div>

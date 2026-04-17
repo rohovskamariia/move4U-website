@@ -31,7 +31,7 @@ export default function Footer() {
               <li><Link href="/book/single-item" className="hover:text-purple-400 transition-colors">Single Item Delivery</Link></li>
               <li><Link href="/book/commercial-move" className="hover:text-purple-400 transition-colors">Commercial Moving</Link></li>
               <li><Link href="/book/international" className="hover:text-purple-400 transition-colors">International Moving</Link></li>
-              <li><Link href="/#services" className="hover:text-purple-400 transition-colors">Pricing</Link></li>
+              <li><Link href="/book/something-else" className="hover:text-purple-400 transition-colors">Custom Request</Link></li>
             </ul>
           </div>
 

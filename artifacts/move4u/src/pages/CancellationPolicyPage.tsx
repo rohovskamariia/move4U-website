@@ -36,7 +36,7 @@ export default function CancellationPolicyPage() {
           </section>
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">6. Contact</h2>
-            <p>For cancellation queries, contact us at move4foru@gmail.com or call +44 7888 355523.</p>
+            <p>For cancellation queries, contact us at move4foru@gmail.com or call +44 7946 259714.</p>
           </section>
         </div>
       </div>

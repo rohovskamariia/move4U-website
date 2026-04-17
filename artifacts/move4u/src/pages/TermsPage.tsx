@@ -66,7 +66,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">8. Contact</h2>
             <p>
-              For any queries about these terms, please contact us at move4foru@gmail.com or call +44 7888 355523.
+              For any queries about these terms, please contact us at move4foru@gmail.com or call +44 7946 259714.
             </p>
           </section>
         </div>

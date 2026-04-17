@@ -24,7 +24,7 @@ export default function HomePage() {
   const steps = [
     { icon: FileText, title: "Get a Quote", text: "Tell us what you need and get a quick estimate." },
     { icon: Calendar, title: "Choose Your Time", text: "Pick a date and time that works for you." },
-    { icon: CheckCircle2, title: "Confirm Booking", text: "We confirm your booking and may require a small deposit." },
+    { icon: CheckCircle2, title: "Confirm Your Details", text: "We review your details and contact you to finalise the booking." },
     { icon: Truck, title: "We Get It Done", text: "Our team arrives and completes the job professionally." },
   ];
 
@@ -99,7 +99,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold mb-3">London's Trusted Moving Service</h2>
           <p className="text-purple-100 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto mb-6">
-            Move4U is a self-employed moving service based in London. We offer house moves, waste collection, commercial relocations, and single item deliveries across London and surrounding areas. No fuss, fair prices, and a professional job every time.
+            Move4U offers house moving, waste removal, single item delivery, commercial moving and international moving across London and surrounding areas. Clear pricing, flexible booking and professional service every time.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
