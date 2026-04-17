@@ -1,0 +1,91 @@
+Update the booking flow and add visual guide pages carefully.
+
+Do NOT rebuild the whole website.
+Do NOT duplicate sections.
+Only improve the existing booking flow and add guide pages/links cleanly.
+
+1. ADD VAN SIZE GUIDE PAGE
+
+Create a new page for House Moving called:
+
+Van Size Guide
+
+This page should show:
+- Small Van
+- Medium Van
+- Large Van
+- Luton Van
+
+Each van should include:
+- image
+- short description
+- load space specifications
+
+Use the existing reference images/style, but do not copy another website exactly.
+Keep the design similar in structure, but adapted to the Move4U style and branding.
+
+2. ADD WASTE LOAD GUIDE PAGE
+
+Create a new page for Waste Removal called:
+
+Waste Load Guide
+
+This page should show:
+- Minimum Load
+- 1/4 Load
+- 1/3 Load
+- 1/2 Load
+- 3/4 Load
+- Full Load
+- Extra Large Load
+
+Each option should include:
+- visual van/load image
+- price
+- short load explanation if useful
+
+Use the existing uploaded reference image for the load sizes as visual inspiration.
+Do not copy exactly, but keep a similar practical layout in the Move4U style.
+
+3. ADD GUIDE LINKS IN BOOKING FLOW
+
+In House Moving flow:
+add a small visible link:
+See van size guide
+or
+View van sizes & pictures
+
+In Waste Removal flow:
+add a small visible link:
+See load size guide
+or
+View load sizes & pictures
+
+These links should open the relevant guide page.
+
+4. HELP TEXT FOR CUSTOMERS
+
+Add a small helpful note:
+
+For House Moving:
+Not sure which van size you need? View van sizes and pictures.
+
+For Waste Removal:
+Not sure which load size is right? View load sizes and pictures.
+
+5. OPTIONAL FOOTER LINKS
+
+Add these guide pages to footer or useful links section if appropriate:
+- Van Size Guide
+- Waste Load Guide
+
+6. STYLE RULES
+
+- Keep it clean and professional
+- Use Move4U colors and style
+- Do not make it look copied from another website
+- Make the guides easy to read on mobile and desktop
+- Images should help customers choose faster
+
+Goal:
+Help customers understand van sizes and waste load sizes visually before booking.

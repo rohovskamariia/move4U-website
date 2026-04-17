@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2 } from "lucide-react";
+import { Link } from "wouter";
+import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2, ChevronLeft, Info } from "lucide-react";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS } from "@/data/constants";
 import { submitBooking, uploadPhotos } from "@/lib/api";
 
@@ -43,6 +44,36 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   }, 0);
   const estimatedTotal = loadPrice + extrasTotal;
 
+  // Per-step back navigation
+  const goPrev = () => {
+    if (step === "details") {
+      onBack();
+    } else if (step === "summary") {
+      setStep("details");
+    } else if (step === "final") {
+      setStep("summary");
+    }
+  };
+
+  const Header = () => (
+    <div className="flex items-center gap-3 mb-6">
+      <button
+        onClick={goPrev}
+        className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+        aria-label="Go back"
+        data-testid="waste-back"
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+      <div>
+        <h2 className="text-base font-bold text-gray-900">Waste Removal</h2>
+        <p className="text-xs text-gray-400">
+          {step === "details" ? "Step 1 of 3 — Details" : step === "summary" ? "Step 2 of 3 — Summary" : "Step 3 of 3 — Confirm"}
+        </p>
+      </div>
+    </div>
+  );
+
   if (step === "submitted") {
     return (
       <div className="text-center py-8">
@@ -70,6 +101,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
     const timeWindows = ["Morning (8am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–8pm)"];
     return (
       <div>
+        <Header />
         <h3 className="text-base font-semibold text-gray-900 mb-1">Final details</h3>
         <p className="text-gray-500 text-sm mb-5">We will call or text to confirm your booking.</p>
         <div className="space-y-4">
@@ -156,6 +188,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   if (step === "summary") {
     return (
       <div>
+        <Header />
         <h3 className="text-base font-semibold text-gray-900 mb-1">Booking summary</h3>
         <p className="text-gray-500 text-sm mb-5">Review your waste removal details.</p>
         <div className="bg-gray-50 border border-gray-100 rounded-xl overflow-hidden mb-5">
@@ -192,7 +225,9 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div>
+      <Header />
+      <div className="space-y-6">
       {/* Pickup address */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Pickup address</label>
@@ -201,7 +236,18 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
 
       {/* Load size */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Select load size</h3>
+        <div className="flex items-baseline justify-between mb-2 gap-3 flex-wrap">
+          <h3 className="text-sm font-semibold text-gray-900">Select load size</h3>
+          <Link
+            href="/waste-guide"
+            className="text-xs font-medium text-purple-700 hover:text-purple-900 underline underline-offset-2 inline-flex items-center gap-1"
+            data-testid="waste-guide-link"
+          >
+            <Info className="w-3.5 h-3.5" />
+            View load sizes &amp; pictures
+          </Link>
+        </div>
+        <p className="text-xs text-gray-500 mb-3">Not sure what size you need? View load sizes &amp; pictures.</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {WASTE_LOADS.map((load) => (
             <button
@@ -266,6 +312,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
       >
         See Summary
       </button>
+      </div>
     </div>
   );
 }

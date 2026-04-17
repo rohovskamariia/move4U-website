@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link } from "wouter";
+import { Info } from "lucide-react";
 import { HELP_PRICING, VAN_SIZES } from "@/data/constants";
 import VanSizeModal from "@/components/VanSizeModal";
 import { CONTACT } from "@/data/constants";
@@ -17,8 +19,19 @@ export default function VanStep({ selected, onSelect }: VanStepProps) {
 
   return (
     <div>
-      <h3 className="text-base font-semibold text-gray-900 mb-1">Choose your van size</h3>
-      <p className="text-gray-500 text-sm mb-5">Prices are per hour — select the best fit for your move.</p>
+      <div className="flex items-baseline justify-between mb-1 gap-3 flex-wrap">
+        <h3 className="text-base font-semibold text-gray-900">Choose your van size</h3>
+        <Link
+          href="/van-guide"
+          className="text-xs font-medium text-purple-700 hover:text-purple-900 underline underline-offset-2 inline-flex items-center gap-1"
+          data-testid="van-guide-link"
+        >
+          <Info className="w-3.5 h-3.5" />
+          View van sizes &amp; pictures
+        </Link>
+      </div>
+      <p className="text-gray-500 text-sm mb-2">Prices are per hour — select the best fit for your move.</p>
+      <p className="text-xs text-gray-500 mb-5">Not sure which van size you need? View van sizes and pictures.</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
         {VAN_SIZES.map((van) => {

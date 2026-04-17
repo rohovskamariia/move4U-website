@@ -1,0 +1,75 @@
+Update the Van Size Guide using the uploaded reference images.
+
+Important:
+- Do NOT generate random van images
+- Use the uploaded reference screenshots as the source
+- Crop/extract the 3 van images from the reference screenshots:
+  - Small Van
+  - Medium Van
+  - Large Van
+- Use those extracted van images inside the Move4U Van Size Guide page
+
+Requirements:
+
+1. IMAGE EXTRACTION
+From the uploaded reference images, crop the van pictures only (cleanly, without phone browser UI if possible).
+Use:
+- Small Van image
+- Medium Van image
+- Large Van image
+
+2. VAN SIZE GUIDE PAGE
+Update or create the Van Size Guide page in Move4U style.
+
+For each van, show:
+- heading
+- short description
+- extracted van image
+- load space specifications
+
+Use this text:
+
+Small Van  
+Suitable for one person’s luggage and easy to park. Can fit up to 10 packed suitcases.
+
+Load Space Specifications:
+- Length: 1.7m / 5.58ft
+- Width: 1.49m / 4.89ft
+- Height: 1.2m / 3.94ft
+- Payload: 600–800kg
+- Seats (including driver): 2
+
+Medium Van  
+Suitable for transporting two people’s belongings. Offers a large load area without being much bigger than a family car.
+
+Load Space Specifications:
+- Length: 2.4m / 7.87ft
+- Width: 1.7m / 5.58ft
+- Height: 1.4m / 4.59ft
+- Payload: 800–1200kg
+- Seats (including driver): 3
+
+Large Van  
+Suitable for 1–2 bedroom flat removals or business-to-business deliveries. Offers a large internal load space with easy loading and unloading.
+
+Load Space Specifications:
+- Length: 3.4m / 11.15ft
+- Width: 1.7m / 5.58ft
+- Height: 1.8m / 6.20ft
+- Payload: 1200–1500kg
+- Seats (including driver): 3
+
+3. STYLE
+- Keep it similar in structure to the reference, but adapted to Move4U style
+- Do NOT copy another website exactly
+- Use clean spacing, modern layout, and mobile-friendly design
+- Keep the page easy to read on desktop and mobile
+
+4. BOOKING FLOW LINK
+In the House Moving booking flow, add a small helpful link:
+View van sizes & pictures
+
+This should open the Van Size Guide page.
+
+Goal:
+Use the uploaded reference screenshots to extract the actual van images and build a clean Move4U Van Size Guide page.

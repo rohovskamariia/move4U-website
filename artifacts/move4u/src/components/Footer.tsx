@@ -42,7 +42,6 @@ export default function Footer() {
               <li><a href={`tel:${CONTACT.driver}`} className="hover:text-purple-400 transition-colors">Driver: {CONTACT.driverDisplay}</a></li>
               <li><a href={`tel:${CONTACT.support}`} className="hover:text-purple-400 transition-colors">Support: {CONTACT.supportDisplay}</a></li>
               <li><a href={`mailto:${CONTACT.email}`} className="hover:text-purple-400 transition-colors break-all">{CONTACT.email}</a></li>
-              <li><Link href="/#contact" className="hover:text-purple-400 transition-colors">All contact options</Link></li>
             </ul>
           </div>
 
@@ -55,6 +54,8 @@ export default function Footer() {
               <li><Link href="/booking-policy" className="hover:text-purple-400 transition-colors">Booking Policy</Link></li>
               <li><Link href="/cancellation-policy" className="hover:text-purple-400 transition-colors">Cancellation Policy</Link></li>
               <li><Link href="/pricing-guide" className="hover:text-purple-400 transition-colors">Pricing Guide</Link></li>
+              <li><Link href="/van-guide" className="hover:text-purple-400 transition-colors">Van Size Guide</Link></li>
+              <li><Link href="/waste-guide" className="hover:text-purple-400 transition-colors">Waste Load Guide</Link></li>
             </ul>
           </div>
         </div>

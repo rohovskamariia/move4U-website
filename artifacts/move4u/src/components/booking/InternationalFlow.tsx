@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { CheckCircle, Loader2, ChevronLeft } from "lucide-react";
 import { submitBooking } from "@/lib/api";
 
 interface InternationalFlowProps {
@@ -54,7 +54,20 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div>
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={onBack}
+          className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+          aria-label="Go back"
+          data-testid="international-back"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <h2 className="text-base font-bold text-gray-900">International Moving</h2>
+      </div>
+
+      <div className="space-y-4">
       <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm text-blue-700 mb-2">
         Please contact us directly for a final international moving quote.
       </div>
@@ -159,6 +172,7 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
       >
         {submitting ? <><Loader2 className="w-4 h-4 animate-spin" />Submitting…</> : "Submit Enquiry"}
       </button>
+      </div>
     </div>
   );
 }
