@@ -6,6 +6,9 @@ import HomePage from "@/pages/HomePage";
 import BookingPage from "@/pages/BookingPage";
 import TermsPage from "@/pages/TermsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
+import BookingPolicyPage from "@/pages/BookingPolicyPage";
+import CancellationPolicyPage from "@/pages/CancellationPolicyPage";
+import PricingGuidePage from "@/pages/PricingGuidePage";
 import SecureBookingPage from "@/pages/SecureBookingPage";
 import AdminBookingsPage from "@/pages/AdminBookingsPage";
 import PayRedirectPage from "@/pages/PayRedirectPage";
@@ -24,6 +27,9 @@ function Router() {
         <Route path="/book/:service" component={BookingPage} />
         <Route path="/terms" component={TermsPage} />
         <Route path="/privacy" component={PrivacyPage} />
+        <Route path="/booking-policy" component={BookingPolicyPage} />
+        <Route path="/cancellation-policy" component={CancellationPolicyPage} />
+        <Route path="/pricing-guide" component={PricingGuidePage} />
         <Route path="/secure-booking" component={SecureBookingPage} />
         <Route path="/admin/bookings" component={AdminBookingsPage} />
         <Route path="/pay/:ref" component={PayRedirectPage} />

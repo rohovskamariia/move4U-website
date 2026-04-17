@@ -1,0 +1,156 @@
+Update the existing homepage professionally, but do NOT create duplicate sections.
+
+Do NOT change the hero slider.
+
+If a section already exists, update and improve it instead of adding a second one.
+
+1. TOP HEADER / TOP BAR
+
+The current top panel/header area looks too plain and unfinished.
+Please improve it professionally.
+
+Requirements:
+- Make the header feel more premium and structured
+- Keep the logo on the left
+- Keep navigation clean and balanced
+- Make buttons look more polished
+- Improve spacing and alignment
+- Make the whole top area feel less empty and less basic
+
+For the thin top bar / purple strip:
+- redesign it so it looks modern and polished
+- do NOT use a flat plain purple only
+- use a nicer gradient / ombre purple style
+- keep it subtle and professional
+
+Use short trust/info text only, without prices:
+- Same-day service available
+- Fast & reliable across London
+- Available 7 days a week
+
+If this top bar already exists, improve it instead of creating another one.
+
+2. SERVICES SECTION
+
+Update the existing services section.
+
+- Keep exactly 6 service cards
+- Remove any "Small Move" or duplicate services
+- Use correct names (use "Moving", not "Move")
+
+Services:
+
+House Moving  
+From £35/hour  
+Reliable home moving service for flats, houses and full property moves across London.
+
+Waste Removal  
+From £60  
+Fast and affordable waste collection. Ideal for furniture, bags and general rubbish.
+
+Single Item Delivery  
+From £15  
+Quick delivery for furniture and individual items. Final price depends on distance and stairs.
+
+Commercial Moving  
+From £45/hour  
+Professional office and business relocation with flexible scheduling.
+
+International Moving  
+Custom pricing  
+Moving across the UK and Europe. Contact us for a personalised quote.
+
+Custom Request  
+Contact us  
+Have a special request? We will recommend the best solution for your job.
+
+Layout:
+- 2 rows, 3 cards
+- clean spacing
+- modern card style
+
+3. HOW IT WORKS SECTION
+
+If this section already exists, update it.
+If not, add it below Services.
+
+Title:
+How It Works
+
+Steps:
+
+1. Get a Quote  
+Tell us what you need and get a quick estimate.
+
+2. Choose Your Time  
+Pick a date and time that works for you.
+
+3. Confirm Booking  
+We confirm your booking and may require a small deposit.
+
+4. We Get It Done  
+Our team arrives and completes the job professionally.
+
+4. WHY CHOOSE US
+
+If exists, update it.
+If not, add a simple clean trust section.
+
+Use:
+- Reliable and experienced team
+- Transparent pricing
+- Fast response
+- Flexible booking
+
+5. REVIEWS SECTION
+
+Do NOT create a duplicate if reviews already exist.
+
+Update the existing reviews section to make it more professional:
+- card-style layout
+- star ratings
+- better spacing
+- cleaner typography
+- customer names visible
+
+Title:
+What Our Customers Say
+
+6. CONTACT SECTION
+
+Update the existing contact section.
+
+Use these labels:
+- Call Us
+- WhatsApp Us
+- Viber Us
+- Email Us
+
+Make WhatsApp the main primary button.
+
+7. FOOTER
+
+Update the existing footer only.
+
+Make sure it includes:
+- Services
+- Pricing
+- Contact
+- Terms & Conditions
+- Privacy Policy
+- Booking Policy
+- Cancellation Policy
+- Pricing Guide
+
+Do NOT duplicate the footer.
+
+8. GENERAL RULES
+
+- Do NOT create duplicate sections
+- Only improve existing structure
+- Keep design clean, modern and professional
+- Improve spacing and readability
+- Make the homepage feel more polished and less template-like
+
+Goal:
+Make the homepage feel like a professional moving service business website, especially improving the top panel/header area which currently feels too plain.

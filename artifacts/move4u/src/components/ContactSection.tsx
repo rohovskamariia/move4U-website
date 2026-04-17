@@ -1,79 +1,88 @@
-import { Phone, Mail, MessageCircle } from "lucide-react";
+import { Phone, Mail, MessageCircle, Send } from "lucide-react";
 import { CONTACT } from "@/data/constants";
 
 // Edit contact details in src/data/constants.ts
 export default function ContactSection() {
   const waHref = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(CONTACT.whatsappDefaultMessage)}`;
+  const viberHref = `viber://chat?number=${encodeURIComponent(CONTACT.viber)}`;
 
   return (
-    <section id="contact" className="py-16 bg-white">
+    <section id="contact" className="py-20 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">Get in Touch</h2>
+        <div className="text-center mb-12">
+          <p className="text-xs font-semibold tracking-widest text-purple-700 mb-2">CONTACT</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Get in Touch</h2>
           <p className="text-gray-500 text-sm sm:text-base">
-            Ready to book or have a question? Contact us any time.
+            Ready to book or have a question? Reach us any time.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-3xl mx-auto">
-          {/* Driver */}
-          <div className="bg-purple-50 border border-purple-100 rounded-xl p-6 text-center">
-            <div className="bg-purple-700 text-white w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Phone className="w-5 h-5" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
+          {/* WhatsApp — primary */}
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl p-6 text-center hover:shadow-lg hover:-translate-y-1 transition-all group"
+            data-testid="contact-whatsapp"
+          >
+            <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-white/30 transition-colors">
+              <MessageCircle className="w-6 h-6" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-1 text-sm">Driver</h3>
-            <p className="text-gray-500 text-xs mb-4">{CONTACT.driverDisplay}</p>
-            <div className="flex flex-col gap-2">
-              <a
-                href={`tel:${CONTACT.driver}`}
-                className="text-xs font-semibold text-white bg-purple-700 py-2 px-3 rounded-lg hover:bg-purple-800 transition-colors"
-                data-testid="contact-call-driver"
-              >
-                Call Driver
-              </a>
-              <a
-                href={waHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs font-semibold text-green-700 border border-green-200 py-2 px-3 rounded-lg hover:bg-green-50 transition-colors"
-                data-testid="contact-whatsapp"
-              >
-                WhatsApp Us
-              </a>
-            </div>
-          </div>
+            <h3 className="font-bold text-white mb-1">WhatsApp Us</h3>
+            <p className="text-green-50 text-xs mb-4">Fastest reply</p>
+            <span className="inline-block text-xs font-semibold bg-white text-green-700 py-2 px-4 rounded-full">
+              Open WhatsApp
+            </span>
+          </a>
 
-          {/* Support */}
-          <div className="bg-purple-50 border border-purple-100 rounded-xl p-6 text-center">
-            <div className="bg-purple-700 text-white w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <MessageCircle className="w-5 h-5" />
+          {/* Call */}
+          <a
+            href={`tel:${CONTACT.driver}`}
+            className="bg-purple-50 border border-purple-100 rounded-2xl p-6 text-center hover:shadow-md hover:border-purple-300 hover:-translate-y-1 transition-all group"
+            data-testid="contact-call-driver"
+          >
+            <div className="bg-purple-700 text-white w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-800 transition-colors">
+              <Phone className="w-6 h-6" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-1 text-sm">Support / Admin</h3>
-            <p className="text-gray-500 text-xs mb-4">{CONTACT.supportDisplay}</p>
-            <a
-              href={`tel:${CONTACT.support}`}
-              className="block text-xs font-semibold text-white bg-purple-700 py-2 px-3 rounded-lg hover:bg-purple-800 transition-colors"
-              data-testid="contact-support-line"
-            >
-              Support Line
-            </a>
-          </div>
+            <h3 className="font-bold text-gray-900 mb-1">Call Us</h3>
+            <p className="text-gray-500 text-xs mb-4">{CONTACT.driverDisplay}</p>
+            <span className="inline-block text-xs font-semibold bg-purple-700 text-white py-2 px-4 rounded-full">
+              Call Now
+            </span>
+          </a>
+
+          {/* Viber */}
+          <a
+            href={viberHref}
+            className="bg-purple-50 border border-purple-100 rounded-2xl p-6 text-center hover:shadow-md hover:border-purple-300 hover:-translate-y-1 transition-all group"
+            data-testid="contact-viber"
+          >
+            <div className="bg-[#7360f2] text-white w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-[#5d4ad9] transition-colors">
+              <Send className="w-6 h-6" />
+            </div>
+            <h3 className="font-bold text-gray-900 mb-1">Viber Us</h3>
+            <p className="text-gray-500 text-xs mb-4">{CONTACT.driverDisplay}</p>
+            <span className="inline-block text-xs font-semibold bg-[#7360f2] text-white py-2 px-4 rounded-full">
+              Open Viber
+            </span>
+          </a>
 
           {/* Email */}
-          <div className="bg-purple-50 border border-purple-100 rounded-xl p-6 text-center">
-            <div className="bg-purple-700 text-white w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Mail className="w-5 h-5" />
+          <a
+            href={`mailto:${CONTACT.email}`}
+            className="bg-purple-50 border border-purple-100 rounded-2xl p-6 text-center hover:shadow-md hover:border-purple-300 hover:-translate-y-1 transition-all group"
+            data-testid="contact-email"
+          >
+            <div className="bg-purple-700 text-white w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-800 transition-colors">
+              <Mail className="w-6 h-6" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-1 text-sm">Email</h3>
+            <h3 className="font-bold text-gray-900 mb-1">Email Us</h3>
             <p className="text-gray-500 text-xs mb-4 break-all">{CONTACT.email}</p>
-            <a
-              href={`mailto:${CONTACT.email}`}
-              className="block text-xs font-semibold text-white bg-purple-700 py-2 px-3 rounded-lg hover:bg-purple-800 transition-colors"
-              data-testid="contact-email"
-            >
-              Email Us
-            </a>
-          </div>
+            <span className="inline-block text-xs font-semibold bg-purple-700 text-white py-2 px-4 rounded-full">
+              Send Email
+            </span>
+          </a>
         </div>
       </div>
     </section>

@@ -11,6 +11,7 @@ export const CONTACT = {
   email: "move4foru@gmail.com",
   whatsapp: "447888355523",
   whatsappDefaultMessage: "Hi Move4U, I need help with my move.",
+  viber: "+447888355523", // Viber uses the same phone as the driver line
 };
 
 // HOMEPAGE SLIDER CONTENT — Edit slide text here
@@ -78,47 +79,48 @@ export const SLIDES: Slide[] = [
 ];
 
 // SERVICE DESCRIPTIONS — Edit homepage service card descriptions here
+// Exactly 6 cards (2 rows of 3). Use "Moving" not "Move".
 export const SERVICES = [
   {
     id: "house-move",
-    title: "House Move",
-    description: "Reliable home moving service across London and surrounding areas.",
+    title: "House Moving",
+    price: "From £35/hour",
+    description: "Reliable home moving service for flats, houses and full property moves across London.",
     icon: "Home",
   },
   {
     id: "waste-removal",
     title: "Waste Removal",
-    description: "Fast and affordable waste collection and disposal.",
+    price: "From £60",
+    description: "Fast and affordable waste collection. Ideal for furniture, bags and general rubbish.",
     icon: "Trash2",
-  },
-  {
-    id: "commercial-move",
-    title: "Commercial Move",
-    description: "Business and office moving service with flexible booking.",
-    icon: "Building2",
   },
   {
     id: "single-item",
     title: "Single Item Delivery",
-    description: "Quick delivery for furniture, appliances, and individual items.",
+    price: "From £15",
+    description: "Quick delivery for furniture and individual items. Final price depends on distance and stairs.",
     icon: "Package",
   },
   {
-    id: "small-move",
-    title: "Small Move",
-    description: "Ideal for lighter moves, boxes and smaller jobs.",
-    icon: "PackageOpen",
+    id: "commercial-move",
+    title: "Commercial Moving",
+    price: "From £45/hour",
+    description: "Professional office and business relocation with flexible scheduling.",
+    icon: "Building2",
   },
   {
     id: "international",
     title: "International Moving",
-    description: "Moving enquiries from the UK to Europe.",
+    price: "Custom pricing",
+    description: "Moving across the UK and Europe. Contact us for a personalised quote.",
     icon: "Globe",
   },
   {
     id: "something-else",
-    title: "Something Else",
-    description: "Need something different? Send us a custom enquiry.",
+    title: "Custom Request",
+    price: "Contact us",
+    description: "Have a special request? We will recommend the best solution for your job.",
     icon: "HelpCircle",
   },
 ];
