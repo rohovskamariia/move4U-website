@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Link } from "wouter";
-import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2, ChevronLeft, Info } from "lucide-react";
+import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2, ChevronLeft, Info, Plus, Minus } from "lucide-react";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS } from "@/data/constants";
 import { submitBooking, uploadPhotos } from "@/lib/api";
+import WasteSizeModal from "@/components/WasteSizeModal";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   BedDouble, Refrigerator, Circle, Armchair, Chair: Armchair,
@@ -17,7 +18,8 @@ interface WasteRemovalFlowProps {
 // Edit extra item prices in src/data/constants.ts (WASTE_EXTRA_ITEMS)
 export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   const [selectedLoad, setSelectedLoad] = useState("");
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  /** Map of extra-item id → quantity. Quantity 0 = not selected. */
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [pickup, setPickup] = useState("");
   const [notes, setNotes] = useState("");
   const [photos, setPhotos] = useState<File[]>([]);
@@ -30,18 +32,25 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   const [bookingRef, setBookingRef] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [showGuide, setShowGuide] = useState(false);
 
-  const toggleItem = (id: string) => {
-    setSelectedItems((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
+  const setQty = (id: string, qty: number) => {
+    setQuantities((prev) => {
+      const next = { ...prev };
+      if (qty <= 0) delete next[id];
+      else next[id] = qty;
+      return next;
+    });
   };
 
   const loadPrice = WASTE_LOADS.find((l) => l.id === selectedLoad)?.price || 0;
-  const extrasTotal = selectedItems.reduce((sum, id) => {
-    const item = WASTE_EXTRA_ITEMS.find((i) => i.id === id);
-    return sum + (item?.price || 0);
-  }, 0);
+  const selectedExtras = Object.entries(quantities)
+    .filter(([, q]) => q > 0)
+    .map(([id, qty]) => {
+      const item = WASTE_EXTRA_ITEMS.find((i) => i.id === id);
+      return { id, qty, label: item?.label ?? id, price: item?.price ?? 0 };
+    });
+  const extrasTotal = selectedExtras.reduce((sum, e) => sum + e.price * e.qty, 0);
   const estimatedTotal = loadPrice + extrasTotal;
 
   // Per-step back navigation
@@ -143,7 +152,9 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
               setSubmitError("");
               try {
                 const loadLabel = WASTE_LOADS.find((l) => l.id === selectedLoad)?.label ?? selectedLoad;
-                const extraLabels = selectedItems.map((id) => WASTE_EXTRA_ITEMS.find((i) => i.id === id)?.label ?? id).join(", ");
+                const extraLabels = selectedExtras
+                  .map((e) => `${e.label} × ${e.qty} (£${e.price * e.qty})`)
+                  .join(", ");
                 // Upload photos first, then submit with their serving URLs
                 const photoUrls = await uploadPhotos(photos);
                 const result = await submitBooking({
@@ -197,10 +208,10 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
             { label: "Pickup address", value: pickup || "—" },
             { label: "Load size", value: WASTE_LOADS.find((l) => l.id === selectedLoad)?.label || "—" },
             { label: "Load price", value: `£${loadPrice}` },
-            ...selectedItems.map((id) => {
-              const item = WASTE_EXTRA_ITEMS.find((i) => i.id === id);
-              return { label: item?.label || id, value: `+£${item?.price || 0}` };
-            }),
+            ...selectedExtras.map((e) => ({
+              label: `${e.label} × ${e.qty}`,
+              value: `+£${e.price * e.qty}`,
+            })),
           ].map((row, i) => (
             <div key={i} className={`flex justify-between px-4 py-2.5 text-sm ${i % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
               <span className="text-gray-500">{row.label}</span>
@@ -228,91 +239,132 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
     <div>
       <Header />
       <div className="space-y-6">
-      {/* Pickup address */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Pickup address</label>
-        <input type="text" value={pickup} onChange={(e) => setPickup(e.target.value)} placeholder="Collection address..." className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" />
-      </div>
-
-      {/* Load size */}
-      <div>
-        <div className="flex items-baseline justify-between mb-2 gap-3 flex-wrap">
-          <h3 className="text-sm font-semibold text-gray-900">Select load size</h3>
-          <Link
-            href="/waste-guide"
-            className="text-xs font-medium text-purple-700 hover:text-purple-900 underline underline-offset-2 inline-flex items-center gap-1"
-            data-testid="waste-guide-link"
-          >
-            <Info className="w-3.5 h-3.5" />
-            View load sizes &amp; pictures
-          </Link>
+        {/* Pickup address */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Pickup address</label>
+          <AddressAutocomplete
+            value={pickup}
+            onChange={setPickup}
+            placeholder="Collection address or postcode..."
+            testId="waste-pickup-input"
+          />
         </div>
-        <p className="text-xs text-gray-500 mb-3">Not sure what size you need? View load sizes &amp; pictures.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {WASTE_LOADS.map((load) => (
+
+        {/* Load size */}
+        <div>
+          <div className="flex items-baseline justify-between mb-2 gap-3 flex-wrap">
+            <h3 className="text-sm font-semibold text-gray-900">Select load size</h3>
             <button
-              key={load.id}
-              onClick={() => setSelectedLoad(load.id)}
-              className={`text-center py-3 px-2 border-2 rounded-xl transition-all text-sm ${selectedLoad === load.id ? "border-purple-700 bg-purple-50" : "border-gray-100 bg-white hover:border-purple-300"}`}
-              data-testid={`waste-load-${load.id}`}
+              type="button"
+              onClick={() => setShowGuide(true)}
+              className="text-xs font-medium text-purple-700 hover:text-purple-900 underline underline-offset-2 inline-flex items-center gap-1"
+              data-testid="waste-guide-link"
             >
-              <p className="font-semibold text-gray-900 text-xs">{load.label}</p>
-              <p className={`text-sm font-bold mt-0.5 ${selectedLoad === load.id ? "text-purple-700" : "text-gray-700"}`}>£{load.price}{load.id === "extra_large" ? "+" : ""}</p>
+              <Info className="w-3.5 h-3.5" />
+              View load sizes &amp; pictures
             </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Extra items */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-1">Do you have any of these items?</h3>
-        <p className="text-xs text-gray-500 mb-3">Select any additional items — charges are added automatically.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {WASTE_EXTRA_ITEMS.map((item) => {
-            const Icon = iconMap[item.icon] || Circle;
-            const isSelected = selectedItems.includes(item.id);
-            return (
+          </div>
+          <p className="text-xs text-gray-500 mb-3">Not sure what size you need? View load sizes &amp; pictures.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {WASTE_LOADS.map((load) => (
               <button
-                key={item.id}
-                onClick={() => toggleItem(item.id)}
-                className={`text-center py-3 px-2 border-2 rounded-xl transition-all ${isSelected ? "border-purple-700 bg-purple-50" : "border-gray-100 bg-white hover:border-purple-300"}`}
-                data-testid={`waste-item-${item.id}`}
+                key={load.id}
+                onClick={() => setSelectedLoad(load.id)}
+                className={`text-center py-3 px-2 border-2 rounded-xl transition-all text-sm ${selectedLoad === load.id ? "border-purple-700 bg-purple-50" : "border-gray-100 bg-white hover:border-purple-300"}`}
+                data-testid={`waste-load-${load.id}`}
               >
-                <Icon className={`w-5 h-5 mx-auto mb-1 ${isSelected ? "text-purple-700" : "text-gray-400"}`} />
-                <p className="text-xs font-medium text-gray-900">{item.label}</p>
-                <p className={`text-sm font-bold mt-0.5 ${isSelected ? "text-purple-700" : "text-gray-700"}`}>+£{item.price}</p>
+                <p className="font-semibold text-gray-900 text-xs">{load.label}</p>
+                <p className={`text-sm font-bold mt-0.5 ${selectedLoad === load.id ? "text-purple-700" : "text-gray-700"}`}>{load.displayPrice}</p>
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
+
+        {/* Extra items with quantity selector */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 mb-1">Do you have any of these items?</h3>
+          <p className="text-xs text-gray-500 mb-3">Use + and − to set how many — charges update automatically.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {WASTE_EXTRA_ITEMS.map((item) => {
+              const Icon = iconMap[item.icon] || Circle;
+              const qty = quantities[item.id] || 0;
+              const isSelected = qty > 0;
+              return (
+                <div
+                  key={item.id}
+                  className={`flex items-center justify-between gap-3 py-3 px-3 border-2 rounded-xl transition-all ${isSelected ? "border-purple-700 bg-purple-50" : "border-gray-100 bg-white"}`}
+                  data-testid={`waste-item-${item.id}`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Icon className={`w-5 h-5 flex-shrink-0 ${isSelected ? "text-purple-700" : "text-gray-400"}`} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{item.label}</p>
+                      <p className={`text-xs font-bold ${isSelected ? "text-purple-700" : "text-gray-700"}`}>
+                        +£{item.price}{qty > 1 ? ` × ${qty} = £${item.price * qty}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setQty(item.id, qty - 1)}
+                      disabled={qty === 0}
+                      className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                      aria-label={`Decrease ${item.label}`}
+                      data-testid={`waste-item-${item.id}-minus`}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span
+                      className="w-7 text-center text-sm font-semibold tabular-nums"
+                      data-testid={`waste-item-${item.id}-qty`}
+                    >
+                      {qty}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setQty(item.id, qty + 1)}
+                      className="w-8 h-8 rounded-lg border border-purple-200 bg-white flex items-center justify-center text-purple-700 hover:bg-purple-50"
+                      aria-label={`Increase ${item.label}`}
+                      data-testid={`waste-item-${item.id}-plus`}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Notes */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Notes <span className="text-gray-400 font-normal">(optional)</span></label>
+          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Any access details, timing, or special requirements..." className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none" />
+        </div>
+
+        {/* Photo upload */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">Attach photos <span className="text-gray-400 font-normal">(optional)</span></label>
+          <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl py-5 cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-colors">
+            <span className="text-sm text-gray-600">Attach photos (optional)</span>
+            <span className="text-xs text-gray-400 mt-1">Helps confirm pricing</span>
+            <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => setPhotos(Array.from(e.target.files || []))} />
+          </label>
+          {photos.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{photos.map((f, i) => <span key={i} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-lg">{f.name}</span>)}</div>}
+        </div>
+
+        <button
+          onClick={() => setStep("summary")}
+          disabled={!selectedLoad}
+          className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          data-testid="waste-continue"
+        >
+          See Summary
+        </button>
       </div>
 
-      {/* Notes */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Notes <span className="text-gray-400 font-normal">(optional)</span></label>
-        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Any access details, timing, or special requirements..." className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none" />
-      </div>
-
-      {/* Photo upload */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-1">Attach photos <span className="text-gray-400 font-normal">(optional)</span></label>
-        <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl py-5 cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-colors">
-          <span className="text-sm text-gray-600">Attach photos (optional)</span>
-          <span className="text-xs text-gray-400 mt-1">Helps confirm pricing</span>
-          <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => setPhotos(Array.from(e.target.files || []))} />
-        </label>
-        {photos.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{photos.map((f, i) => <span key={i} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-lg">{f.name}</span>)}</div>}
-      </div>
-
-      <button
-        onClick={() => setStep("summary")}
-        disabled={!selectedLoad}
-        className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        data-testid="waste-continue"
-      >
-        See Summary
-      </button>
-      </div>
+      {showGuide && <WasteSizeModal onClose={() => setShowGuide(false)} />}
     </div>
   );
 }

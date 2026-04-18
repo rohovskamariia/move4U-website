@@ -4,7 +4,6 @@ import { Link } from "wouter";
 import smallVan from "@assets/IMG_3410_1776508670556.jpeg";
 import mediumVan from "@assets/IMG_3409_1776508670556.jpeg";
 import largeVan from "@assets/IMG_3408_1776508670556.jpeg";
-import lutonVan from "@assets/IMG_3398_1776508670556.jpeg";
 
 interface VanInfo {
   name: string;
@@ -27,7 +26,7 @@ const VANS: VanInfo[] = [
       { label: "Seats (including driver)", value: "2" },
     ],
     image: smallVan,
-    scale: 0.55,
+    scale: 0.6,
   },
   {
     name: "Medium Van",
@@ -41,7 +40,7 @@ const VANS: VanInfo[] = [
       { label: "Seats (including driver)", value: "3" },
     ],
     image: mediumVan,
-    scale: 0.75,
+    scale: 0.78,
   },
   {
     name: "Large Van",
@@ -55,18 +54,6 @@ const VANS: VanInfo[] = [
       { label: "Seats (including driver)", value: "3" },
     ],
     image: largeVan,
-    scale: 0.92,
-  },
-  {
-    name: "Luton Van",
-    description:
-      "Suitable for 3-bedroom flat or house removals, heavy or large items, and office relocations. Please note: not all Luton vans are equipped with an electric tail lift.",
-    specs: [
-      { label: "Type", value: "Box-body Luton" },
-      { label: "Payload", value: "Up to ~1000kg" },
-      { label: "Seats (including driver)", value: "3" },
-    ],
-    image: lutonVan,
     scale: 1,
   },
 ];
@@ -100,7 +87,6 @@ export default function VanGuidePage() {
               className="border border-gray-100 rounded-2xl overflow-hidden bg-white shadow-sm"
               data-testid={`van-card-${van.name.toLowerCase().replace(/\s/g, "-")}`}
             >
-              {/* Uniform image frame: same aspect, white bg, identical padding, baseline-aligned via flex end */}
               <div className="bg-white border-b border-gray-100 aspect-[12/5] flex items-end justify-center px-6 pt-6 pb-4">
                 <img
                   src={van.image}

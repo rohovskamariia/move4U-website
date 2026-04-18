@@ -1,0 +1,151 @@
+Please carefully update the booking flow and guides. Some parts are currently incorrect and need to be fixed.
+
+IMPORTANT:
+- Do NOT redesign the site
+- Do NOT create new layouts
+- Keep the existing style and structure
+- Only improve functionality, replace images, and fix UX
+
+------------------------------------
+1. REMOVE LUTON VAN
+------------------------------------
+- Completely remove Luton Van from:
+  • van size selection step
+  • van size guide
+  • any booking logic
+- Keep only: Small / Medium / Large
+- Do not leave empty gaps or broken layout
+
+------------------------------------
+2. REPLACE IMAGES WITH HIGH-QUALITY ONES
+------------------------------------
+I uploaded new high-quality images.
+
+Please:
+
+- replace ALL waste removal images (green block trucks) with the new ones
+- ensure images are sharp and not blurry
+- keep same layout, spacing, and proportions
+- do NOT stretch or distort images
+- keep consistent sizing across all cards and guides
+
+------------------------------------
+3. VAN SIZE GUIDE → MUST OPEN AS POPUP
+------------------------------------
+Currently behaviour is wrong.
+
+When user clicks:
+- “See our size guide”
+- “View van sizes & pictures”
+
+It must:
+- open as a popup / modal window (NOT full page redirect)
+- display the SAME existing Van Size Guide content
+- show real images (not icons)
+- be scrollable inside the popup
+- have a close button (X)
+
+When user closes popup:
+- they return to SAME booking step
+- all selections must remain (no reset)
+
+------------------------------------
+4. WASTE REMOVAL GUIDE → SAME POPUP
+------------------------------------
+Apply EXACT same behaviour:
+
+- open inside popup/modal
+- NOT redirect to separate page
+- show existing Waste Removal guide content
+- use new high-quality images
+- scrollable inside popup
+- close returns to same booking step
+
+------------------------------------
+5. BACK NAVIGATION (VERY IMPORTANT)
+------------------------------------
+Navigation is currently not user-friendly.
+
+Fix:
+
+A) In booking steps:
+- add back arrow (←)
+- goes to previous step
+- keeps all entered data
+
+B) On service pages:
+- add “Back to home” button/link
+- visible and easy to use
+- user should NOT rely only on clicking logo
+
+C) In popup:
+- close button (X)
+- returns user back into booking
+
+------------------------------------
+6. KEEP BOOKING STATE (CRITICAL)
+------------------------------------
+When user:
+- opens guide popup
+- closes it
+- goes back
+
+They must keep:
+- selected service
+- selected van
+- selected extras
+- entered data
+
+NO reset allowed.
+
+------------------------------------
+7. MULTIPLE ITEM QUANTITIES
+------------------------------------
+Fix extras selection.
+
+User must be able to choose quantities:
+- 2 mattresses
+- 3 chairs
+- etc.
+
+Add:
+- + / – buttons or quantity selector
+- automatic price update
+- correct total calculation
+
+------------------------------------
+8. ADDRESS AUTOCOMPLETE
+------------------------------------
+Add autocomplete for:
+- pickup address
+- drop-off address
+
+Requirements:
+- suggestions while typing
+- UK / London addresses
+- autofill when selected
+- clean UX
+
+------------------------------------
+
+------------------------------------
+10. GUIDES INSIDE BOOKING FLOW
+------------------------------------
+User must NOT search guides elsewhere.
+
+Guides must:
+- open directly during booking
+- appear as popup
+- allow user to quickly view and return
+
+------------------------------------
+FINAL GOAL
+------------------------------------
+- Clean and professional look
+- High-quality images everywhere
+- Smooth booking flow
+- Easy navigation (back + home)
+- Guides accessible inside booking
+- No data loss during navigation
+
+Keep everything simple, clean, and consistent.

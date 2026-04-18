@@ -170,14 +170,27 @@ export const STAIR_CHARGES: Record<string, number> = {
 };
 
 // WASTE REMOVAL LOAD PRICES — Edit waste removal pricing here
-export const WASTE_LOADS = [
-  { id: "minimum", label: "Minimum Load", price: 60 },
-  { id: "quarter", label: "1/4 Load", price: 120 },
-  { id: "third", label: "1/3 Load", price: 150 },
-  { id: "half", label: "1/2 Load", price: 200 },
-  { id: "three_quarter", label: "3/4 Load", price: 250 },
-  { id: "full", label: "Full Load", price: 350 },
-  { id: "extra_large", label: "Extra Large", price: 400 },
+export type WasteLoad = {
+  id: string;
+  label: string;
+  /** Numeric price used for total calculation */
+  price: number;
+  /** Customer-facing price string (may include ranges like "£350–400" or "£400+") */
+  displayPrice: string;
+  labour?: string;
+  cubicYards?: string;
+  maxWeight?: string;
+  equivalent?: string;
+};
+
+export const WASTE_LOADS: WasteLoad[] = [
+  { id: "minimum",       label: "Minimum Load",     price: 60,  displayPrice: "£60",      labour: "10 mins", cubicYards: "1.5",  maxWeight: "100–150kg", equivalent: "8 bin bags" },
+  { id: "quarter",       label: "1/4 Load",         price: 120, displayPrice: "£120",     labour: "20 mins", cubicYards: "3.5",  maxWeight: "200–250kg", equivalent: "20 bin bags" },
+  { id: "third",         label: "1/3 Load",         price: 150, displayPrice: "£150",     labour: "30 mins", cubicYards: "5.25", maxWeight: "250–300kg", equivalent: "30 bin bags" },
+  { id: "half",          label: "1/2 Load",         price: 200, displayPrice: "£200",     labour: "40 mins", cubicYards: "7",    maxWeight: "350–500kg", equivalent: "40 bin bags" },
+  { id: "three_quarter", label: "3/4 Load",         price: 250, displayPrice: "£250",     labour: "50 mins", cubicYards: "10.5", maxWeight: "500–650kg", equivalent: "60 bin bags" },
+  { id: "full",          label: "Full Load",        price: 350, displayPrice: "£350–400",                                        maxWeight: "1000kg" },
+  { id: "extra_large",   label: "Extra Large Load", price: 400, displayPrice: "£400+",                                           maxWeight: "up to 2000kg (on request)" },
 ];
 
 // WASTE REMOVAL EXTRA ITEMS — Edit extra item prices here

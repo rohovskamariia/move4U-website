@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 interface AddressStepProps {
   label: string;
@@ -63,13 +64,11 @@ export default function AddressStep({
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</label>
-        <input
-          type="text"
+        <AddressAutocomplete
           value={addressValue}
-          onChange={(e) => onAddressChange(e.target.value)}
-          placeholder="Start typing address..."
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          data-testid={`address-input-${label.toLowerCase().replace(/\s/g, "-")}`}
+          onChange={onAddressChange}
+          placeholder="Start typing postcode or address..."
+          testId={`address-input-${label.toLowerCase().replace(/\s/g, "-")}`}
         />
       </div>
 
