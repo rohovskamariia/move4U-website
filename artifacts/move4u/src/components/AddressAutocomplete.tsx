@@ -155,9 +155,15 @@ export default function AddressAutocomplete({
 
   const [enhanced, setEnhanced] = useState(false);
   const [failed, setFailed] = useState(false);
+  // When a saved address already exists (e.g. user navigated back to this
+  // step), show a read-only summary card instead of the autocomplete element.
+  // Google's <gmp-place-autocomplete> owns its internal input state and does
+  // not reliably accept programmatic prefilling, so we show a "Change" action
+  // to reopen the autocomplete when the user wants to edit the address.
+  const [editing, setEditing] = useState(!value);
 
   useEffect(() => {
-    if (!hostRef.current) return;
+    if (!hostRef.current || !editing) return;
     let cancelled = false;
     let element: HTMLElement | null = null;
 
@@ -183,19 +189,6 @@ export default function AddressAutocomplete({
           el.setAttribute("data-testid", testId);
         }
         el.style.width = "100%";
-
-        // Pre-fill the inner input if this component mounts with an existing
-        // value (e.g. user navigated back to a previously-completed step).
-        if (value) {
-          const setInitial = () => {
-            const inner = el.querySelector("input");
-            if (inner instanceof HTMLInputElement && !inner.value) {
-              inner.value = value;
-            }
-          };
-          setTimeout(setInitial, 50);
-          setTimeout(setInitial, 250);
-        }
 
         const handleSelect = async (e: Event) => {
           const evt = e as GmpSelectEvent;
@@ -241,11 +234,41 @@ export default function AddressAutocomplete({
         }
       }
     };
-    // We intentionally only run once per mount. Parents that need a fresh
-    // autocomplete (e.g. switching between pickup and drop-off steps) should
-    // pass a unique `key` prop to remount the component.
+    // Re-run when entering edit mode so the Google web component is mounted
+    // when the user clicks "Change" on a previously-saved address. Parents
+    // that need a fresh autocomplete (e.g. switching between pickup and
+    // drop-off steps) should pass a unique `key` prop to remount the
+    // component.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [editing]);
+
+  // If a saved address exists and we're not in editing mode, render a
+  // read-only summary card with a "Change" button. This guarantees that
+  // navigating back to a previously-completed step always shows the saved
+  // address — without fighting Google's web component over input ownership.
+  if (!editing && value) {
+    return (
+      <div
+        className="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 flex items-start justify-between gap-3"
+        data-testid={testId}
+      >
+        <div className="text-sm text-gray-900 leading-snug break-words flex-1">
+          {value}
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            onChange("");
+            setEditing(true);
+          }}
+          className="text-xs font-medium text-purple-700 hover:text-purple-900 underline underline-offset-2 shrink-0"
+          data-testid={testId ? `${testId}-change` : undefined}
+        >
+          Change
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
