@@ -96,6 +96,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
       case "pickup":
         return (
           <AddressStep
+            key="pickup-step"
             label="Pickup address"
             addressValue={pickupAddress}
             onAddressChange={setPickupAddress}
@@ -111,6 +112,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
       case "dropoff":
         return (
           <AddressStep
+            key="dropoff-step"
             label="Drop-off address"
             addressValue={dropoffAddress}
             onAddressChange={setDropoffAddress}

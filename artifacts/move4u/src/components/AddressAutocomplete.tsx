@@ -7,11 +7,18 @@ interface AddressAutocompleteProps {
   testId?: string;
 }
 
+interface AddressComponent {
+  longText?: string;
+  shortText?: string;
+  types?: string[];
+}
+
 interface PlaceLike {
   formattedAddress?: string;
   displayName?: string;
+  addressComponents?: AddressComponent[];
   fetchFields: (opts: { fields: string[] }) => Promise<unknown>;
-  toJSON: () => Record<string, unknown>;
+  toJSON?: () => Record<string, unknown>;
 }
 
 interface PlacePrediction {
@@ -19,12 +26,19 @@ interface PlacePrediction {
 }
 
 interface GmpSelectEvent extends Event {
-  placePrediction: PlacePrediction;
+  placePrediction?: PlacePrediction;
+  place?: PlaceLike;
+}
+
+interface LatLngLiteral {
+  lat: number;
+  lng: number;
 }
 
 interface PlaceAutocompleteElementOptions {
   includedRegionCodes?: string[];
   includedPrimaryTypes?: string[];
+  locationBias?: { north: number; south: number; east: number; west: number } | LatLngLiteral;
 }
 
 interface PlaceAutocompleteElementCtor {
@@ -50,6 +64,14 @@ declare global {
 const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY as
   | string
   | undefined;
+
+/** Greater London bounding box — used to bias suggestions toward London first. */
+const LONDON_BIAS = {
+  north: 51.6919,
+  south: 51.2868,
+  east: 0.3340,
+  west: -0.5103,
+};
 
 /** Load Google Maps JS (with places library) once across the whole app. */
 function loadGoogleMaps(): Promise<void> {
@@ -84,14 +106,41 @@ function loadGoogleMaps(): Promise<void> {
   return window.__movefourGmapsLoader;
 }
 
+/** Pull a single component value out of Google's address_components array. */
+function pick(components: AddressComponent[] | undefined, type: string): string {
+  if (!components) return "";
+  const c = components.find((x) => x.types?.includes(type));
+  return c?.longText || c?.shortText || "";
+}
+
+/** Build a clean full UK address from Place data, falling back to formattedAddress. */
+function buildFullAddress(place: PlaceLike): string {
+  const components = place.addressComponents;
+  if (components && components.length) {
+    const streetNumber = pick(components, "street_number");
+    const route = pick(components, "route");
+    const postalTown =
+      pick(components, "postal_town") ||
+      pick(components, "locality") ||
+      pick(components, "administrative_area_level_2");
+    const postcode = pick(components, "postal_code");
+    const country = pick(components, "country") || "UK";
+    const street = [streetNumber, route].filter(Boolean).join(" ");
+    const cityPostcode = [postalTown, postcode].filter(Boolean).join(" ");
+    const parts = [street, cityPostcode, country].filter(Boolean);
+    if (parts.length) return parts.join(", ");
+  }
+  return place.formattedAddress || place.displayName || "";
+}
+
 /**
  * Google Places-powered UK address autocomplete using the modern
  * `PlaceAutocompleteElement` web component.
  *
- * The element is rendered inside a host div and styled via CSS variables to
- * match the rest of the form. Restricted to UK addresses. The browser-side
- * key is loaded from VITE_GOOGLE_PLACES_API_KEY — keep it referrer-restricted
- * in Google Cloud Console.
+ * Restricted to UK addresses, biased toward Greater London. On selection we
+ * fetch full Place details and build a full address string from
+ * `addressComponents` so the parent always receives a complete address such as
+ * `233 Alexandra Park Rd, London N22 7BJ, UK` — even for postcode-only searches.
  */
 export default function AddressAutocomplete({
   value,
@@ -103,8 +152,6 @@ export default function AddressAutocomplete({
   const fallbackInputRef = useRef<HTMLInputElement>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
-  const valueRef = useRef(value);
-  valueRef.current = value;
 
   const [enhanced, setEnhanced] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -113,17 +160,12 @@ export default function AddressAutocomplete({
     if (!hostRef.current) return;
     let cancelled = false;
     let element: HTMLElement | null = null;
-    let handler: ((e: Event) => void) | null = null;
-    let inputObserver: MutationObserver | null = null;
 
     (async () => {
       try {
-        console.log("[AA] start, key?", !!GOOGLE_KEY);
         await loadGoogleMaps();
-        console.log("[AA] maps ok, cancelled?", cancelled, "host?", !!hostRef.current);
         if (cancelled || !hostRef.current) return;
         const lib = window.google?.maps?.places;
-        console.log("[AA] places obj keys:", lib ? Object.keys(lib).slice(0,20).join(",") : "null");
         if (!lib?.PlaceAutocompleteElement) {
           throw new Error("PlaceAutocompleteElement not available");
         }
@@ -131,6 +173,7 @@ export default function AddressAutocomplete({
         const el = new lib.PlaceAutocompleteElement({
           includedRegionCodes: ["gb"],
           includedPrimaryTypes: ["geocode"],
+          locationBias: LONDON_BIAS,
         });
         element = el;
         if (placeholder) {
@@ -141,54 +184,55 @@ export default function AddressAutocomplete({
         }
         el.style.width = "100%";
 
-        // Mirror current value into the inner input once it's available, so
-        // navigation back to a step shows the previously chosen address.
-        const syncValue = () => {
-          const inner = el.querySelector("input");
-          if (inner instanceof HTMLInputElement && valueRef.current) {
-            inner.value = valueRef.current;
+        // Pre-fill the inner input if this component mounts with an existing
+        // value (e.g. user navigated back to a previously-completed step).
+        if (value) {
+          const setInitial = () => {
+            const inner = el.querySelector("input");
+            if (inner instanceof HTMLInputElement && !inner.value) {
+              inner.value = value;
+            }
+          };
+          setTimeout(setInitial, 50);
+          setTimeout(setInitial, 250);
+        }
+
+        const handleSelect = async (e: Event) => {
+          const evt = e as GmpSelectEvent;
+          const place = evt.placePrediction?.toPlace?.() ?? evt.place;
+          if (!place) return;
+          try {
+            await place.fetchFields({
+              fields: ["formattedAddress", "displayName", "addressComponents"],
+            });
+          } catch {
+            /* fall through to whatever fields are available */
+          }
+          const full = buildFullAddress(place);
+          if (full) {
+            onChangeRef.current(full);
+            // Mirror the full address back into the visible input so the user
+            // sees the complete selected address (Google sometimes only puts a
+            // shorter label after selection).
+            const inner = el.querySelector("input");
+            if (inner instanceof HTMLInputElement) {
+              inner.value = full;
+            }
           }
         };
-        inputObserver = new MutationObserver(() => syncValue());
-        inputObserver.observe(el, { childList: true, subtree: true });
-
-        handler = (e) => {
-          const evt = e as GmpSelectEvent;
-          const place = evt.placePrediction?.toPlace?.();
-          if (!place) return;
-          place
-            .fetchFields({ fields: ["formattedAddress", "displayName"] })
-            .then(() => {
-              const text = place.formattedAddress || place.displayName || "";
-              if (text) onChangeRef.current(text);
-            })
-            .catch(() => {
-              /* ignore */
-            });
-        };
-        el.addEventListener("gmp-select", handler);
-
-        // Fallback: also handle text input changes so the parent stays in sync
-        // even if the user types without picking a suggestion.
-        const inputHandler = (e: Event) => {
-          const target = e.target as HTMLInputElement;
-          if (target?.value != null) onChangeRef.current(target.value);
-        };
-        el.addEventListener("input", inputHandler);
+        // Different versions of the API fire slightly different event names.
+        el.addEventListener("gmp-select", handleSelect);
+        el.addEventListener("gmp-placeselect", handleSelect);
 
         hostRef.current.appendChild(el);
         setEnhanced(true);
-        // Initial sync after first mount
-        setTimeout(syncValue, 50);
-      } catch (err) {
-        console.warn("[AA] failed:", err);
+      } catch {
         if (!cancelled) setFailed(true);
       }
     })();
 
     return () => {
       cancelled = true;
-      if (inputObserver) inputObserver.disconnect();
       if (element) {
         try {
           element.remove();
@@ -197,6 +241,9 @@ export default function AddressAutocomplete({
         }
       }
     };
+    // We intentionally only run once per mount. Parents that need a fresh
+    // autocomplete (e.g. switching between pickup and drop-off steps) should
+    // pass a unique `key` prop to remount the component.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -213,7 +260,7 @@ export default function AddressAutocomplete({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder ?? "Start typing UK address..."}
+          placeholder={placeholder ?? "Start typing postcode or address..."}
           className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           data-testid={testId}
           autoComplete="off"

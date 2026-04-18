@@ -1,5 +1,6 @@
-import { Link } from "wouter";
+import { useState } from "react";
 import { HELP_PRICING, VAN_SIZES, STAIR_CHARGES } from "@/data/constants";
+import BookingPolicyModal from "@/components/BookingPolicyModal";
 
 interface SummaryStepProps {
   service: string;
@@ -65,6 +66,7 @@ export default function SummaryStep({
   notes,
   onContinue,
 }: SummaryStepProps) {
+  const [showPolicy, setShowPolicy] = useState(false);
   const pricing = HELP_PRICING[vanSize] || HELP_PRICING.medium;
   let hourlyRate = pricing.noHelp;
   if (helpOption === "driver-help") hourlyRate = pricing.driverHelp;
@@ -144,13 +146,14 @@ export default function SummaryStep({
           A 30% deposit is required to secure your booking. By continuing, you agree to our booking and cancellation terms.
         </p>
         <p className="text-xs text-gray-500 mt-2">Minimum booking time is 2 hours.</p>
-        <Link
-          href="/booking-policy"
-          className="text-xs text-purple-700 hover:text-purple-900 underline underline-offset-2 mt-1.5 inline-block"
+        <button
+          type="button"
+          onClick={() => setShowPolicy(true)}
+          className="text-xs text-purple-700 hover:text-purple-900 underline underline-offset-2 mt-1.5 inline-block bg-transparent border-0 p-0 cursor-pointer"
           data-testid="learn-more-booking-fees"
         >
           Learn more about booking fees
-        </Link>
+        </button>
       </div>
 
       <button
@@ -160,6 +163,8 @@ export default function SummaryStep({
       >
         Continue booking
       </button>
+
+      {showPolicy && <BookingPolicyModal onClose={() => setShowPolicy(false)} />}
     </div>
   );
 }
