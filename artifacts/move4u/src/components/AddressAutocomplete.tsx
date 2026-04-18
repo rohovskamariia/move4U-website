@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { Loader2, MapPin } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 interface AddressAutocompleteProps {
   value: string;
@@ -8,12 +7,79 @@ interface AddressAutocompleteProps {
   testId?: string;
 }
 
+interface PlaceResult {
+  formatted_address?: string;
+  name?: string;
+}
+
+interface PlacesAutocomplete {
+  addListener: (event: string, cb: () => void) => void;
+  getPlace: () => PlaceResult;
+}
+
+interface PlacesAutocompleteOptions {
+  componentRestrictions?: { country: string | string[] };
+  types?: string[];
+  fields?: string[];
+}
+
+declare global {
+  interface Window {
+    google?: {
+      maps: {
+        places: {
+          Autocomplete: new (
+            input: HTMLInputElement,
+            opts?: PlacesAutocompleteOptions,
+          ) => PlacesAutocomplete;
+        };
+        event?: {
+          clearInstanceListeners: (instance: unknown) => void;
+        };
+      };
+    };
+    __movefourGmapsLoader?: Promise<void>;
+  }
+}
+
+const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY as string | undefined;
+
+/** Load Google Maps JS once across the whole app. */
+function loadGoogleMaps(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  if (window.google?.maps?.places) return Promise.resolve();
+  if (window.__movefourGmapsLoader) return window.__movefourGmapsLoader;
+  if (!GOOGLE_KEY) {
+    return Promise.reject(new Error("Google Places API key missing"));
+  }
+  window.__movefourGmapsLoader = new Promise<void>((resolve, reject) => {
+    const existing = document.getElementById("movefour-gmaps-script") as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener("load", () => resolve());
+      existing.addEventListener("error", () => reject(new Error("Maps script error")));
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = "movefour-gmaps-script";
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
+      GOOGLE_KEY,
+    )}&libraries=places&v=weekly&loading=async`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Maps script error"));
+    document.head.appendChild(script);
+  });
+  return window.__movefourGmapsLoader;
+}
+
 /**
- * Lightweight UK address autocomplete.
+ * Google Places-powered UK address autocomplete.
  *
- * Uses postcodes.io (free, no key required, government-backed) to suggest UK
- * postcodes as the user types. Users can also free-type a full street address
- * — suggestions are an aid, not a hard validation.
+ * Renders a normal input that's enhanced by Google's Places library when the
+ * Maps JS API is available. Restricted to UK addresses. The browser-side key
+ * is loaded from VITE_GOOGLE_PLACES_API_KEY — keep it referrer-restricted in
+ * Google Cloud Console.
  */
 export default function AddressAutocomplete({
   value,
@@ -21,103 +87,63 @@ export default function AddressAutocomplete({
   placeholder,
   testId,
 }: AddressAutocompleteProps) {
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
-  // Debounced postcode autocomplete
   useEffect(() => {
-    const q = value.trim();
-    // Postcodes are 2+ chars and start with a letter
-    if (q.length < 2 || !/^[A-Za-z]/.test(q)) {
-      setSuggestions([]);
-      return;
-    }
+    if (!inputRef.current) return;
+    let acInstance: PlacesAutocomplete | null = null;
     let cancelled = false;
-    setLoading(true);
-    const handle = window.setTimeout(async () => {
-      try {
-        const res = await fetch(
-          `https://api.postcodes.io/postcodes/${encodeURIComponent(q)}/autocomplete`,
-        );
-        if (!res.ok) throw new Error("autocomplete failed");
-        const json = await res.json();
-        if (cancelled) return;
-        const list: string[] = Array.isArray(json?.result) ? json.result : [];
-        setSuggestions(list);
-      } catch {
-        if (!cancelled) setSuggestions([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }, 250);
+
+    loadGoogleMaps()
+      .then(() => {
+        if (cancelled || !inputRef.current || !window.google?.maps?.places) return;
+        const ac = new window.google.maps.places.Autocomplete(inputRef.current, {
+          componentRestrictions: { country: "gb" },
+          types: ["address"],
+          fields: ["formatted_address", "name"],
+        });
+        acInstance = ac;
+        ac.addListener("place_changed", () => {
+          const place = ac.getPlace();
+          const text = place.formatted_address || place.name || "";
+          if (text) onChangeRef.current(text);
+        });
+      })
+      .catch(() => {
+        // Silent — input still functions as a plain text input.
+      });
+
     return () => {
       cancelled = true;
-      window.clearTimeout(handle);
-    };
-  }, [value]);
-
-  // Close on outside click
-  useEffect(() => {
-    const onDocClick = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setOpen(false);
+      if (acInstance && window.google?.maps?.event) {
+        try {
+          window.google.maps.event.clearInstanceListeners(acInstance);
+        } catch {
+          /* ignore */
+        }
       }
     };
-    document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
-  const showDropdown = open && (suggestions.length > 0 || loading);
-
   return (
-    <div ref={wrapperRef} className="relative">
+    <div className="relative">
       <input
+        ref={inputRef}
         type="text"
         value={value}
-        onChange={(e) => {
-          onChange(e.target.value);
-          setOpen(true);
-        }}
-        onFocus={() => setOpen(true)}
-        placeholder={placeholder ?? "Start typing postcode or address..."}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder ?? "Start typing UK address..."}
         className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
         data-testid={testId}
         autoComplete="off"
       />
-      {showDropdown && (
-        <ul
-          className="absolute z-30 left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-64 overflow-y-auto"
-          data-testid={testId ? `${testId}-suggestions` : undefined}
-        >
-          {loading && suggestions.length === 0 && (
-            <li className="flex items-center gap-2 px-4 py-2.5 text-xs text-gray-500">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              Searching UK postcodes…
-            </li>
-          )}
-          {suggestions.map((s) => (
-            <li key={s}>
-              <button
-                type="button"
-                onClick={() => {
-                  onChange(s);
-                  setSuggestions([]);
-                  setOpen(false);
-                }}
-                className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700"
-              >
-                <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                {s}
-              </button>
-            </li>
-          ))}
-        </ul>
+      {!GOOGLE_KEY && (
+        <p className="text-[11px] text-amber-600 mt-1.5">
+          Address suggestions unavailable. Please enter the full address manually.
+        </p>
       )}
-      <p className="text-[11px] text-gray-400 mt-1.5">
-        UK postcode suggestions appear as you type. You can also enter a full street address.
-      </p>
     </div>
   );
 }
