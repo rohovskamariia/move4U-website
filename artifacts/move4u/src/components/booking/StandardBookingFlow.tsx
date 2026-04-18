@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { STAIR_CHARGES, HELP_PRICING, VAN_SIZES } from "@/data/constants";
 import { submitBooking, uploadPhotos } from "@/lib/api";
@@ -40,6 +40,12 @@ function getFloorCharge(floorKey: string) {
 // Edit steps and flow logic here
 export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }: StandardBookingFlowProps) {
   const [step, setStep] = useState<Step>("pickup");
+
+  // Scroll to top whenever the step changes so each step starts at the top
+  // of the page (instead of jumping to the bottom of the previous step).
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
 
   // Pickup state
   const [pickupAddress, setPickupAddress] = useState("");

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CheckCircle, Loader2 } from "lucide-react";
+import BookingTermsNotice from "./BookingTermsNotice";
 
 interface FinalDetailsStepProps {
   onSubmit: (data: {
@@ -20,11 +21,13 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [contactMethod, setContactMethod] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const canSubmit = date && timeWindow && name && phone && contactMethod;
+  const canSubmit =
+    date && timeWindow && name && phone && contactMethod && agreedToTerms;
 
   // Detect same-day or last-minute (within next 24h) bookings
   const isSameDayOrLastMinute = (() => {
@@ -183,6 +186,11 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
             {error}
           </p>
         )}
+
+        <BookingTermsNotice
+          agreed={agreedToTerms}
+          onAgreedChange={setAgreedToTerms}
+        />
 
         <button
           type="submit"

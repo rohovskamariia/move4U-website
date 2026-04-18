@@ -273,13 +273,28 @@ html {
   background-color: rgb(250 245 255);
 }
 
-/* PlaceAutocompleteElement (modern Google Places web component) styling */
+/* PlaceAutocompleteElement (modern Google Places web component) styling.
+ *
+ * Goals:
+ *  - Stable, non-jumpy input that matches our other form fields.
+ *  - Use a 16px input font on mobile to prevent iOS Safari from
+ *    auto-zooming when the field gains focus (zoom is what makes the
+ *    page "jump" and feel broken on phones).
+ *  - The suggestions dropdown should appear smoothly *under* the input
+ *    as a regular floating list — never as a fullscreen dark overlay.
+ */
+.movefour-place-host {
+  /* Establish a positioning context so any absolutely-positioned
+   * dropdown rendered by the web component anchors to this row. */
+  position: relative;
+  isolation: isolate;
+}
 .movefour-place-host gmp-place-autocomplete {
   --gmpx-color-surface: #ffffff;
   --gmpx-color-on-surface: #111827;
-  --gmpx-color-primary: #a855f7;
+  --gmpx-color-primary: #7e22ce;
   --gmpx-font-family-base: inherit;
-  --gmpx-font-size-base: 0.875rem;
+  --gmpx-font-size-base: 1rem;
   width: 100%;
   display: block;
 }
@@ -288,12 +303,50 @@ html {
   border: 1px solid rgb(229 231 235);
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
-  font-size: 0.875rem;
+  /* 16px on mobile so iOS Safari doesn't auto-zoom; smaller on tablets+ */
+  font-size: 16px;
+  line-height: 1.4;
   color: rgb(17 24 39);
   background: white;
   outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+@media (min-width: 640px) {
+  .movefour-place-host gmp-place-autocomplete::part(input) {
+    font-size: 0.9375rem;
+  }
 }
 .movefour-place-host gmp-place-autocomplete::part(input):focus {
   border-color: transparent;
   box-shadow: 0 0 0 2px rgb(168 85 247);
+}
+
+/* The Google web component renders its prediction list either as a
+ * native `.pac-container` (legacy) or as part of its shadow DOM. In
+ * either case keep it as a slim floating panel with a soft shadow —
+ * never a fullscreen modal-style overlay. */
+.movefour-place-host gmp-place-autocomplete::part(prediction-list),
+.movefour-place-host gmp-place-autocomplete::part(suggestion-list) {
+  background: #fff;
+  border: 1px solid rgb(229 231 235);
+  border-radius: 0.75rem;
+  box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.18);
+  margin-top: 6px;
+  padding: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.movefour-place-host gmp-place-autocomplete::part(prediction-item),
+.movefour-place-host gmp-place-autocomplete::part(suggestion-item) {
+  padding: 10px 12px;
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  color: rgb(31 41 55);
+  cursor: pointer;
+}
+.movefour-place-host gmp-place-autocomplete::part(prediction-item):hover,
+.movefour-place-host gmp-place-autocomplete::part(suggestion-item):hover {
+  background: rgb(250 245 255);
+  color: rgb(126 34 206);
 }

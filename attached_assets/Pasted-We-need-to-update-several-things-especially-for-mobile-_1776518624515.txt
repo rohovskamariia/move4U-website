@@ -1,0 +1,125 @@
+We need to update several things, especially for mobile UX and waste removal pricing.
+
+Please review carefully:
+
+---
+
+1. BOOKING POLICY + DEPOSIT (ALL SERVICES)
+
+Everything we implemented for House Moving must now apply to ALL services:
+
+- Waste Removal
+- Single Item Delivery
+- Commercial Moving
+- International Moving
+- Custom Request
+
+Booking policy must open as a modal (popup), not a new page.
+
+User must NOT lose progress.
+
+---
+
+Deposit message (same everywhere):
+
+"By submitting this form, you agree to our booking terms.
+A 30% deposit is required to secure your booking."
+
+Show ONLY at final step (before submit button).
+
+Add checkbox:
+"I agree to the booking terms"
+
+---
+
+2. WASTE REMOVAL PRICING (IMPORTANT UPDATE)
+
+We need to improve waste removal pricing logic.
+
+Add simple additional charges:
+
+- Stairs (no lift) → +£10
+- Difficult / restricted access → +£10
+
+Examples of restricted access:
+- long walking distance
+- no parking nearby
+- narrow access
+- upper floors / terrace
+
+Do NOT overcomplicate — keep it simple.
+
+Show clearly in summary:
+- base price
+- items
+- surcharges
+- total
+
+Add note:
+"Final price may vary depending on access and loading conditions."
+
+---
+
+3. MOBILE ADDRESS INPUT (CRITICAL ISSUE)
+
+Current behaviour is very bad on mobile:
+
+- screen jumps when typing
+- dark overlay appears (black screen style)
+- dropdown is hard to use
+- feels broken and confusing
+
+Fix:
+
+- address input must stay stable (no jumping)
+- dropdown must appear smoothly under input
+- no full-screen dark mode or blocking UI
+- user should clearly see and tap address options
+
+Goal: simple, clean, easy selection like Uber
+
+---
+
+4. SCROLL BEHAVIOUR (MOBILE)
+
+When user clicks "Continue":
+
+- page must go to TOP of next step
+- currently it jumps to bottom → bad UX
+
+Fix this so every step starts at the top.
+
+---
+
+5. MOBILE LAYOUT (BUTTONS & OPTIONS)
+
+Current layout feels cramped and unclear on phone.
+
+Improve:
+
+- options should NOT be squeezed in one line
+- use full-width buttons or stacked layout
+- make selection clear and easy to tap
+
+Everything must feel:
+simple, clean, finger-friendly
+
+---
+
+6. TOP PURPLE BAR (MOBILE)
+
+The top info bar (same-day / fast / 7 days):
+
+- looks bad when scrolling
+- overlaps content
+
+Fix:
+- either hide it on mobile
+- or make it static (not moving)
+
+---
+
+Goal:
+Clean mobile-first experience, clear pricing, no confusion, smooth booking flow.
+
+Right now mobile UX feels broken — we need to fix that.

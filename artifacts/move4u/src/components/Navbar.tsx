@@ -18,9 +18,11 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50">
-      {/* Gradient trust strip — premium ombre purple */}
+      {/* Gradient trust strip — premium ombre purple.
+       * Hidden on mobile (overlapping content + cluttered on small screens);
+       * shown from sm: breakpoint upward. */}
       <div
-        className="text-white text-xs"
+        className="hidden sm:block text-white text-xs"
         style={{
           background:
             "linear-gradient(90deg, #4c1d95 0%, #6d28d9 50%, #7e22ce 100%)",

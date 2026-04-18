@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2, ChevronLeft, Info, Plus, Minus } from "lucide-react";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS } from "@/data/constants";
 import { submitBooking, uploadPhotos } from "@/lib/api";
 import WasteSizeModal from "@/components/WasteSizeModal";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
+import BookingTermsNotice from "./BookingTermsNotice";
+
+/** Flat surcharges for waste removal — keep simple, no per-floor maths. */
+const STAIRS_NO_LIFT_SURCHARGE = 10;
+const RESTRICTED_ACCESS_SURCHARGE = 10;
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   BedDouble, Refrigerator, Circle, Armchair, Chair: Armchair,
@@ -21,6 +26,8 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   /** Map of extra-item id → quantity. Quantity 0 = not selected. */
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [pickup, setPickup] = useState("");
+  const [stairsNoLift, setStairsNoLift] = useState(false);
+  const [restrictedAccess, setRestrictedAccess] = useState(false);
   const [notes, setNotes] = useState("");
   const [photos, setPhotos] = useState<File[]>([]);
   const [step, setStep] = useState<"details" | "summary" | "final" | "submitted">("details");
@@ -29,10 +36,17 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [contactMethod, setContactMethod] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [showGuide, setShowGuide] = useState(false);
+
+  // Scroll to top whenever the step changes so the user always starts at
+  // the top of the new step instead of the bottom of the previous one.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
 
   const setQty = (id: string, qty: number) => {
     setQuantities((prev) => {
@@ -51,7 +65,10 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
       return { id, qty, label: item?.label ?? id, price: item?.price ?? 0 };
     });
   const extrasTotal = selectedExtras.reduce((sum, e) => sum + e.price * e.qty, 0);
-  const estimatedTotal = loadPrice + extrasTotal;
+  const stairsCharge = stairsNoLift ? STAIRS_NO_LIFT_SURCHARGE : 0;
+  const accessCharge = restrictedAccess ? RESTRICTED_ACCESS_SURCHARGE : 0;
+  const surchargeTotal = stairsCharge + accessCharge;
+  const estimatedTotal = loadPrice + extrasTotal + surchargeTotal;
 
   // Per-step back navigation
   const goPrev = () => {
@@ -145,15 +162,27 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
           {submitError && (
             <p className="text-red-600 text-sm bg-red-50 border border-red-100 rounded-xl px-4 py-3">{submitError}</p>
           )}
+
+          <BookingTermsNotice
+            agreed={agreedToTerms}
+            onAgreedChange={setAgreedToTerms}
+          />
+
           <button
             onClick={async () => {
-              if (!date || !timeWindow || !name || !phone || !contactMethod) return;
+              if (!date || !timeWindow || !name || !phone || !contactMethod || !agreedToTerms) return;
               setSubmitting(true);
               setSubmitError("");
               try {
                 const loadLabel = WASTE_LOADS.find((l) => l.id === selectedLoad)?.label ?? selectedLoad;
                 const extraLabels = selectedExtras
                   .map((e) => `${e.label} × ${e.qty} (£${e.price * e.qty})`)
+                  .join(", ");
+                const accessNotes = [
+                  stairsNoLift ? `Stairs (no lift) +£${STAIRS_NO_LIFT_SURCHARGE}` : null,
+                  restrictedAccess ? `Restricted access +£${RESTRICTED_ACCESS_SURCHARGE}` : null,
+                ]
+                  .filter(Boolean)
                   .join(", ");
                 // Upload photos first, then submit with their serving URLs
                 const photoUrls = await uploadPhotos(photos);
@@ -163,7 +192,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                   phone,
                   contactMethod,
                   pickup,
-                  pickupDetails: "",
+                  pickupDetails: accessNotes,
                   dropoff: "",
                   dropoffDetails: "",
                   extraAddress: "",
@@ -174,7 +203,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                   estimatedTime: "",
                   date,
                   timeWindow,
-                  wasteAddons: extraLabels,
+                  wasteAddons: [extraLabels, accessNotes].filter(Boolean).join(" | "),
                   uploadedFiles: photoUrls.join(", "),
                   notes: [notes, `Load: ${loadLabel}`].filter(Boolean).join(" | "),
                 });
@@ -186,7 +215,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                 setSubmitting(false);
               }
             }}
-            disabled={!date || !timeWindow || !name || !phone || !contactMethod || submitting}
+            disabled={!date || !timeWindow || !name || !phone || !contactMethod || !agreedToTerms || submitting}
             className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {submitting ? <><Loader2 className="w-4 h-4 animate-spin" />Submitting…</> : "Submit Enquiry"}
@@ -207,27 +236,37 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
             { label: "Service", value: "Waste Removal" },
             { label: "Pickup address", value: pickup || "—" },
             { label: "Load size", value: WASTE_LOADS.find((l) => l.id === selectedLoad)?.label || "—" },
-            { label: "Load price", value: `£${loadPrice}` },
+            { label: "Base price", value: `£${loadPrice}` },
             ...selectedExtras.map((e) => ({
               label: `${e.label} × ${e.qty}`,
               value: `+£${e.price * e.qty}`,
             })),
-          ].map((row, i) => (
-            <div key={i} className={`flex justify-between px-4 py-2.5 text-sm ${i % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
-              <span className="text-gray-500">{row.label}</span>
-              <span className="font-medium text-gray-900 text-right">{row.value}</span>
-            </div>
-          ))}
+            stairsNoLift ? { label: "Stairs (no lift)", value: `+£${STAIRS_NO_LIFT_SURCHARGE}` } : null,
+            restrictedAccess ? { label: "Restricted access", value: `+£${RESTRICTED_ACCESS_SURCHARGE}` } : null,
+          ]
+            .filter(Boolean)
+            .map((row, i) => {
+              const r = row as { label: string; value: string };
+              return (
+                <div key={i} className={`flex justify-between px-4 py-2.5 text-sm ${i % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
+                  <span className="text-gray-500">{r.label}</span>
+                  <span className="font-medium text-gray-900 text-right">{r.value}</span>
+                </div>
+              );
+            })}
         </div>
-        <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 mb-5">
+        <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 mb-3">
           <div className="flex justify-between items-center">
             <span className="text-gray-700 text-sm font-medium">Estimated total</span>
-            <span className="text-2xl font-bold text-purple-700">£{estimatedTotal}</span>
+            <span
+              className="text-2xl font-bold text-purple-700"
+              data-testid="waste-summary-total"
+            >£{estimatedTotal}</span>
           </div>
         </div>
-        <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-5 text-xs text-amber-700">
-          Final price will be confirmed after review if needed.
-        </div>
+        <p className="text-xs text-gray-500 mb-5 leading-relaxed">
+          Final price may vary depending on access and loading conditions.
+        </p>
         <button onClick={() => setStep("final")} className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm">
           Continue booking
         </button>
@@ -248,6 +287,41 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
             placeholder="Collection address or postcode..."
             testId="waste-pickup-input"
           />
+
+          {/* Access surcharges. Kept simple (flat add-ons) so the user can
+           * tick them without filling in a floor count. */}
+          <div className="mt-3 space-y-2">
+            <label className="flex items-start gap-2.5 cursor-pointer text-sm">
+              <input
+                type="checkbox"
+                checked={stairsNoLift}
+                onChange={(e) => setStairsNoLift(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-purple-700 cursor-pointer"
+                data-testid="waste-stairs-checkbox"
+              />
+              <span className="text-gray-700">
+                Stairs (no lift available)
+                <span className="ml-1 text-gray-500">+£{STAIRS_NO_LIFT_SURCHARGE}</span>
+              </span>
+            </label>
+            <label className="flex items-start gap-2.5 cursor-pointer text-sm">
+              <input
+                type="checkbox"
+                checked={restrictedAccess}
+                onChange={(e) => setRestrictedAccess(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-purple-700 cursor-pointer"
+                data-testid="waste-access-checkbox"
+              />
+              <span className="text-gray-700">
+                Restricted access (long carry, narrow passage, parking &gt; 20m)
+                <span className="ml-1 text-gray-500">+£{RESTRICTED_ACCESS_SURCHARGE}</span>
+              </span>
+            </label>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              These small surcharges cover the extra time and effort needed when items
+              must be carried up stairs or over longer distances from the van.
+            </p>
+          </div>
         </div>
 
         {/* Load size */}

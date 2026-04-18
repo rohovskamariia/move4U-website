@@ -139,20 +139,18 @@ export default function SummaryStep({
         </div>
       )}
 
-      {/* Booking notice — deposit + minimum time */}
-      <div className="bg-purple-50 border border-purple-100 rounded-xl px-4 py-3.5 mb-5 text-sm text-gray-700">
-        <p className="font-semibold text-gray-900 mb-1">Please note:</p>
-        <p className="leading-relaxed">
-          A 30% deposit is required to secure your booking. By continuing, you agree to our booking and cancellation terms.
-        </p>
-        <p className="text-xs text-gray-500 mt-2">Minimum booking time is 2 hours.</p>
+      {/* Minimum booking time + policy link.
+       * The deposit notice + agreement checkbox now live on the final
+       * step only, so they appear immediately above the submit button. */}
+      <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 mb-5 text-sm text-gray-600">
+        <p className="text-xs text-gray-500">Minimum booking time is 2 hours.</p>
         <button
           type="button"
           onClick={() => setShowPolicy(true)}
           className="text-xs text-purple-700 hover:text-purple-900 underline underline-offset-2 mt-1.5 inline-block bg-transparent border-0 p-0 cursor-pointer"
           data-testid="learn-more-booking-fees"
         >
-          Learn more about booking fees
+          Read full booking terms
         </button>
       </div>
 
