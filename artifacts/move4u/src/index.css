@@ -272,3 +272,28 @@ html {
 .pac-item:hover {
   background-color: rgb(250 245 255);
 }
+
+/* PlaceAutocompleteElement (modern Google Places web component) styling */
+.movefour-place-host gmp-place-autocomplete {
+  --gmpx-color-surface: #ffffff;
+  --gmpx-color-on-surface: #111827;
+  --gmpx-color-primary: #a855f7;
+  --gmpx-font-family-base: inherit;
+  --gmpx-font-size-base: 0.875rem;
+  width: 100%;
+  display: block;
+}
+.movefour-place-host gmp-place-autocomplete::part(input) {
+  width: 100%;
+  border: 1px solid rgb(229 231 235);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: rgb(17 24 39);
+  background: white;
+  outline: none;
+}
+.movefour-place-host gmp-place-autocomplete::part(input):focus {
+  border-color: transparent;
+  box-shadow: 0 0 0 2px rgb(168 85 247);
+}
