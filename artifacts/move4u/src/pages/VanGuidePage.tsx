@@ -1,13 +1,17 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "wouter";
-import { Truck } from "lucide-react";
+import smallVan from "@assets/IMG_3410_1776508670556.jpeg";
+import mediumVan from "@assets/IMG_3409_1776508670556.jpeg";
+import largeVan from "@assets/IMG_3408_1776508670556.jpeg";
+import lutonVan from "@assets/IMG_3398_1776508670556.jpeg";
 
 interface VanInfo {
   name: string;
   description: string;
   specs: { label: string; value: string }[];
-  iconScale?: number;
+  image: string;
+  scale: number;
 }
 
 const VANS: VanInfo[] = [
@@ -22,7 +26,8 @@ const VANS: VanInfo[] = [
       { label: "Payload", value: "600–800kg" },
       { label: "Seats (including driver)", value: "2" },
     ],
-    iconScale: 0.65,
+    image: smallVan,
+    scale: 0.55,
   },
   {
     name: "Medium Van",
@@ -35,7 +40,8 @@ const VANS: VanInfo[] = [
       { label: "Payload", value: "800–1200kg" },
       { label: "Seats (including driver)", value: "3" },
     ],
-    iconScale: 0.8,
+    image: mediumVan,
+    scale: 0.75,
   },
   {
     name: "Large Van",
@@ -48,7 +54,8 @@ const VANS: VanInfo[] = [
       { label: "Payload", value: "1200–1500kg" },
       { label: "Seats (including driver)", value: "3" },
     ],
-    iconScale: 1,
+    image: largeVan,
+    scale: 0.92,
   },
   {
     name: "Luton Van",
@@ -59,6 +66,8 @@ const VANS: VanInfo[] = [
       { label: "Payload", value: "Up to ~1000kg" },
       { label: "Seats (including driver)", value: "3" },
     ],
+    image: lutonVan,
+    scale: 1,
   },
 ];
 
@@ -91,10 +100,15 @@ export default function VanGuidePage() {
               className="border border-gray-100 rounded-2xl overflow-hidden bg-white shadow-sm"
               data-testid={`van-card-${van.name.toLowerCase().replace(/\s/g, "-")}`}
             >
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 aspect-[16/8] flex items-center justify-center text-purple-600">
-                <Truck
-                  style={{ width: `${(van.iconScale ?? 1) * 140}px`, height: `${(van.iconScale ?? 1) * 140}px` }}
-                  strokeWidth={1.25}
+              {/* Uniform image frame: same aspect, white bg, identical padding, baseline-aligned via flex end */}
+              <div className="bg-white border-b border-gray-100 aspect-[12/5] flex items-end justify-center px-6 pt-6 pb-4">
+                <img
+                  src={van.image}
+                  alt={van.name}
+                  loading="lazy"
+                  decoding="async"
+                  style={{ width: `${van.scale * 100}%` }}
+                  className="max-h-full object-contain"
                 />
               </div>
 

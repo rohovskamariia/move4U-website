@@ -1,40 +1,54 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "wouter";
+import minLoad from "@assets/IMG_3398_1776508670556.jpeg";
+import quarterLoad from "@assets/IMG_3399_1776508670556.jpeg";
+import thirdLoad from "@assets/IMG_3400_1776508670556.jpeg";
+import halfLoad from "@assets/IMG_3401_1776508670556.jpeg";
+import threeQuarterLoad from "@assets/IMG_3402_1776508670556.jpeg";
+import fullLoad from "@assets/IMG_3403_1776508670556.jpeg";
 
 interface LoadInfo {
   title: string;
   description: string;
+  image: string;
 }
 
 const LOADS: LoadInfo[] = [
   {
     title: "Minimum Load",
     description: "Ideal for small clear-outs or a few items. Up to approx. 8 bin bags.",
+    image: minLoad,
   },
   {
     title: "1/4 Load",
     description: "Suitable for light waste or small furniture. Around 20 bin bags.",
+    image: quarterLoad,
   },
   {
     title: "1/3 Load",
     description: "Good for medium clear-outs. Around 30 bin bags.",
+    image: thirdLoad,
   },
   {
     title: "1/2 Load",
     description: "Suitable for larger waste or furniture. Around 40 bin bags.",
+    image: halfLoad,
   },
   {
     title: "3/4 Load",
     description: "For heavy loads and larger jobs. Around 60 bin bags.",
+    image: threeQuarterLoad,
   },
   {
     title: "Full Load",
     description: "Full van load for major clearances or bulky waste.",
+    image: fullLoad,
   },
   {
     title: "Extra Large Load",
     description: "For very large jobs. Multiple loads available on request.",
+    image: fullLoad,
   },
 ];
 
@@ -62,25 +76,38 @@ export default function WasteGuidePage() {
           </p>
         </div>
 
-        {/* Per-load breakdown */}
-        <div className="space-y-3 mb-10">
+        {/* Per-load breakdown with uniform image frames */}
+        <div className="space-y-4 mb-10">
           {LOADS.map((load, i) => (
             <div
               key={load.title}
-              className="border border-gray-100 rounded-xl p-4 sm:p-5 bg-white hover:border-purple-200 transition-colors"
+              className="border border-gray-100 rounded-2xl overflow-hidden bg-white shadow-sm"
               data-testid={`waste-load-card-${i}`}
             >
-              <div className="flex items-start gap-4">
-                <div className="bg-purple-100 text-purple-700 w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0">
-                  {i + 1}
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
-                    {load.title}
-                  </h2>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    {load.description}
-                  </p>
+              {/* Uniform image frame — same canvas, identical padding, vans baseline-aligned */}
+              <div className="bg-white border-b border-gray-100 aspect-[12/5] flex items-end justify-center px-6 pt-6 pb-4">
+                <img
+                  src={load.image}
+                  alt={`${load.title} visual`}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+
+              <div className="p-5 sm:p-6">
+                <div className="flex items-start gap-4">
+                  <div className="bg-purple-100 text-purple-700 w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    {i + 1}
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
+                      {load.title}
+                    </h2>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      {load.description}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
