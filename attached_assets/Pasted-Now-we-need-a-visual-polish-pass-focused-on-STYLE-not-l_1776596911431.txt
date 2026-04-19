@@ -1,0 +1,218 @@
+Now we need a visual polish pass focused on STYLE, not logic.
+
+The structure is better now, but the website still feels too dry, too form-like, and not premium enough. It should feel like a modern service website, not like stacked admin cards.
+
+Please apply the following visual improvements across the mobile site:
+
+-----------------------------------
+1. OVERALL VISUAL DIRECTION
+-----------------------------------
+
+Make the site feel:
+- warmer
+- more premium
+- more like a real brand website
+- less like a form / template / admin panel
+
+Design goal:
+- elegant service business
+- modern and clean
+- softer, more polished, more intentional
+- less “box after box after box”
+
+Please improve the emotional feel of the UI, not just spacing.
+
+-----------------------------------
+2. SAFARI / IN-APP BROWSER FLOATING ISSUE
+-----------------------------------
+
+This is still not solved properly.
+
+On Safari / Telegram in-app browser, the layout still feels like it floats and shifts.
+
+Please do a deeper fix for iPhone Safari / in-app browser stability:
+- eliminate floating / jumping feeling
+- ensure the header and sections feel anchored
+- avoid awkward viewport shifts
+- test against Safari and in-app browser behaviour
+- reduce any sticky/fixed conflicts causing the “floating page” effect
+
+The site must feel stable while scrolling.
+
+-----------------------------------
+3. HEADER POLISH
+-----------------------------------
+
+The mobile header is better, but still feels a bit heavy and plain.
+
+Please improve:
+- slightly smaller logo block
+- cleaner spacing
+- more refined proportions
+- softer shadow or subtle separation
+- make it feel like a premium app header, not a default bar
+
+Do not make it bulky.
+
+-----------------------------------
+4. SERVICE CARDS – LESS DRY / LESS TEMPLATE FEEL
+-----------------------------------
+
+Current service cards still feel too much like plain form cards.
+
+Please redesign service cards so they feel more premium and branded:
+- slightly smaller icons
+- better balance between icon, title, price pill, text, and buttons
+- reduce the “empty box” feeling
+- improve card rhythm and proportions
+- softer card styling
+- more refined shadows / border tone
+- stronger hierarchy
+
+Important:
+- icons are currently too big
+- cards should feel lighter and more elegant
+- less boxy, less stiff
+- more like a polished commercial landing page
+
+-----------------------------------
+5. ICON SIZING
+-----------------------------------
+
+Icons across the site are too large in some sections.
+
+Please reduce icon size slightly across:
+- services
+- why choose us
+- contact cards
+- process cards
+
+Icons should support the design, not dominate it.
+
+-----------------------------------
+6. WHY CHOOSE US / CONTACT / REVIEWS – BREAK THE “SAME CARD” FEEL
+-----------------------------------
+
+Right now too many sections feel visually identical.
+
+Please introduce more visual variation and hierarchy between sections:
+- Why Choose Us should not feel identical to Services
+- Reviews should feel more editorial / testimonial-based
+- Contact should feel more premium and intentional
+- avoid repeated “same white rounded card” feeling everywhere
+
+Each section should still be consistent with the brand, but have its own visual identity.
+
+-----------------------------------
+7. REVIEWS SECTION POLISH
+-----------------------------------
+
+Reviews still feel like plain stacked boxes.
+
+Please improve:
+- typography hierarchy
+- quote styling
+- spacing between review content and reviewer info
+- slightly more premium testimonial layout
+- reduce the heavy repetitive card feeling
+
+Make it feel more like genuine testimonials on a real website.
+
+-----------------------------------
+8. CONTACT SECTION POLISH
+-----------------------------------
+
+The Contact section has good structure, but visually it still feels too blocky.
+
+Please improve:
+- spacing
+- visual balance
+- icon scale
+- card elegance
+- button styling
+
+Make the WhatsApp / Call / Email contact methods feel more premium and less template-like.
+
+-----------------------------------
+9. PROCESS / HOW IT WORKS SECTION
+-----------------------------------
+
+The process layout is improved, but still slightly dry.
+
+Please refine it further:
+- better visual line / connection between steps
+- smaller, more elegant icons
+- better spacing between number badges and content
+- stronger hierarchy between step title and description
+- make it feel like a designed journey, not a list
+
+-----------------------------------
+10. BUTTON POLISH
+-----------------------------------
+
+Buttons should feel more refined and premium.
+
+Please improve:
+- vertical alignment
+- font weight
+- border thickness for outline buttons
+- spacing inside buttons
+- consistency across all sections
+
+Primary purple buttons should feel more premium.
+Outline buttons should feel lighter and more elegant.
+
+-----------------------------------
+11. WHATSAPP FLOATING BUTTON
+-----------------------------------
+
+It is still interfering visually with some content.
+
+Please reposition and rebalance it:
+- keep it visible
+- but make sure it does not visually clash with service cards, review cards, or contact cards
+- it should feel intentionally placed, not floating randomly over the UI
+
+-----------------------------------
+12. REDUCE THE “FORM PAGE” LOOK
+-----------------------------------
+
+This is the biggest visual issue overall.
+
+Right now the site still feels like:
+- input cards
+- admin panels
+- repeated white blocks
+
+Please reduce this feeling by:
+- softening repetitive card structure
+- introducing better section rhythm
+- using more elegant visual hierarchy
+- improving spacing and contrast
+- making the page feel like a professional brand website
+
+The result should feel:
+- polished
+- premium
+- lighter
+- more natural
+- less mechanical
+
+-----------------------------------
+13. FINAL VISUAL QA
+-----------------------------------
+
+Please do one full visual quality pass on mobile after changes.
+
+Check:
+- icon sizes
+- card proportions
+- section spacing
+- typography balance
+- button polish
+- Safari stability
+- in-app browser stability
+- no section should feel raw or unfinished
+
+Goal:
+The site should look like a polished, trustworthy moving service brand — not a template, not a form, not an admin panel.
