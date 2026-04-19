@@ -92,23 +92,66 @@ async function patchNewHeaders(id: string): Promise<void> {
   headerPatched = true;
 }
 
-// Reads column O to count existing MV4U-* references so the next one is always sequential.
-// Old rows without a reference don't affect the count, so the first real booking = MV4U-1001.
-async function getNextBookingRef(id: string): Promise<string> {
+// Generates a unique sequential booking reference like MV4U-1001, MV4U-1002, …
+//
+// Strategy:
+//   1. Read column O, parse every existing MV4U-#### value, find the MAX numeric
+//      suffix and return max+1. This is robust against missing rows, blanks,
+//      header rows, and rows without a reference.
+//   2. Track the last-issued reference in this process so two simultaneous
+//      submissions in the same Node process never collide between Sheets reads
+//      and the eventual append (the Sheets read is eventually-consistent and
+//      can lag the previous append by a few hundred ms).
+//   3. Serialize calls through `inflightRefGen` so concurrent submissions
+//      compute their refs one after the other, not in parallel.
+//   4. If the Sheets read fails entirely, fall back to a timestamp+random
+//      suffix that is guaranteed unique within the process.
+let lastIssuedRefNumber = 0;
+let inflightRefGen: Promise<string> = Promise.resolve("");
+
+async function computeNextBookingRef(id: string): Promise<string> {
   try {
     const res = await connectors.proxy(
       "google-sheet",
       `/v4/spreadsheets/${id}/values/Bookings!O:O`,
     );
     const data = (await res.json()) as { values?: string[][] };
-    const existingRefs = (data.values ?? [])
-      .slice(1) // skip header row
-      .filter((row) => row[0]?.startsWith("MV4U-")).length;
-    return `MV4U-${1001 + existingRefs}`;
-  } catch {
-    // Fallback: use current minute as a disambiguator
-    return `MV4U-${1001 + (Math.floor(Date.now() / 60000) % 9000)}`;
+    const rows = data.values ?? [];
+
+    // Parse the trailing number from each MV4U-#### cell and take the max.
+    let maxRef = 1000; // so the first booking becomes MV4U-1001
+    for (const row of rows) {
+      const cell = row?.[0];
+      if (typeof cell !== "string") continue;
+      const m = cell.match(/^MV4U-(\d+)$/);
+      if (!m) continue;
+      const n = parseInt(m[1], 10);
+      if (Number.isFinite(n) && n > maxRef) maxRef = n;
+    }
+
+    // Guarantee monotonic increase even if the Sheets read is stale relative
+    // to a previous append from this process.
+    const next = Math.max(maxRef + 1, lastIssuedRefNumber + 1);
+    lastIssuedRefNumber = next;
+    return `MV4U-${next}`;
+  } catch (err) {
+    logger.warn({ err }, "Could not read column O for booking reference — using fallback");
+    // Fallback: timestamp-based reference, guaranteed unique within the process.
+    const fallbackBase = Math.max(
+      lastIssuedRefNumber + 1,
+      1001 + (Math.floor(Date.now() / 1000) % 100000),
+    );
+    lastIssuedRefNumber = fallbackBase;
+    return `MV4U-${fallbackBase}`;
   }
+}
+
+async function getNextBookingRef(id: string): Promise<string> {
+  // Chain so concurrent calls run serially and never compute the same ref.
+  const next = inflightRefGen.then(() => computeNextBookingRef(id));
+  // Swallow rejections in the chain so one failure doesn't poison subsequent calls.
+  inflightRefGen = next.catch(() => "");
+  return next;
 }
 
 export interface BookingRow {
