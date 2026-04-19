@@ -1,0 +1,74 @@
+Update the website navigation and pricing-related sections only.
+
+Do NOT change the hero section, header design, animations, or lower homepage sections yet.
+Focus only on the fixes below.
+
+1. Navigation logic across the whole website
+
+Make navigation consistent from every page.
+
+Required behavior:
+- Add "Home" as a visible menu item so users can return to the homepage without clicking the logo
+- Logo should still go to the top of the homepage
+- Services must always go directly to the Services section on the homepage
+- How It Works must always go directly to the How It Works section on the homepage
+- Pricing must always go directly to the Pricing page
+- Contact must always go directly to the Contact section on the homepage
+
+Important:
+This must work from every page, including booking pages, guide pages, the pricing page, and all service pages.
+Services / How It Works / Contact should not behave like simple "go home" links.
+They must always open the exact destination section.
+
+2. All pages must always open from the top
+
+Fix page loading behavior so that any page opened from navigation or internal links always starts from the TOP of the page.
+
+Current issue:
+Sometimes pages open in the middle instead of starting from the top.
+
+Required behavior:
+- Pricing page must always open from the top
+- Guide pages must always open from the top
+- Service pages must always open from the top
+- Any other linked page must always open from the top
+
+3. Add a heading before "Choose your van"
+
+Before the "Choose your van" section, add a clear section heading:
+
+House & Commercial Moving
+
+Add a short supporting line below it:
+Choose the right van and service for your move.
+
+Then keep:
+Choose your van
+
+4. Waste Removal images — replace everywhere on the site
+
+I will upload new cleaner waste removal images.
+
+Use the new uploaded waste removal images to replace the old green-background waste images EVERYWHERE across the website, not only on the Pricing page.
+
+This includes:
+- Pricing page
+- Waste Removal Size Guide
+- Waste Removal Guide
+- Any other section or page where the old waste van images are currently used
+
+Important:
+- do not keep the old green-background versions anywhere
+- replace all old versions with the new ones
+- all waste images must look clean, consistent, and professional
+- use either transparent PNG versions or clean white-background versions
+
+5. Policies link
+
+In the Policies section / footer, the Pricing Guide link must go to the same Pricing page and always open from the top of that page.
+
+Goal:
+Make navigation clear, logical, and professional.
+Make all pages open from the top.
+Make waste removal visuals clean and consistent across the whole site.
+Do not redesign the website yet.
