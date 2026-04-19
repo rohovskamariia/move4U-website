@@ -1,0 +1,122 @@
+Fix the navigation behavior across the whole website.
+
+Current problem:
+Pricing works correctly, but Services, How It Works, and Contact do NOT.
+
+Right now, when I click Services / How It Works / Contact from another page, it first goes to the homepage top and only then scrolls down to the correct section.
+
+I do NOT want that behavior.
+
+Required behavior:
+- Services should open directly at the Services section
+- How It Works should open directly at the How It Works section
+- Contact should open directly at the Contact section
+- This should work from every page on the site
+- It should NOT visibly jump to homepage first
+- It should go directly to the correct section smoothly and correctly
+
+Also:
+- Home should go to the top of the homepage
+- Pricing should continue working as it already does
+
+Important:
+Make the navigation feel direct and clean.
+Do not make Services / How It Works / Contact first show the homepage top.
+They must open the exact destination section immediately.
+
+Please update this behavior everywhere in the site navigation. Do not route Services / How It Works / Contact through a visible homepage reset first.
+Open the target section directly. Update the mobile header and mobile sidebar menu.
+
+Do NOT change desktop layout right now.
+Focus only on mobile / small screens.
+
+1. Services in mobile sidebar
+
+Current issue:
+When the mobile sidebar opens, the Services section is already expanded automatically.
+
+I do NOT want that.
+
+Required behavior:
+- When the mobile sidebar first opens, Services must stay collapsed
+- User should expand Services only when they tap on it
+- Policies & Guides should also stay collapsed by default
+- Keep the menu clean and compact when first opened
+
+2. Mobile sidebar structure
+
+Current issue:
+The sidebar menu structure feels messy and not fully logical.
+
+Please reorganise it so it feels clean and intuitive.
+
+Use this order:
+
+Main navigation:
+- Home
+- Services
+- How It Works
+- Pricing
+- Contact
+
+Inside Services dropdown:
+- House Moving
+- Waste Removal
+- Single Item Delivery
+- Commercial Moving
+- International Moving
+- Custom Request
+
+Inside Policies & Guides dropdown:
+- Pricing Guide
+- Van Size Guide
+- Waste Removal Guide
+- Booking Policy
+- Cancellation Policy
+- Terms & Conditions
+- Privacy Policy
+
+Important:
+- Do NOT show Reviews in the mobile navigation
+- Keep Reviews only as a homepage section, not as a main menu item
+- Make the menu feel simple, logical, and professional
+- Reduce clutter
+
+3. Mobile sidebar visual cleanup
+
+Improve the mobile sidebar so it feels cleaner and more premium:
+- keep a soft light background
+- improve spacing between items
+- keep icons subtle and consistent
+- make dropdown sections clear but not heavy
+- do not make it feel crowded
+- make sure CTA buttons stay clean and balanced
+
+4. Mobile header / top bar behavior
+
+Current issue:
+In mobile Safari opened from Telegram, the top header / bar feels like it moves or floats awkwardly.
+
+Please fix the mobile top header behavior so it feels stable and clean.
+
+Required behavior:
+- mobile header should stay properly positioned
+- do not let it visually float awkwardly
+- avoid layout jumping when opening menu or scrolling
+- make the top bar stable and consistent on mobile browsers, including in-app Safari / Telegram browser
+- ensure no strange overlap with browser UI
+
+5. Mobile navigation behavior
+
+Make sure these work correctly on mobile from every page:
+- Home → homepage top
+- Services → homepage Services section
+- How It Works → homepage How It Works section
+- Pricing → Pricing page
+- Contact → homepage Contact section
+
+This should work correctly from booking pages, pricing page, guide pages, and service pages.
+
+Goal:
+Make the mobile menu feel clean, professional, compact, and easy to use.
+Do not redesign the whole site yet.

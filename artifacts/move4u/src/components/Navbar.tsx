@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Menu, Truck } from "lucide-react";
 import MobileDrawer from "./MobileDrawer";
+import { SCROLL_TARGET_KEY } from "@/lib/sectionNav";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
 
   // Track scroll so the header gains a touch more depth once the user
   // scrolls past the hero — empty-feeling pure white at top, with
@@ -21,9 +22,11 @@ export default function Navbar() {
   const scrollTo = (id: string) => {
     setMenuOpen(false);
     if (location !== "/") {
-      // Cross-page nav — use hard navigation so the browser jumps to the
-      // exact section anchor on the homepage every time.
-      window.location.assign(`/#${id}`);
+      // Cross-page nav — store the section target so HomePage can jump
+      // straight to it before the browser paints (no visible "go to top
+      // first" flash). Then SPA-navigate to "/" via wouter.
+      sessionStorage.setItem(SCROLL_TARGET_KEY, id);
+      setLocation("/");
       return;
     }
     const el = document.getElementById(id);
@@ -35,7 +38,9 @@ export default function Navbar() {
     if (location === "/") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      window.location.assign("/");
+      // Ensure no stale section target — clear before navigating home.
+      sessionStorage.removeItem(SCROLL_TARGET_KEY);
+      setLocation("/");
     }
   };
 
@@ -45,17 +50,26 @@ export default function Navbar() {
           white or harsh transparent. The shadow strengthens on scroll for
           added depth while the brand tint stays subtle and readable. */}
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 backdrop-blur-xl border-b ${
+        className={`sticky top-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 backdrop-blur-xl border-b ${
           scrolled
             ? "border-purple-200/60 shadow-[0_10px_32px_-12px_rgba(91,33,182,0.22)]"
             : "border-purple-100/60 shadow-[0_4px_18px_-8px_rgba(91,33,182,0.14)]"
         }`}
         style={{
+          // Mostly opaque on mobile to stay visually stable inside in-app
+          // browsers (Telegram / Instagram) where backdrop-filter can be
+          // unreliable. Adds a touch more transparency on desktop where
+          // backdrop-blur is consistent.
           backgroundColor: scrolled
-            ? "rgba(241,234,255,0.82)"
-            : "rgba(244,238,255,0.72)",
+            ? "rgba(241,234,255,0.94)"
+            : "rgba(244,238,255,0.92)",
           backgroundImage:
             "linear-gradient(180deg, rgba(237,229,255,0.55) 0%, rgba(245,240,255,0.35) 100%)",
+          // Promote the header to its own GPU layer so iOS Safari and
+          // in-app browsers don't repaint/jitter on scroll.
+          transform: "translateZ(0)",
+          WebkitBackdropFilter: "blur(20px)",
+          willChange: "background-color",
         }}
       >
         <nav className="max-w-6xl mx-auto px-4 sm:px-6">

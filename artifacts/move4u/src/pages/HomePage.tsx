@@ -1,4 +1,6 @@
+import { useLayoutEffect } from "react";
 import { useLocation } from "wouter";
+import { consumeScrollTarget } from "@/lib/sectionNav";
 import Navbar from "@/components/Navbar";
 import HeroSlider from "@/components/HeroSlider";
 import ServicesSection from "@/components/ServicesSection";
@@ -13,6 +15,22 @@ import {
 
 export default function HomePage() {
   const [, setLocation] = useLocation();
+
+  // If we landed here via section nav from another page, jump straight to
+  // the requested section before the browser paints — no visible flash at
+  // the top of the homepage. We use an instant scroll (not smooth) so the
+  // navigation feels direct.
+  useLayoutEffect(() => {
+    const target = consumeScrollTarget();
+    if (!target) return;
+    // Two animation frames to let the page lay out fully before scrolling.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const el = document.getElementById(target);
+        if (el) el.scrollIntoView({ behavior: "auto", block: "start" });
+      });
+    });
+  }, []);
 
   const whyChoose = [
     { icon: ShieldCheck, label: "Reliable & experienced", text: "Trained movers who treat your belongings like our own." },
