@@ -8,9 +8,14 @@ import {
 } from "react";
 import { MapPin, Loader2, X } from "lucide-react";
 
+interface AddressMeta {
+  /** True when Google returned a numbered street address (street_number). */
+  hasStreetNumber: boolean;
+}
+
 interface AddressAutocompleteProps {
   value: string;
-  onChange: (val: string) => void;
+  onChange: (val: string, meta?: AddressMeta) => void;
   placeholder?: string;
   testId?: string;
 }
@@ -341,10 +346,13 @@ export default function AddressAutocomplete({
         [pred.mainText?.text, pred.secondaryText?.text]
           .filter(Boolean)
           .join(", ");
+      const hasStreetNumber = Boolean(
+        pick(place.addressComponents, "street_number"),
+      );
       if (finalText) {
         setQuery(finalText);
         lastConfirmedRef.current = finalText;
-        onChange(finalText);
+        onChange(finalText, { hasStreetNumber });
       }
       setSuggestions([]);
       // End the autocomplete session — next keystroke starts a new one.

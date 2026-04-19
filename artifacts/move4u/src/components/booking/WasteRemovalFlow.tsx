@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2, ChevronLeft, Info, Plus, Minus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2, ChevronLeft, Info, Plus, Minus, ArrowUpDown, Route, Check, Hash } from "lucide-react";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS } from "@/data/constants";
 import { submitBooking, uploadPhotos } from "@/lib/api";
 import WasteSizeModal from "@/components/WasteSizeModal";
@@ -26,6 +26,41 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   /** Map of extra-item id → quantity. Quantity 0 = not selected. */
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [pickup, setPickup] = useState("");
+  // House / flat / unit follow-up — shown when Google returned a street
+  // without a number (e.g. route- or postcode-only result).
+  const [needsUnit, setNeedsUnit] = useState(false);
+  const [unitNumber, setUnitNumber] = useState("");
+  const corePickupRef = useRef<string>("");
+
+  const commitPickup = (core: string, unit: string) => {
+    const u = unit.trim();
+    corePickupRef.current = core;
+    setPickup(u && core ? `${u}, ${core}` : core);
+  };
+
+  const handlePickupChange = (
+    val: string,
+    meta?: { hasStreetNumber: boolean },
+  ) => {
+    if (val === "") {
+      setNeedsUnit(false);
+      setUnitNumber("");
+      corePickupRef.current = "";
+      setPickup("");
+      return;
+    }
+    const u = unitNumber.trim();
+    const core = u && val.startsWith(`${u}, `) ? val.slice(u.length + 2) : val;
+    const missing = meta ? !meta.hasStreetNumber : false;
+    setNeedsUnit(missing);
+    if (!missing) setUnitNumber("");
+    commitPickup(core, missing ? unitNumber : "");
+  };
+
+  const handleUnitChange = (val: string) => {
+    setUnitNumber(val);
+    commitPickup(corePickupRef.current, val);
+  };
   const [stairsNoLift, setStairsNoLift] = useState(false);
   const [restrictedAccess, setRestrictedAccess] = useState(false);
   const [notes, setNotes] = useState("");
@@ -283,41 +318,60 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
           <label className="block text-sm font-semibold text-gray-700 mb-1.5">Pickup address</label>
           <AddressAutocomplete
             value={pickup}
-            onChange={setPickup}
+            onChange={handlePickupChange}
             placeholder="Collection address or postcode..."
             testId="waste-pickup-input"
           />
 
-          {/* Access surcharges. Kept simple (flat add-ons) so the user can
-           * tick them without filling in a floor count. */}
-          <div className="mt-3 space-y-2">
-            <label className="flex items-start gap-2.5 cursor-pointer text-sm">
-              <input
-                type="checkbox"
-                checked={stairsNoLift}
-                onChange={(e) => setStairsNoLift(e.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-purple-700 cursor-pointer"
-                data-testid="waste-stairs-checkbox"
-              />
-              <span className="text-gray-700">
-                Stairs (no lift available)
-                <span className="ml-1 text-gray-500">+£{STAIRS_NO_LIFT_SURCHARGE}</span>
-              </span>
-            </label>
-            <label className="flex items-start gap-2.5 cursor-pointer text-sm">
-              <input
-                type="checkbox"
-                checked={restrictedAccess}
-                onChange={(e) => setRestrictedAccess(e.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-purple-700 cursor-pointer"
-                data-testid="waste-access-checkbox"
-              />
-              <span className="text-gray-700">
-                Restricted access (long carry, narrow passage, parking &gt; 20m)
-                <span className="ml-1 text-gray-500">+£{RESTRICTED_ACCESS_SURCHARGE}</span>
-              </span>
-            </label>
-            <p className="text-xs text-gray-500 leading-relaxed">
+          {needsUnit && (
+            <div className="mt-3">
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                House / flat / unit number
+                <span className="text-purple-700"> *</span>
+              </label>
+              <div className="relative">
+                <Hash className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={unitNumber}
+                  onChange={(e) => handleUnitChange(e.target.value)}
+                  placeholder="e.g. 27, Flat 3B, Unit 4"
+                  className="w-full border border-gray-200 rounded-xl pl-10 pr-3 py-3 text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  autoComplete="off"
+                  inputMode="text"
+                  data-testid="waste-unit-number"
+                />
+              </div>
+              <p className="text-[11px] text-gray-500 mt-1.5">
+                We need a building or flat number so the driver can find you.
+              </p>
+            </div>
+          )}
+
+          {/* Access surcharges — premium toggle cards. */}
+          <div className="mt-4 space-y-2.5">
+            <p className="text-xs font-semibold text-gray-700">
+              Access details
+            </p>
+            <AccessToggleCard
+              icon={ArrowUpDown}
+              title="Stairs — no lift"
+              description="Items need to be carried up or down a staircase."
+              priceLabel={`+£${STAIRS_NO_LIFT_SURCHARGE}`}
+              checked={stairsNoLift}
+              onToggle={() => setStairsNoLift((v) => !v)}
+              testId="waste-stairs-checkbox"
+            />
+            <AccessToggleCard
+              icon={Route}
+              title="Restricted access"
+              description="Long carry, narrow passage, or parking more than 20m away."
+              priceLabel={`+£${RESTRICTED_ACCESS_SURCHARGE}`}
+              checked={restrictedAccess}
+              onToggle={() => setRestrictedAccess((v) => !v)}
+              testId="waste-access-checkbox"
+            />
+            <p className="text-[11px] text-gray-500 leading-relaxed">
               These small surcharges cover the extra time and effort needed when items
               must be carried up stairs or over longer distances from the van.
             </p>
@@ -440,5 +494,79 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
 
       {showGuide && <WasteSizeModal onClose={() => setShowGuide(false)} />}
     </div>
+  );
+}
+
+/* ----------------------------------------------------------------- */
+/* AccessToggleCard — premium tappable card replacing bare checkbox. */
+/* ----------------------------------------------------------------- */
+interface AccessToggleCardProps {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  priceLabel: string;
+  checked: boolean;
+  onToggle: () => void;
+  testId?: string;
+}
+
+function AccessToggleCard({
+  icon: Icon,
+  title,
+  description,
+  priceLabel,
+  checked,
+  onToggle,
+  testId,
+}: AccessToggleCardProps) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      role="switch"
+      aria-checked={checked}
+      data-testid={testId}
+      className={`w-full text-left flex items-start gap-3 p-3.5 rounded-xl border-2 transition-all ${
+        checked
+          ? "border-purple-700 bg-purple-50"
+          : "border-gray-100 bg-white hover:border-purple-300"
+      }`}
+    >
+      <div
+        className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
+          checked
+            ? "bg-purple-700 text-white"
+            : "bg-gray-100 text-gray-500"
+        }`}
+      >
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm font-semibold text-gray-900">{title}</p>
+          <span
+            className={`text-xs font-bold ${
+              checked ? "text-purple-700" : "text-gray-500"
+            }`}
+          >
+            {priceLabel}
+          </span>
+        </div>
+        <p className="text-xs text-gray-500 leading-snug mt-0.5">
+          {description}
+        </p>
+      </div>
+      {/* Toggle indicator */}
+      <div
+        className={`shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+          checked
+            ? "bg-purple-700 border-purple-700"
+            : "bg-white border-gray-300"
+        }`}
+        aria-hidden="true"
+      >
+        {checked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+      </div>
+    </button>
   );
 }

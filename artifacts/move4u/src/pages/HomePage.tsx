@@ -39,32 +39,59 @@ export default function HomePage() {
       <ServicesSection />
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-20 bg-gray-50">
+      <section
+        id="how-it-works"
+        className="py-16 sm:py-20 bg-gradient-to-b from-gray-50 to-white"
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <p className="text-xs font-semibold tracking-widest text-purple-700 mb-2">PROCESS</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">How It Works</h2>
+          <div className="text-center mb-10 sm:mb-14">
+            <p className="text-[11px] font-semibold tracking-[0.2em] text-purple-700 mb-2">
+              PROCESS
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight mb-3">
+              How It Works
+            </h2>
             <p className="text-gray-500 text-sm sm:text-base max-w-xl mx-auto">
               Booking with Move4U is simple — from first quote to job done.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {steps.map(({ icon: Icon, title, text }, i) => (
-              <div
-                key={title}
-                className="relative bg-white border border-gray-100 rounded-2xl p-6 text-center shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-700 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow">
-                  {i + 1}
+          {/* Mobile: vertical timeline with connecting line.
+              Desktop: 4-column horizontal grid with dotted connectors. */}
+          <div className="relative">
+            {/* Desktop dashed connector */}
+            <div
+              className="hidden lg:block absolute top-[34px] left-[12.5%] right-[12.5%] border-t-2 border-dashed border-purple-200"
+              aria-hidden="true"
+            />
+
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 sm:gap-6 relative">
+              {steps.map(({ icon: Icon, title, text }, i) => (
+                <div
+                  key={title}
+                  className="relative flex lg:flex-col items-start lg:items-center gap-4 lg:gap-0 lg:text-center"
+                >
+                  {/* Step circle with number badge */}
+                  <div className="relative shrink-0">
+                    <div className="bg-white border-2 border-purple-100 shadow-sm w-16 h-16 rounded-full flex items-center justify-center text-purple-700">
+                      <Icon className="w-7 h-7" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 bg-purple-700 text-white w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ring-2 ring-white">
+                      {i + 1}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 lg:mt-5">
+                    <h3 className="font-bold text-gray-900 text-base sm:text-lg tracking-tight mb-1">
+                      {title}
+                    </h3>
+                    <p className="text-gray-500 text-sm leading-relaxed lg:max-w-[14rem] mx-auto">
+                      {text}
+                    </p>
+                  </div>
                 </div>
-                <div className="bg-purple-100 text-purple-700 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 mt-2">
-                  <Icon className="w-6 h-6" />
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2">{title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{text}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>

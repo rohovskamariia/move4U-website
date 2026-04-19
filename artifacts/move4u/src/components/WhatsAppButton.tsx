@@ -34,7 +34,11 @@ export default function WhatsAppButton({ bookingContext }: WhatsAppButtonProps) 
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-3 rounded-full shadow-lg transition-all hover:shadow-xl hover:scale-105"
+      style={{
+        bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)",
+        right: "calc(env(safe-area-inset-right, 0px) + 1rem)",
+      }}
+      className="fixed z-40 flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full shadow-lg transition-all hover:shadow-xl hover:scale-105"
       data-testid="whatsapp-float-button"
       aria-label="Chat on WhatsApp"
     >

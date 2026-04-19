@@ -139,15 +139,14 @@ export default function SummaryStep({
         </div>
       )}
 
-      {/* Minimum booking time + policy link.
-       * The deposit notice + agreement checkbox now live on the final
-       * step only, so they appear immediately above the submit button. */}
-      <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 mb-5 text-sm text-gray-600">
-        <p className="text-xs text-gray-500">Minimum booking time is 2 hours.</p>
+      {/* Booking-policy link only — the minimum-booking note already lives
+       * on the time step where it's relevant. The deposit notice +
+       * agreement checkbox appear on the final step above Submit. */}
+      <div className="mb-5 text-center">
         <button
           type="button"
           onClick={() => setShowPolicy(true)}
-          className="text-xs text-purple-700 hover:text-purple-900 underline underline-offset-2 mt-1.5 inline-block bg-transparent border-0 p-0 cursor-pointer"
+          className="text-xs text-purple-700 hover:text-purple-900 underline underline-offset-2 inline-block bg-transparent border-0 p-0 cursor-pointer"
           data-testid="learn-more-booking-fees"
         >
           Read full booking terms

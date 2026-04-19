@@ -30,8 +30,7 @@ export default function VanStep({ selected, onSelect }: VanStepProps) {
           View van sizes &amp; pictures
         </button>
       </div>
-      <p className="text-gray-500 text-sm mb-2">Prices are per hour — select the best fit for your move.</p>
-      <p className="text-xs text-gray-500 mb-5">Not sure which van size you need? View van sizes and pictures.</p>
+      <p className="text-gray-500 text-sm mb-5">Prices are per hour — select the best fit for your move.</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
         {VAN_SIZES.map((van) => {
@@ -74,13 +73,6 @@ export default function VanStep({ selected, onSelect }: VanStepProps) {
       </p>
 
       <div className="flex flex-wrap gap-3">
-        <button
-          onClick={() => setShowGuide(true)}
-          className="text-xs font-medium text-purple-700 underline underline-offset-2"
-          data-testid="see-size-guide"
-        >
-          See our size guide
-        </button>
         <a
           href={`tel:${CONTACT.driver}`}
           className="text-xs font-medium text-gray-600 underline underline-offset-2"

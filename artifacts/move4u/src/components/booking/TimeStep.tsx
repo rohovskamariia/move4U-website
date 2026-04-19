@@ -1,11 +1,12 @@
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Clock } from "lucide-react";
 
 interface TimeStepProps {
   hours: number;
   onHoursChange: (h: number) => void;
 }
 
-// Time selection — plus/minus buttons, 30-minute steps, minimum 2 hours
+// Time selection — plus/minus buttons, 30-minute steps, minimum 2 hours.
+// Minimum-booking note lives here (the only place it's relevant).
 export default function TimeStep({ hours, onHoursChange }: TimeStepProps) {
   const MIN = 2;
   const STEP = 0.5;
@@ -23,42 +24,59 @@ export default function TimeStep({ hours, onHoursChange }: TimeStepProps) {
 
   return (
     <div>
-      <h3 className="text-base font-semibold text-gray-900 mb-1">Estimated booking time</h3>
-      <p className="text-gray-500 text-sm mb-5">How long do you think the job will take? Minimum 2 hours.</p>
+      <h3 className="text-base font-semibold text-gray-900 mb-1">
+        Estimated booking time
+      </h3>
+      <p className="text-gray-500 text-sm mb-6">
+        How long do you think the job will take?
+      </p>
 
-      <div className="flex items-center justify-center gap-6">
-        <button
-          onClick={dec}
-          disabled={hours <= MIN}
-          className="w-12 h-12 rounded-full border-2 border-gray-200 flex items-center justify-center text-gray-600 hover:border-purple-500 hover:text-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          aria-label="Decrease time"
-          data-testid="time-dec"
-        >
-          <Minus className="w-5 h-5" />
-        </button>
+      {/* Premium stepper */}
+      <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6 mb-4">
+        <div className="flex items-center justify-between gap-4">
+          <button
+            onClick={dec}
+            disabled={hours <= MIN}
+            className="w-14 h-14 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center text-gray-700 shadow-sm hover:border-purple-500 hover:text-purple-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            aria-label="Decrease time"
+            data-testid="time-dec"
+          >
+            <Minus className="w-5 h-5" />
+          </button>
 
-        <div className="text-center min-w-[100px]">
-          <span className="text-4xl font-bold text-purple-700" data-testid="time-display">
-            {format(hours)}
-          </span>
-          {hours < 3 && (
-            <p className="text-xs text-gray-400 mt-1">Minimum booking</p>
-          )}
+          <div className="text-center flex-1">
+            <span
+              className="text-5xl font-bold text-purple-700 tracking-tight tabular-nums"
+              data-testid="time-display"
+            >
+              {format(hours)}
+            </span>
+            <p className="text-xs text-gray-500 mt-1">30-minute steps</p>
+          </div>
+
+          <button
+            onClick={inc}
+            className="w-14 h-14 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center text-gray-700 shadow-sm hover:border-purple-500 hover:text-purple-700 active:scale-95 transition-all"
+            aria-label="Increase time"
+            data-testid="time-inc"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
         </div>
-
-        <button
-          onClick={inc}
-          className="w-12 h-12 rounded-full border-2 border-gray-200 flex items-center justify-center text-gray-600 hover:border-purple-500 hover:text-purple-700 transition-colors"
-          aria-label="Increase time"
-          data-testid="time-inc"
-        >
-          <Plus className="w-5 h-5" />
-        </button>
       </div>
 
-      <p className="text-center text-xs text-gray-400 mt-5">
-        Time increases in 30-minute steps. Final duration confirmed after review.
-      </p>
+      {/* Minimum-booking notice — relevant here, not in the summary. */}
+      <div className="flex items-start gap-2.5 bg-purple-50 border border-purple-100 rounded-xl px-4 py-3">
+        <Clock className="w-4 h-4 text-purple-700 mt-0.5 shrink-0" />
+        <div className="text-sm">
+          <p className="font-semibold text-purple-900">
+            Minimum booking: 2 hours
+          </p>
+          <p className="text-xs text-purple-700/80 mt-0.5">
+            Final duration is confirmed after we review your job.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
