@@ -17,9 +17,9 @@ export const CONTACT = {
 // HOMEPAGE SLIDER CONTENT — Edit slide text here
 // Hero background images — imported so Vite hashes / optimises them.
 // To swap images, update the imports below.
-import slide1Image from "@assets/9B0EA994-18D8-4A3C-AD5B-C9572BF927CE_1776368081211.png";
-import slide2Image from "@assets/IMG_3293_1776368081211.jpeg";
-import slide3Image from "@assets/IMG_3287_1776365847104.jpeg";
+import slide1Image from "@assets/IMG_3267_1776604323710.png";
+import slide2Image from "@assets/IMG_3539_1776604338384.jpeg";
+import slide3Image from "@assets/IMG_3293_1776604338384.jpeg";
 
 export type SlideButton = {
   text: string;
@@ -46,10 +46,8 @@ export const SLIDES: Slide[] = [
     subtitle: "FROM £35/HOUR",
     title: "Fast & Reliable Moving Services in London",
     text: "House moves, deliveries and waste removal — done quickly, safely and professionally.",
-    image: slide1Image, // two movers loading van in sunlight (landscape)
-    imagePosition: "60% center",
-    // Softer, warmer, more premium look — gentle blur, slight contrast pull-back, mild warmth
-    imageFilter: "blur(0.6px) saturate(0.92) contrast(0.94) brightness(1.04)",
+    image: slide1Image, // two Move4U movers carrying rug & boxes by the van
+    imagePosition: "70% center",
     buttons: [
       { text: "Get a Quote", action: "quote", variant: "primary" },
       { text: "Book Now", action: "book", variant: "secondary" },

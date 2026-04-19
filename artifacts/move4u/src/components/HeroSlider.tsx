@@ -58,22 +58,23 @@ export default function HeroSlider() {
         ))}
       </div>
 
-      {/* Purple gradient overlay — deeper on the left so headline reads
-          cleanly against the photograph without feeling muddy. */}
+      {/* Subtle left-side darken — keeps the photo natural and sharp,
+          only just dark enough on the left for headline legibility.
+          No heavy purple wash. */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "linear-gradient(95deg, rgba(46,16,101,0.78) 0%, rgba(76,29,149,0.55) 40%, rgba(88,28,135,0.18) 75%, rgba(0,0,0,0) 100%)",
+            "linear-gradient(95deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.32) 35%, rgba(0,0,0,0.08) 65%, rgba(0,0,0,0) 100%)",
         }}
       />
 
-      {/* Soft full-frame darken to keep contrast on lighter photos */}
+      {/* Whisper-thin bottom vignette so the dot indicators stay readable */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.32) 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 100%)",
         }}
       />
 
