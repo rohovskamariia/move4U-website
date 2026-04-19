@@ -65,6 +65,28 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* ----------------------------------------------------------------
+     Move4U brand purple — single source of truth.
+     We remap Tailwind's `purple-*` palette to the violet shades that
+     match the Move4U logo and the gradient "Book Now" button so every
+     existing purple-700 / purple-600 / etc. across the codebase renders
+     in the exact same brand tone, on desktop and mobile.
+
+     Brand gradient: #8b5cf6 → #7c3aed → #6d28d9 → #5b21b6 → #4c1d95
+     (mid-tone #6d28d9 = brand primary).
+  ---------------------------------------------------------------- */
+  --color-purple-50:  #f5f0ff;
+  --color-purple-100: #ede4ff;
+  --color-purple-200: #dccdff;
+  --color-purple-300: #c3a8ff;
+  --color-purple-400: #a78bfa;
+  --color-purple-500: #8b5cf6;
+  --color-purple-600: #7c3aed;
+  --color-purple-700: #6d28d9;
+  --color-purple-800: #5b21b6;
+  --color-purple-900: #4c1d95;
+  --color-purple-950: #2e1065;
 }
 
 /* LIGHT MODE — Purple brand theme */

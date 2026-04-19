@@ -3,18 +3,26 @@ import { Minus, Plus } from "lucide-react";
 /**
  * Stairs & access — reusable section used by every booking flow.
  *
- *  - "Is there a lift available?" Yes / No toggle (large tap targets).
- *  - If "No" → floor stepper [-] N [+] starting at ground (0). Each
- *    floor adds £10. No upper limit — the customer can pick any floor.
- *  - Live "Stairs cost: +£X" readout.
- *  - Single, calm note about price variability.
+ * Question flow (one step at a time, never ahead of the user):
  *
- * Pricing: £10 × floor (when no lift). Floor 0 = ground floor = £0.
+ *   1. "Are there any stairs / flights?"  Yes / No
+ *      - No  → no further questions, no surcharge.
+ *      - Yes → reveal step 2.
+ *   2. "Is a lift available?"  Yes / No
+ *      - Yes → no surcharge ("Lift available").
+ *      - No  → reveal step 3.
+ *   3. Floor stepper [-] N [+] starting at ground (0). Each floor adds
+ *      £10. No upper limit. A live "Stairs cost" readout appears.
  *
- * State model (kept compatible with the wider booking flows):
- *   - liftValue: "yes" | "no" | ""  (empty = unset)
- *   - floorValue: "lift" | "0" | "1" | "2" | ...  (a string number when
- *     there's no lift, or the literal string "lift" when there is one)
+ * State model (unchanged at the parent — these flows already use it):
+ *   - liftValue: "" | "none" | "yes" | "no"
+ *       "none" = the user said there are no stairs at all (step 1 = No).
+ *       "yes"  = stairs exist + lift available.
+ *       "no"   = stairs exist + no lift.
+ *   - floorValue:
+ *       "none" when liftValue === "none"
+ *       "lift" when liftValue === "yes"
+ *       "0" / "1" / "2" / ... when liftValue === "no"
  */
 export const FLOOR_PRICE = 10;
 
@@ -37,7 +45,8 @@ export function getFloorChargeFromValue(floorValue: string): number {
 }
 
 export function getFloorLabelFromValue(floorValue: string): string {
-  if (!floorValue || floorValue === "none") return "—";
+  if (!floorValue) return "—";
+  if (floorValue === "none") return "No stairs";
   if (floorValue === "lift") return "Lift available";
   // Backward-compat
   const legacy: Record<string, string> = {
@@ -58,9 +67,9 @@ export function getFloorLabelFromValue(floorValue: string): string {
 interface StairsAccessSectionProps {
   /** Optional title — defaults to "Stairs & access". */
   title?: string;
-  liftValue: string; // "yes" | "no" | ""
-  onLiftChange: (val: "yes" | "no") => void;
-  floorValue: string; // "lift" | "0" | "1" | ...
+  liftValue: string; // "" | "none" | "yes" | "no"
+  onLiftChange: (val: "none" | "yes" | "no") => void;
+  floorValue: string; // "none" | "lift" | "0" | "1" | ...
   onFloorChange: (val: string) => void;
   /** Test-id suffix so multiple instances on the same page stay unique. */
   testIdSuffix?: string;
@@ -74,9 +83,18 @@ export default function StairsAccessSection({
   onFloorChange,
   testIdSuffix = "",
 }: StairsAccessSectionProps) {
-  // Parse the current floor as a number for the stepper. Empty / "lift" /
-  // legacy values all collapse to 0 so the stepper always has something
-  // sensible to display.
+  // Derive the answer to step 1 from the existing state.
+  //   ""     → unanswered
+  //   "no"   → user answered "No stairs"
+  //   "yes"  → user answered "Yes, there are stairs"
+  const hasStairs: "" | "yes" | "no" =
+    liftValue === "none"
+      ? "no"
+      : liftValue === "yes" || liftValue === "no"
+      ? "yes"
+      : "";
+
+  // Parse the current floor as a number for the stepper.
   const parsedFloor = (() => {
     if (!floorValue || floorValue === "lift" || floorValue === "none") return 0;
     const legacy: Record<string, number> = {
@@ -89,6 +107,17 @@ export default function StairsAccessSection({
 
   const stairsCost = liftValue === "no" ? parsedFloor * FLOOR_PRICE : 0;
   const idSuffix = testIdSuffix ? `-${testIdSuffix}` : "";
+
+  const setHasStairs = (val: "yes" | "no") => {
+    if (val === "no") {
+      onLiftChange("none");
+      onFloorChange("none");
+    } else {
+      // Stairs exist — reset lift / floor so the user must answer step 2.
+      onLiftChange("yes");
+      onFloorChange("lift");
+    }
+  };
 
   const setLift = (val: "yes" | "no") => {
     onLiftChange(val);
@@ -103,7 +132,7 @@ export default function StairsAccessSection({
 
   return (
     <div
-      className="bg-white border border-gray-150 rounded-2xl p-4 sm:p-5"
+      className="bg-white border rounded-2xl p-4 sm:p-5"
       style={{ borderColor: "rgb(238 238 242)" }}
       data-testid={`stairs-access${idSuffix}`}
     >
@@ -111,39 +140,69 @@ export default function StairsAccessSection({
         {title}
       </h4>
       <p className="text-[12.5px] text-gray-500 mt-1 leading-relaxed">
-        If there is no lift available, stairs may affect the final price.
+        Stairs may affect the final price when there is no lift available.
       </p>
 
-      {/* Lift toggle — Yes / No, large tap targets, obvious selected state */}
+      {/* Step 1 — Are there any stairs / flights? */}
       <div className="mt-4">
         <p className="text-[13px] font-semibold text-gray-700 mb-2">
-          Is there a lift available?
+          Are there any stairs / flights?
         </p>
         <div className="grid grid-cols-2 gap-2.5">
-          {(["yes", "no"] as const).map((opt) => {
-            const selected = liftValue === opt;
+          {(["no", "yes"] as const).map((opt) => {
+            const selected = hasStairs === opt;
             return (
               <button
                 key={opt}
                 type="button"
-                onClick={() => setLift(opt)}
+                onClick={() => setHasStairs(opt)}
                 aria-pressed={selected}
                 className={`py-3 rounded-xl text-[14px] font-semibold transition-all border-2 ${
                   selected
-                    ? "border-purple-700 bg-purple-700 text-white shadow-[0_6px_16px_-8px_rgba(124,58,237,0.5)]"
+                    ? "border-purple-700 bg-purple-700 text-white shadow-[0_6px_16px_-8px_rgba(109,40,217,0.5)]"
                     : "border-gray-200 bg-white text-gray-700 hover:border-purple-300 hover:bg-purple-50/40"
                 }`}
-                data-testid={`lift-${opt}${idSuffix}`}
+                data-testid={`has-stairs-${opt}${idSuffix}`}
               >
-                {opt === "yes" ? "Yes" : "No"}
+                {opt === "no" ? "No" : "Yes"}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Floor stepper — only visible when no lift */}
-      {liftValue === "no" && (
+      {/* Step 2 — Lift toggle (only when stairs = Yes) */}
+      {hasStairs === "yes" && (
+        <div className="mt-4">
+          <p className="text-[13px] font-semibold text-gray-700 mb-2">
+            Is a lift available?
+          </p>
+          <div className="grid grid-cols-2 gap-2.5">
+            {(["yes", "no"] as const).map((opt) => {
+              const selected = liftValue === opt;
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setLift(opt)}
+                  aria-pressed={selected}
+                  className={`py-3 rounded-xl text-[14px] font-semibold transition-all border-2 ${
+                    selected
+                      ? "border-purple-700 bg-purple-700 text-white shadow-[0_6px_16px_-8px_rgba(109,40,217,0.5)]"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-purple-300 hover:bg-purple-50/40"
+                  }`}
+                  data-testid={`lift-${opt}${idSuffix}`}
+                >
+                  {opt === "yes" ? "Yes" : "No"}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Step 3 — Floor stepper (only when stairs = Yes AND lift = No) */}
+      {hasStairs === "yes" && liftValue === "no" && (
         <div className="mt-4">
           <p className="text-[13px] font-semibold text-gray-700">Floor level</p>
           <p className="text-[12px] text-gray-500 mt-1 leading-relaxed">
@@ -199,7 +258,19 @@ export default function StairsAccessSection({
         </div>
       )}
 
-      {liftValue === "yes" && (
+      {/* Reassuring readout when no surcharge applies */}
+      {hasStairs === "no" && (
+        <div className="mt-3 flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2.5">
+          <span className="text-[13px] font-medium text-emerald-800">
+            No stairs — no surcharge
+          </span>
+          <span className="text-[15px] font-bold text-emerald-700 tabular-nums">
+            +£0
+          </span>
+        </div>
+      )}
+
+      {hasStairs === "yes" && liftValue === "yes" && (
         <div className="mt-3 flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2.5">
           <span className="text-[13px] font-medium text-emerald-800">
             Lift available — no stairs surcharge
