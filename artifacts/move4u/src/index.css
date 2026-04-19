@@ -290,29 +290,54 @@ html {
  * classes (`text-base sm:text-sm`). */
 
 /* ---------------------------------------------------------------- */
-/* Mobile-safe full-viewport utilities.                              */
+/* Mobile-safe full-viewport utilities + iOS Safari stability.       */
 /* ---------------------------------------------------------------- */
-/* iOS Safari's `100vh` includes the address bar's hidden area, which
- * causes the layout to shift when the user scrolls. `100dvh` (dynamic
- * viewport height) tracks the visible viewport and behaves correctly
- * on every modern mobile browser. We expose Tailwind-friendly aliases
- * so existing `min-h-screen` usage automatically gets the safer
- * behaviour. */
+/* iOS Safari's `100vh` includes the address bar's hidden area which
+ * causes layout shift when scrolling. `100dvh` tracks the visible
+ * viewport and behaves correctly on every modern mobile browser. */
 .min-h-screen {
-  min-height: 100vh; /* fallback */
+  min-height: 100vh;
   min-height: 100dvh;
 }
 .h-screen {
-  height: 100vh; /* fallback */
+  height: 100vh;
   height: 100dvh;
 }
 .max-h-screen {
-  max-height: 100vh; /* fallback */
+  max-height: 100vh;
   max-height: 100dvh;
 }
-/* Prevent over-scroll bounce from making fixed headers/buttons feel
- * unstable on iOS while still allowing normal page scrolling. */
-html,
+
+/* Anchor the page so iOS Safari + in-app browsers (Telegram, Instagram)
+ * don't get the "floating / shifting" feeling caused by the address bar
+ * collapsing/expanding mid-scroll. */
+html {
+  /* Disable the elastic top/bottom bounce that makes sticky headers
+   * appear to "lift off" on iOS. */
+  overscroll-behavior-y: none;
+  /* Prevent any horizontal jiggle from off-screen content. */
+  overflow-x: hidden;
+  /* Smoother momentum scrolling on iOS. */
+  -webkit-overflow-scrolling: touch;
+  /* Don't let mobile browsers up-scale text after rotation. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 body {
   overscroll-behavior-y: none;
+  overflow-x: hidden;
+  /* Background colour matches the body so any over-scroll area never
+   * flashes a different colour. */
+  background: #ffffff;
+  min-height: 100dvh;
+}
+
+/* Sticky elements (the header) feel much more stable on iOS when
+ * promoted to their own compositor layer. */
+.sticky,
+.fixed {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
