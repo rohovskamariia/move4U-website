@@ -195,7 +195,7 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
         <button
           type="submit"
           disabled={loading || !canSubmit}
-          className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full py-2.5 sm:py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           data-testid="submit-booking"
         >
           {loading ? (

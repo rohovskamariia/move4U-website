@@ -157,9 +157,9 @@ export default function StairsAccessSection({
                 type="button"
                 onClick={() => setHasStairs(opt)}
                 aria-pressed={selected}
-                className={`py-3 rounded-xl text-[14px] font-semibold transition-all border-2 ${
+                className={`py-2 sm:py-2.5 rounded-xl text-[13.5px] font-semibold transition-all border ${
                   selected
-                    ? "border-purple-700 bg-purple-700 text-white shadow-[0_6px_16px_-8px_rgba(109,40,217,0.5)]"
+                    ? "border-purple-700 bg-purple-700 text-white shadow-[0_4px_12px_-6px_rgba(109,40,217,0.45)]"
                     : "border-gray-200 bg-white text-gray-700 hover:border-purple-300 hover:bg-purple-50/40"
                 }`}
                 data-testid={`has-stairs-${opt}${idSuffix}`}
@@ -186,9 +186,9 @@ export default function StairsAccessSection({
                   type="button"
                   onClick={() => setLift(opt)}
                   aria-pressed={selected}
-                  className={`py-3 rounded-xl text-[14px] font-semibold transition-all border-2 ${
+                  className={`py-2 sm:py-2.5 rounded-xl text-[13.5px] font-semibold transition-all border ${
                     selected
-                      ? "border-purple-700 bg-purple-700 text-white shadow-[0_6px_16px_-8px_rgba(109,40,217,0.5)]"
+                      ? "border-purple-700 bg-purple-700 text-white shadow-[0_4px_12px_-6px_rgba(109,40,217,0.45)]"
                       : "border-gray-200 bg-white text-gray-700 hover:border-purple-300 hover:bg-purple-50/40"
                   }`}
                   data-testid={`lift-${opt}${idSuffix}`}
@@ -216,10 +216,10 @@ export default function StairsAccessSection({
               onClick={() => setFloor(parsedFloor - 1)}
               disabled={parsedFloor <= 0}
               aria-label="Decrease floor"
-              className="w-12 h-12 rounded-xl bg-white border border-purple-200 text-purple-700 flex items-center justify-center hover:bg-purple-50 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white border border-purple-200 text-purple-700 flex items-center justify-center hover:bg-purple-50 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               data-testid={`floor-minus${idSuffix}`}
             >
-              <Minus className="w-5 h-5" strokeWidth={2.5} />
+              <Minus className="w-[18px] h-[18px] sm:w-5 sm:h-5" strokeWidth={2.5} />
             </button>
             <div className="flex-1 text-center">
               <p
@@ -236,10 +236,10 @@ export default function StairsAccessSection({
               type="button"
               onClick={() => setFloor(parsedFloor + 1)}
               aria-label="Increase floor"
-              className="w-12 h-12 rounded-xl bg-purple-700 text-white flex items-center justify-center hover:bg-purple-800 active:scale-95 transition-all"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-700 text-white flex items-center justify-center hover:bg-purple-800 active:scale-95 transition-all"
               data-testid={`floor-plus${idSuffix}`}
             >
-              <Plus className="w-5 h-5" strokeWidth={2.5} />
+              <Plus className="w-[18px] h-[18px] sm:w-5 sm:h-5" strokeWidth={2.5} />
             </button>
           </div>
 

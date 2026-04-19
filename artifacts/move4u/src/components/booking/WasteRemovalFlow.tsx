@@ -260,7 +260,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
               }
             }}
             disabled={!date || !timeWindow || !name || !phone || !contactMethod || !agreedToTerms || submitting}
-            className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-2.5 sm:py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {submitting ? <><Loader2 className="w-4 h-4 animate-spin" />Submitting…</> : "Submit Enquiry"}
           </button>
@@ -337,7 +337,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
         </p>
         <button
           onClick={() => setStep("final")}
-          className="btn-purple w-full py-3.5 font-semibold rounded-xl text-sm"
+          className="btn-purple w-full py-2.5 sm:py-3.5 font-semibold rounded-xl text-sm"
         >
           Continue booking
         </button>
@@ -520,7 +520,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
         <button
           onClick={() => setStep("summary")}
           disabled={!selectedLoad || !pickup || !liftValue}
-          className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-2.5 sm:py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           data-testid="waste-continue"
         >
           See Summary
