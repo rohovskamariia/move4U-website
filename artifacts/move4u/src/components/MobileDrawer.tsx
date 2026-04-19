@@ -15,6 +15,11 @@ import {
   Compass,
   Briefcase,
   BookOpen,
+  Home as HomeIcon,
+  Package,
+  Building2,
+  Globe,
+  Sparkles,
 } from "lucide-react";
 
 interface MobileDrawerProps {
@@ -31,6 +36,15 @@ interface DrawerLinkRow {
   label: string;
   Icon: React.ComponentType<{ className?: string }>;
 }
+
+const SERVICE_LINKS: DrawerLinkRow[] = [
+  { href: "/book/house-move", label: "House Moving", Icon: HomeIcon },
+  { href: "/book/waste-removal", label: "Waste Removal", Icon: Recycle },
+  { href: "/book/single-item", label: "Single Item Delivery", Icon: Package },
+  { href: "/book/commercial-move", label: "Commercial Moving", Icon: Building2 },
+  { href: "/book/international", label: "International Moving", Icon: Globe },
+  { href: "/book/something-else", label: "Custom Request", Icon: Sparkles },
+];
 
 const POLICY_LINKS: DrawerLinkRow[] = [
   { href: "/pricing", label: "Pricing Guide", Icon: Tag },
@@ -60,12 +74,16 @@ export default function MobileDrawer({
   onSectionLink,
   onHome,
 }: MobileDrawerProps) {
+  const [servicesOpen, setServicesOpen] = useState(false);
   const [policiesOpen, setPoliciesOpen] = useState(false);
 
-  // Reset the collapsible to closed every time the drawer opens so the
+  // Reset the collapsibles to closed every time the drawer opens so the
   // first impression is always clean and compact.
   useEffect(() => {
-    if (open) setPoliciesOpen(false);
+    if (open) {
+      setServicesOpen(false);
+      setPoliciesOpen(false);
+    }
   }, [open]);
 
   // Lock body scroll while open + close on Escape.
@@ -143,12 +161,23 @@ export default function MobileDrawer({
             onClick={onHome}
             testId="drawer-home"
           />
-          <NavRow
-            icon={<Briefcase className="w-[18px] h-[18px] text-gray-500" />}
+          <Group
             label="Services"
-            onClick={() => handleSection("services")}
+            icon={<Briefcase className="w-[18px] h-[18px] text-gray-500" />}
+            open={servicesOpen}
+            onToggle={() => setServicesOpen((v) => !v)}
             testId="drawer-services"
-          />
+          >
+            {SERVICE_LINKS.map(({ href, label, Icon }) => (
+              <DrawerLink
+                key={href}
+                href={href}
+                label={label}
+                Icon={Icon}
+                onClick={onClose}
+              />
+            ))}
+          </Group>
           <NavRow
             icon={<Compass className="w-[18px] h-[18px] text-gray-500" />}
             label="How It Works"

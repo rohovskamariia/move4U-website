@@ -49,14 +49,14 @@ export default function PricingGuidePage() {
     <div className="min-h-screen bg-[#faf8fd]">
       <Navbar />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-14">
         {/* Page header */}
-        <header className="mb-10 sm:mb-12">
-          <BackToHome className="mb-4" />
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mb-2">
+        <header className="mb-6 sm:mb-12">
+          <BackToHome className="mb-3 sm:mb-4" />
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mb-1 sm:mb-2">
             Pricing
           </h1>
-          <p className="text-gray-500 text-base sm:text-lg">
+          <p className="text-gray-500 text-[14px] sm:text-lg">
             Simple, transparent pricing. No hidden fees.
           </p>
         </header>
@@ -72,13 +72,13 @@ export default function PricingGuidePage() {
         </div>
 
         <Section title="Choose your van" subtitle="Hourly rate. Minimum 2 hours.">
-          <div className="grid sm:grid-cols-3 gap-4 sm:gap-5">
+          <div className="grid sm:grid-cols-3 gap-3 sm:gap-5">
             {VANS.map((v) => (
               <div
                 key={v.name}
-                className="group bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-[0_4px_18px_-10px_rgba(76,29,149,0.18)] hover:shadow-[0_10px_30px_-12px_rgba(76,29,149,0.28)] hover:-translate-y-0.5 transition-all"
+                className="group bg-white border border-gray-100 rounded-2xl overflow-hidden flex sm:block shadow-[0_4px_18px_-10px_rgba(76,29,149,0.18)] hover:shadow-[0_10px_30px_-12px_rgba(76,29,149,0.28)] sm:hover:-translate-y-0.5 transition-all"
               >
-                <div className="aspect-[5/3] bg-gradient-to-br from-purple-50 to-white flex items-center justify-center p-4">
+                <div className="w-32 sm:w-auto shrink-0 sm:aspect-[5/3] bg-gradient-to-br from-purple-50 to-white flex items-center justify-center p-2.5 sm:p-4">
                   <img
                     src={v.image}
                     alt={v.name}
@@ -86,15 +86,15 @@ export default function PricingGuidePage() {
                     className="w-full h-full object-contain"
                   />
                 </div>
-                <div className="p-4">
-                  <div className="flex items-baseline justify-between gap-2 mb-1.5">
-                    <h3 className="font-semibold text-gray-900 text-[15px]">{v.name}</h3>
-                    <span className="text-purple-700 font-bold tabular-nums">
+                <div className="p-3 sm:p-4 flex-1 min-w-0 flex flex-col justify-center sm:block">
+                  <div className="flex items-baseline justify-between gap-2 mb-1 sm:mb-1.5">
+                    <h3 className="font-semibold text-gray-900 text-[14.5px] sm:text-[15px]">{v.name}</h3>
+                    <span className="text-purple-700 font-bold tabular-nums text-[14px] sm:text-base">
                       {v.price}
-                      <span className="text-xs font-medium text-gray-500">/hr</span>
+                      <span className="text-[11px] sm:text-xs font-medium text-gray-500">/hr</span>
                     </span>
                   </div>
-                  <p className="text-[13px] text-gray-600 leading-snug">{v.desc}</p>
+                  <p className="text-[12.5px] sm:text-[13px] text-gray-600 leading-snug">{v.desc}</p>
                 </div>
               </div>
             ))}
@@ -266,13 +266,13 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mb-10 sm:mb-12">
-      <div className="mb-4 sm:mb-5">
-        <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
+    <section className="mb-6 sm:mb-12">
+      <div className="mb-3 sm:mb-5">
+        <h2 className="text-[15.5px] sm:text-xl font-bold text-gray-900 tracking-tight">
           {title}
         </h2>
         {subtitle && (
-          <p className="text-[13px] sm:text-sm text-gray-500 mt-0.5">{subtitle}</p>
+          <p className="text-[12.5px] sm:text-sm text-gray-500 mt-0.5">{subtitle}</p>
         )}
       </div>
       {children}
@@ -290,12 +290,12 @@ function InfoCard({
   desc: string;
 }) {
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6 shadow-[0_4px_18px_-10px_rgba(76,29,149,0.15)]">
-      <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">{title}</h2>
-      <p className="text-purple-700 text-2xl font-bold tracking-tight mb-2">
+    <div className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-6 shadow-[0_4px_18px_-10px_rgba(76,29,149,0.15)]">
+      <h2 className="text-[15px] sm:text-lg font-bold text-gray-900 mb-1">{title}</h2>
+      <p className="text-purple-700 text-xl sm:text-2xl font-bold tracking-tight mb-1.5 sm:mb-2">
         {highlight}
       </p>
-      <p className="text-[13.5px] text-gray-600 leading-relaxed">{desc}</p>
+      <p className="text-[13px] sm:text-[13.5px] text-gray-600 leading-relaxed">{desc}</p>
     </div>
   );
 }

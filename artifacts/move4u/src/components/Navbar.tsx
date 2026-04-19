@@ -48,9 +48,15 @@ export default function Navbar() {
     <>
       {/* Premium glass header — soft translucent lavender wash, never plain
           white or harsh transparent. The shadow strengthens on scroll for
-          added depth while the brand tint stays subtle and readable. */}
+          added depth while the brand tint stays subtle and readable.
+
+          Uses position: fixed (not sticky) so the header stays fully visible
+          on mobile Safari and Telegram / Instagram in-app browsers where
+          sticky elements can rubber-band half-offscreen during dynamic
+          browser-chrome resizes. A spacer below pushes content down by
+          the same height + iOS safe-area-inset-top. */}
       <header
-        className={`sticky top-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 backdrop-blur-xl border-b ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 backdrop-blur-xl border-b ${
           scrolled
             ? "border-gray-200/80 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.18)]"
             : "border-gray-100/80 shadow-[0_2px_10px_-8px_rgba(15,23,42,0.10)]"
@@ -63,6 +69,9 @@ export default function Navbar() {
           backgroundColor: scrolled
             ? "rgba(255,255,255,0.94)"
             : "rgba(252,251,254,0.92)",
+          // Respect iPhone notch / status bar in standalone (PWA) mode so
+          // the logo never sits under the system UI.
+          paddingTop: "env(safe-area-inset-top)",
           // Promote the header to its own GPU layer so iOS Safari and
           // in-app browsers don't repaint/jitter on scroll.
           transform: "translateZ(0)",
@@ -184,6 +193,15 @@ export default function Navbar() {
           </div>
         </nav>
       </header>
+
+      {/* Spacer that occupies the same vertical space the fixed header would
+          have taken in normal flow. Includes the iOS safe-area inset so
+          content never sits under the notch / status bar. */}
+      <div
+        aria-hidden="true"
+        className="h-[56px] md:h-[68px]"
+        style={{ marginTop: "env(safe-area-inset-top)" }}
+      />
 
       <MobileDrawer
         open={menuOpen}

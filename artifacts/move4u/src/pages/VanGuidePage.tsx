@@ -64,25 +64,25 @@ export default function VanGuidePage() {
     <div className="min-h-screen bg-white flex flex-col">
       <Navbar />
 
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-10">
-        <BackToHome className="mb-6" />
+      <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        <BackToHome className="mb-4 sm:mb-6" />
 
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Van Size Guide</h1>
-          <p className="text-gray-600 text-sm leading-relaxed">
+        <div className="mb-5 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1.5 sm:mb-2">Van Size Guide</h1>
+          <p className="text-gray-600 text-[13.5px] sm:text-sm leading-relaxed">
             Use this guide to choose the right van for your move. Not sure?
             Pick the closest match — our team will confirm the best fit before your booking.
           </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-6">
           {VANS.map((van) => (
             <div
               key={van.name}
               className="border border-gray-100 rounded-2xl overflow-hidden bg-white shadow-sm"
               data-testid={`van-card-${van.name.toLowerCase().replace(/\s/g, "-")}`}
             >
-              <div className="bg-white border-b border-gray-100 aspect-[12/5] flex items-end justify-center px-6 pt-6 pb-4">
+              <div className="bg-white border-b border-gray-100 aspect-[16/6] sm:aspect-[12/5] flex items-end justify-center px-4 sm:px-6 pt-3 sm:pt-6 pb-2 sm:pb-4">
                 <img
                   src={van.image}
                   alt={van.name}
@@ -93,22 +93,22 @@ export default function VanGuidePage() {
                 />
               </div>
 
-              <div className="p-5 sm:p-6">
-                <div className="flex items-center justify-between mb-2 gap-3 flex-wrap">
-                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">{van.name}</h2>
+              <div className="p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-1.5 sm:mb-2 gap-3 flex-wrap">
+                  <h2 className="text-base sm:text-xl font-bold text-gray-900">{van.name}</h2>
                   <Link
                     href={`/book/house-move`}
-                    className="text-sm font-semibold text-purple-700 hover:text-purple-900 underline underline-offset-2"
+                    className="text-[13px] sm:text-sm font-semibold text-purple-700 hover:text-purple-900 underline underline-offset-2"
                   >
                     Book now
                   </Link>
                 </div>
-                <p className="text-gray-600 text-sm leading-relaxed mb-4">{van.description}</p>
+                <p className="text-gray-600 text-[13px] sm:text-sm leading-relaxed mb-3 sm:mb-4">{van.description}</p>
 
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">Load space specifications</h3>
-                <ul className="space-y-1.5 text-sm text-gray-700">
+                <h3 className="text-[13px] sm:text-sm font-semibold text-gray-900 mb-1.5 sm:mb-2">Load space specifications</h3>
+                <ul className="space-y-1 sm:space-y-1.5 text-[13px] sm:text-sm text-gray-700">
                   {van.specs.map((s) => (
-                    <li key={s.label} className="flex justify-between border-b border-gray-50 pb-1.5 last:border-0">
+                    <li key={s.label} className="flex justify-between border-b border-gray-50 pb-1 sm:pb-1.5 last:border-0">
                       <span className="text-gray-500">{s.label}</span>
                       <span className="font-medium">{s.value}</span>
                     </li>
@@ -119,7 +119,7 @@ export default function VanGuidePage() {
           ))}
         </div>
 
-        <div className="mt-10 bg-purple-50 border border-purple-100 rounded-2xl p-5 text-center">
+        <div className="mt-6 sm:mt-10 bg-purple-50 border border-purple-100 rounded-2xl p-4 sm:p-5 text-center">
           <p className="text-sm text-gray-700 mb-3">
             Still unsure which van size you need? Our team is happy to help.
           </p>

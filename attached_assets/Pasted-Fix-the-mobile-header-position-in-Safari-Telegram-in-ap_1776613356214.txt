@@ -1,0 +1,85 @@
+Fix the mobile header position in Safari / Telegram in-app browser.
+
+Current issue:
+The Move4U mobile header sometimes sits half-overlapped or half-hidden under the browser UI.
+That looks broken.
+
+Required behavior:
+- the mobile header must always stay fully visible
+- if it needs to float, that is fine
+- but it must never sit half-hidden or half-overlapped
+- it should always appear clean and complete
+- keep the header stable on mobile Safari and Telegram in-app browser
+- respect iPhone safe-area spacing
+- prevent partial overlap with the browser top bar
+
+Important:
+A floating mobile header is acceptable.
+A half-hidden or half-overlapping header is not. Fix the mobile Services navigation.
+
+Current issue:
+On mobile, Services no longer behaves like a dropdown.
+Instead, it sends the user down to the Services section on the homepage.
+
+I do NOT want that.
+
+Required behavior on mobile:
+- Services must stay as a dropdown item in the sidebar menu
+- When the user taps Services, it should expand / collapse the list
+- It should NOT immediately navigate to the Services section
+- It should work like it did before: a dropdown with service options
+
+Inside the Services dropdown, keep:
+- House Moving
+- Waste Removal
+- Single Item Delivery
+- Commercial Moving
+- International Moving
+- Custom Request
+
+Important:
+- Do not remove the Services dropdown on mobile
+- Do not make Services act like a direct anchor link on mobile
+- Keep mobile navigation clean and easy to use
+
+Refine mobile layout for Pricing, Guides, and service pages to be more compact.
+
+Current issue:
+On mobile, all sections (Pricing, Waste Removal Guide, Van Guide) look too large and oversized.
+Cards, images, and text take too much space, making the page feel heavy and hard to scroll.
+
+Required improvements (mobile only):
+
+1. Reduce card size
+- reduce padding inside cards
+- reduce margin between cards
+- make cards more compact and tighter
+
+2. Reduce image size
+- scale down van images inside cards
+- prevent images from taking too much vertical space
+- keep them clear but smaller and balanced
+
+3. Reduce text spacing
+- decrease spacing between headings and descriptions
+- tighten vertical gaps between elements
+
+4. Improve overall density
+- allow more content visible on screen without excessive scrolling
+- make layout feel closer to desktop structure but optimized for mobile
+
+5. Keep readability
+- do NOT make text too small
+- maintain clean hierarchy and spacing balance
+
+Apply this to:
+- Pricing page
+- Waste Removal Size Guide
+- Van Size Guide
+- Any similar card-based pages
+
+Goal:
+Make mobile layout feel clean, modern, and efficient — not oversized or bulky.
+
+Desktop can keep normal navigation behavior.
+This fix is specifically for mobile sidebar navigation.
