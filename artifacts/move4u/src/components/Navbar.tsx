@@ -21,11 +21,22 @@ export default function Navbar() {
   const scrollTo = (id: string) => {
     setMenuOpen(false);
     if (location !== "/") {
-      window.location.href = `/#${id}`;
+      // Cross-page nav — use hard navigation so the browser jumps to the
+      // exact section anchor on the homepage every time.
+      window.location.assign(`/#${id}`);
       return;
     }
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const goHome = () => {
+    setMenuOpen(false);
+    if (location === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      window.location.assign("/");
+    }
   };
 
   return (
@@ -81,28 +92,39 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop nav */}
-            <div className="hidden md:flex items-center gap-8 text-[14px] font-medium text-gray-700">
+            <div className="hidden md:flex items-center gap-7 text-[14px] font-medium text-gray-700">
+              <button
+                onClick={goHome}
+                className="hover:text-purple-700 transition-colors"
+                data-testid="nav-home"
+              >
+                Home
+              </button>
               <button
                 onClick={() => scrollTo("services")}
                 className="hover:text-purple-700 transition-colors"
+                data-testid="nav-services"
               >
                 Services
               </button>
               <button
                 onClick={() => scrollTo("how-it-works")}
                 className="hover:text-purple-700 transition-colors"
+                data-testid="nav-how-it-works"
               >
                 How It Works
               </button>
               <Link
                 href="/pricing"
                 className="hover:text-purple-700 transition-colors"
+                data-testid="nav-pricing"
               >
                 Pricing
               </Link>
               <button
                 onClick={() => scrollTo("contact")}
                 className="hover:text-purple-700 transition-colors"
+                data-testid="nav-contact"
               >
                 Contact
               </button>

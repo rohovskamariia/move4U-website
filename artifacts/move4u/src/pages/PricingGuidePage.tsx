@@ -6,13 +6,13 @@ import { WASTE_LOADS, WASTE_EXTRA_ITEMS, CONTACT } from "@/data/constants";
 import smallVan from "@assets/IMG_3410_1776508670556.jpeg";
 import mediumVan from "@assets/IMG_3409_1776508670556.jpeg";
 import largeVan from "@assets/IMG_3408_1776508670556.jpeg";
-import minLoad from "@assets/IMG_3422_1776511582686.jpeg";
-import quarterLoad from "@assets/IMG_3423_1776511582686.jpeg";
-import thirdLoad from "@assets/IMG_3424_1776511582686.jpeg";
-import halfLoad from "@assets/IMG_3425_1776511582686.jpeg";
-import threeQuarterLoad from "@assets/IMG_3426_1776511582686.jpeg";
-import fullLoad from "@assets/IMG_3426_1776511582686.jpeg";
-import xlLoad from "@assets/IMG_3426_1776511582686.jpeg";
+import minLoad from "@assets/IMG_3575_1776610167208.jpeg";
+import quarterLoad from "@assets/IMG_3576_1776610167208.jpeg";
+import thirdLoad from "@assets/IMG_3577_1776610167208.jpeg";
+import halfLoad from "@assets/IMG_3578_1776610167208.jpeg";
+import threeQuarterLoad from "@assets/IMG_3579_1776610167209.jpeg";
+import fullLoad from "@assets/IMG_3580_1776610167209.jpeg";
+import xlLoad from "@assets/IMG_3580_1776610167209.jpeg";
 
 const VANS = [
   { name: "Small Van", price: "£35", desc: "Perfect for single items, small flat moves & deliveries.", image: smallVan },
@@ -65,7 +65,16 @@ export default function PricingGuidePage() {
           </p>
         </header>
 
-        {/* SECTION 1 — Van pricing */}
+        {/* SECTION 1 — House & Commercial Moving (van + help + stairs) */}
+        <div className="mb-5 sm:mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+            House &amp; Commercial Moving
+          </h2>
+          <p className="text-[13.5px] sm:text-sm text-gray-500 mt-1">
+            Choose the right van and service for your move.
+          </p>
+        </div>
+
         <Section title="Choose your van" subtitle="Hourly rate. Minimum 2 hours.">
           <div className="grid sm:grid-cols-3 gap-4 sm:gap-5">
             {VANS.map((v) => (

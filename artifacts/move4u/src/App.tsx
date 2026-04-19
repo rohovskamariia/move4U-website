@@ -17,12 +17,14 @@ import PayRedirectPage from "@/pages/PayRedirectPage";
 import PaymentSuccessPage from "@/pages/PaymentSuccessPage";
 import NotFound from "@/pages/not-found";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
 function Router() {
   return (
     <>
+      <ScrollToTop />
       <Switch>
         <Route path="/" component={HomePage} />
         <Route path="/book" component={BookingPage} />

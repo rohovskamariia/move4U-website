@@ -2,13 +2,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "wouter";
 import { WASTE_LOADS } from "@/data/constants";
-import minLoad from "@assets/IMG_3422_1776511582686.jpeg";
-import quarterLoad from "@assets/IMG_3423_1776511582686.jpeg";
-import thirdLoad from "@assets/IMG_3424_1776511582686.jpeg";
-import halfLoad from "@assets/IMG_3425_1776511582686.jpeg";
-import threeQuarterLoad from "@assets/IMG_3426_1776511582686.jpeg";
-import fullLoad from "@assets/IMG_3426_1776511582686.jpeg";
-import xlLoad from "@assets/IMG_3426_1776511582686.jpeg";
+import minLoad from "@assets/IMG_3575_1776610167208.jpeg";
+import quarterLoad from "@assets/IMG_3576_1776610167208.jpeg";
+import thirdLoad from "@assets/IMG_3577_1776610167208.jpeg";
+import halfLoad from "@assets/IMG_3578_1776610167208.jpeg";
+import threeQuarterLoad from "@assets/IMG_3579_1776610167209.jpeg";
+import fullLoad from "@assets/IMG_3580_1776610167209.jpeg";
+import xlLoad from "@assets/IMG_3580_1776610167209.jpeg";
 
 const LOAD_IMAGES: Record<string, string> = {
   minimum: minLoad,

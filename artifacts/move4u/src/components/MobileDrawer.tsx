@@ -83,6 +83,8 @@ export default function MobileDrawer({
   }, [open, onClose]);
 
   const handleSection = (id: string) => {
+    // Close first, then trigger the section nav. The parent decides whether
+    // to smooth-scroll or hard-navigate to /#id (works from any page).
     onClose();
     onSectionLink(id);
   };
@@ -160,10 +162,28 @@ export default function MobileDrawer({
             ))}
           </Group>
 
-          {/* Other */}
+          {/* Main nav */}
           <div className="mt-2 mb-1 px-3 text-[11px] font-semibold tracking-wider text-gray-400 uppercase">
-            Other
+            Navigate
           </div>
+          <Link
+            href="/"
+            onClick={onClose}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 active:bg-gray-100"
+            data-testid="drawer-home"
+          >
+            <Home className="w-4 h-4 text-purple-600" />
+            Home
+          </Link>
+          <button
+            type="button"
+            onClick={() => handleSection("services")}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 active:bg-gray-100"
+            data-testid="drawer-services-anchor"
+          >
+            <Package className="w-4 h-4 text-purple-600" />
+            Services
+          </button>
           <button
             type="button"
             onClick={() => handleSection("how-it-works")}
@@ -173,6 +193,15 @@ export default function MobileDrawer({
             <Compass className="w-4 h-4 text-purple-600" />
             How It Works
           </button>
+          <Link
+            href="/pricing"
+            onClick={onClose}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 active:bg-gray-100"
+            data-testid="drawer-pricing"
+          >
+            <Tag className="w-4 h-4 text-purple-600" />
+            Pricing
+          </Link>
           <button
             type="button"
             onClick={() => handleSection("reviews")}
