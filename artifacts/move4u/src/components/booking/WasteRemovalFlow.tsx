@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2, ChevronLeft, Info, Plus, Minus, Route, Check, Hash } from "lucide-react";
+import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2, ChevronLeft, Info, Plus, Minus, Route, Check, Hash, Clock, Sparkles } from "lucide-react";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS } from "@/data/constants";
 import { submitBooking, uploadPhotos } from "@/lib/api";
 import WasteSizeModal from "@/components/WasteSizeModal";
@@ -12,6 +12,9 @@ import StairsAccessSection, {
 
 /** Flat surcharge for restricted-access pickups (long carry, narrow lane, etc). */
 const RESTRICTED_ACCESS_SURCHARGE = 10;
+
+/** Minimum charge for any waste removal booking (£). */
+const WASTE_MIN_CHARGE = 60;
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   BedDouble, Refrigerator, Circle, Armchair, Chair: Armchair,
@@ -107,18 +110,31 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
     });
   };
 
-  const loadPrice = WASTE_LOADS.find((l) => l.id === selectedLoad)?.price || 0;
   const selectedExtras = Object.entries(quantities)
     .filter(([, q]) => q > 0)
     .map(([id, qty]) => {
       const item = WASTE_EXTRA_ITEMS.find((i) => i.id === id);
       return { id, qty, label: item?.label ?? id, price: item?.price ?? 0 };
     });
+  const hasItems = selectedExtras.length > 0;
+  // Items Only mode — when the user has picked individual items we drop
+  // the load-size requirement and price purely from items + access.
+  const itemsOnlyMode = hasItems && !selectedLoad;
+  const loadPrice = itemsOnlyMode
+    ? 0
+    : WASTE_LOADS.find((l) => l.id === selectedLoad)?.price || 0;
   const extrasTotal = selectedExtras.reduce((sum, e) => sum + e.price * e.qty, 0);
   const stairsCharge = getFloorChargeFromValue(floorValue);
   const accessCharge = restrictedAccess ? RESTRICTED_ACCESS_SURCHARGE : 0;
   const surchargeTotal = stairsCharge + accessCharge;
-  const estimatedTotal = loadPrice + extrasTotal + surchargeTotal;
+  const calculatedTotal = loadPrice + extrasTotal + surchargeTotal;
+  // Minimum charge only kicks in once the user has actually picked something
+  // (a load OR at least one item). An empty selection should still read £0.
+  const hasSelection = !!selectedLoad || hasItems;
+  const estimatedTotal = hasSelection
+    ? Math.max(WASTE_MIN_CHARGE, calculatedTotal)
+    : 0;
+  const minChargeApplied = hasSelection && calculatedTotal < WASTE_MIN_CHARGE;
 
   // Per-step back navigation
   const goPrev = () => {
@@ -174,7 +190,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   }
 
   if (step === "final") {
-    const timeWindows = ["Morning (8am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–8pm)"];
+    const timeWindows = ["Morning (8am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–8pm)", "Late evening (8pm–12am)"];
     return (
       <div>
         <Header />
@@ -186,7 +202,13 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} min={new Date().toISOString().split("T")[0]} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Preferred time</label>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <label className="block text-sm font-medium text-gray-700">Preferred time</label>
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500" data-testid="waste-working-hours">
+                <Clock className="w-3 h-3" />
+                Working hours: 8:00 AM – 12:00 AM
+              </span>
+            </div>
             <div className="flex flex-col gap-2">
               {timeWindows.map((tw) => (
                 <button key={tw} type="button" onClick={() => setTimeWindow(tw)} className={`text-left px-4 py-2.5 text-sm rounded-xl border-2 transition-colors ${timeWindow === tw ? "border-purple-700 bg-purple-50 text-purple-700 font-medium" : "border-gray-100 text-gray-700 hover:border-purple-300"}`}>{tw}</button>
@@ -224,7 +246,9 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
               setSubmitting(true);
               setSubmitError("");
               try {
-                const loadLabel = WASTE_LOADS.find((l) => l.id === selectedLoad)?.label ?? selectedLoad;
+                const loadLabel = itemsOnlyMode
+                  ? "Items only"
+                  : (WASTE_LOADS.find((l) => l.id === selectedLoad)?.label ?? selectedLoad);
                 const extraLabels = selectedExtras
                   .map((e) => `${e.label} × ${e.qty} (£${e.price * e.qty})`)
                   .join(", ");
@@ -259,7 +283,11 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                   timeWindow,
                   wasteAddons: [extraLabels, accessNotes].filter(Boolean).join(" | "),
                   uploadedFiles: photoUrls.join(", "),
-                  notes: [notes, `Load: ${loadLabel}`].filter(Boolean).join(" | "),
+                  notes: [
+                    notes,
+                    `Load: ${loadLabel}`,
+                    minChargeApplied ? `Min charge applied (calc £${calculatedTotal} → £${estimatedTotal})` : null,
+                  ].filter(Boolean).join(" | "),
                 });
                 setBookingRef(result.bookingReference);
                 setStep("submitted");
@@ -306,19 +334,29 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
               £{estimatedTotal}
             </span>
             <span className="text-white text-sm font-medium">
-              Load £{loadPrice}
-              {extrasTotal > 0 ? ` + £${extrasTotal} items` : ""}
+              {itemsOnlyMode ? "Items only" : `Load £${loadPrice}`}
+              {!itemsOnlyMode && extrasTotal > 0 ? ` + £${extrasTotal} items` : ""}
+              {itemsOnlyMode && extrasTotal > 0 ? ` £${extrasTotal} items` : ""}
               {surchargeTotal > 0 ? ` + £${surchargeTotal} access` : ""}
             </span>
           </div>
+          {minChargeApplied && (
+            <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-white/90" data-testid="waste-min-applied">
+              Minimum charge £{WASTE_MIN_CHARGE} applied
+            </p>
+          )}
         </div>
 
         <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden mb-3 divide-y divide-gray-50">
           {[
             { label: "Service", value: "Waste Removal" },
             { label: "Pickup address", value: pickup || "—" },
-            { label: "Load size", value: WASTE_LOADS.find((l) => l.id === selectedLoad)?.label || "—" },
-            { label: "Base price", value: `£${loadPrice}` },
+            itemsOnlyMode
+              ? { label: "Booking type", value: "Items only" }
+              : { label: "Load size", value: WASTE_LOADS.find((l) => l.id === selectedLoad)?.label || "—" },
+            itemsOnlyMode
+              ? null
+              : { label: "Base price", value: `£${loadPrice}` },
             ...selectedExtras.map((e) => ({
               label: `${e.label} × ${e.qty}`,
               value: `+£${e.price * e.qty}`,
@@ -329,6 +367,9 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
               ? { label: `${getFloorLabelFromValue(floorValue)} — no lift`, value: `+£${stairsCharge}` }
               : null,
             restrictedAccess ? { label: "Restricted access", value: `+£${RESTRICTED_ACCESS_SURCHARGE}` } : null,
+            minChargeApplied
+              ? { label: "Minimum charge adjustment", value: `+£${WASTE_MIN_CHARGE - calculatedTotal}` }
+              : null,
           ]
             .filter(Boolean)
             .map((row, i) => {
@@ -423,10 +464,21 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
           </div>
         </div>
 
-        {/* Load size */}
-        <div>
+        {/* Booking guidance — items-only + minimum charge */}
+        <div className="rounded-xl bg-purple-50 border border-purple-100 px-3.5 py-3 flex items-start gap-2.5" data-testid="waste-guidance">
+          <Info className="w-4 h-4 text-purple-700 shrink-0 mt-0.5" />
+          <p className="text-xs text-purple-900 leading-relaxed">
+            <span className="font-semibold">Items only bookings available</span> — minimum charge £{WASTE_MIN_CHARGE} applies.
+            If you only select items below, you don't need to choose a load size.
+          </p>
+        </div>
+
+        {/* Load size — de-emphasized when Items Only mode is active */}
+        <div className={itemsOnlyMode ? "opacity-60" : ""}>
           <div className="flex items-baseline justify-between mb-2 gap-3 flex-wrap">
-            <h3 className="text-sm font-semibold text-gray-900">Select load size</h3>
+            <h3 className="text-sm font-semibold text-gray-900">
+              Select load size <span className="text-gray-400 font-normal">(optional)</span>
+            </h3>
             <button
               type="button"
               onClick={() => setShowGuide(true)}
@@ -437,12 +489,16 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
               View load sizes &amp; pictures
             </button>
           </div>
-          <p className="text-xs text-gray-500 mb-3">Pick the closest match — we'll confirm the right size before pickup.</p>
+          <p className="text-xs text-gray-500 mb-3">
+            {itemsOnlyMode
+              ? "Not needed — your booking is priced by selected items below."
+              : "Pick the closest match — we'll confirm the right size before pickup."}
+          </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {WASTE_LOADS.map((load) => (
               <button
                 key={load.id}
-                onClick={() => setSelectedLoad(load.id)}
+                onClick={() => setSelectedLoad(selectedLoad === load.id ? "" : load.id)}
                 className={`text-center py-3 px-2 border-2 rounded-xl transition-all text-sm ${selectedLoad === load.id ? "border-purple-700 bg-purple-50" : "border-gray-100 bg-white hover:border-purple-300"}`}
                 data-testid={`waste-load-${load.id}`}
               >
@@ -456,7 +512,13 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
         {/* Extra items with quantity selector */}
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-1">Do you have any of these items?</h3>
-          <p className="text-xs text-gray-500 mb-3">Use + and − to set how many — charges update automatically.</p>
+          <p className="text-xs text-gray-500 mb-2">Use + and − to set how many — charges update automatically.</p>
+          {itemsOnlyMode && (
+            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-purple-100 text-purple-800 text-[11px] font-semibold px-2.5 py-1" data-testid="waste-items-only-badge">
+              <Sparkles className="w-3 h-3" />
+              Items Only pricing applied
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {WASTE_EXTRA_ITEMS.map((item) => {
               const Icon = iconMap[item.icon] || Circle;
@@ -512,8 +574,17 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
 
         {/* Notes */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Notes <span className="text-gray-400 font-normal">(optional)</span></label>
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Any access details, timing, or special requirements..." className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none" />
+          <label className="block text-sm font-semibold text-gray-700 mb-1">Notes <span className="text-gray-400 font-normal">(optional)</span></label>
+          <p className="text-xs text-gray-500 mb-1.5">
+            Only selected items are included above. If you have other waste items, list them below.
+          </p>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+            placeholder="Add any extra waste items not listed above"
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+          />
         </div>
 
         {/* Photo upload */}
@@ -529,7 +600,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
 
         <button
           onClick={() => setStep("summary")}
-          disabled={!selectedLoad || !pickup || !liftValue}
+          disabled={!hasSelection || !pickup || !liftValue}
           className="w-full py-2.5 sm:py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           data-testid="waste-continue"
         >

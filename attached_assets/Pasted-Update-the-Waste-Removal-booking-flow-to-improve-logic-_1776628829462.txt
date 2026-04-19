@@ -1,0 +1,116 @@
+Update the Waste Removal booking flow to improve logic, pricing, and user clarity (especially on mobile).
+
+Apply all changes consistently.
+
+---
+
+1. Items Only mode (core logic)
+
+Problem:
+Users can select individual items (e.g. mattress, fridge), but the system still expects load size selection, which is confusing.
+
+Solution:
+- If the user selects any items → activate “Items Only” mode
+- In this mode:
+  - user does NOT need to select load size
+  - pricing is calculated automatically from selected items
+
+---
+
+2. Pricing logic (with minimum charge)
+
+Apply strict pricing rules:
+
+Minimum Waste Removal booking = £60
+
+Rules:
+- if calculated total < £60 → final price = £60
+- if total ≥ £60 → use calculated total
+
+Examples:
+- 1 mattress (£30) → £60  
+- 2 items (£50) → £60  
+- items total £80 → £80  
+
+---
+
+3. UI behavior (clarity for user)
+
+When Items Only mode is active:
+
+- show small indicator text:
+  "Items Only pricing applied"
+
+- de-emphasize or hide load size selection (to avoid confusion)
+
+- keep interface simple and clean
+
+---
+
+4. Helper texts (Waste Removal only)
+
+Add clear guidance:
+
+"If you only select items below, you don’t need to choose a load size."
+
+Also show:
+
+"Minimum charge £60 applies"
+
+(optional combined version):
+"Items only bookings available — minimum charge £60 applies"
+
+---
+
+5. Notes field improvement
+
+Update placeholder text:
+
+"Add any extra waste items not listed above"
+
+Optional helper text above field:
+
+"Only selected items are included above. If you have other waste items, list them below."
+
+---
+
+6. Working hours (booking time window)
+
+Set and display operating hours as:
+
+8:00 AM – 12:00 AM
+
+Requirements:
+- show this clearly in the booking flow (e.g. near time selection)
+- keep it visible but not intrusive
+
+---
+
+7. Booking Policy update (IMPORTANT)
+
+Add this section to Booking Policy:
+
+Waste Removal – Minimum Booking
+
+Waste removal bookings are subject to a minimum charge of £60.
+
+If the total value of selected items is below £60, the final price will be adjusted to £60.
+
+For small jobs, users can select individual items without choosing a load size. Additional items can be added in the notes section. Final pricing may be adjusted accordingly.
+
+---
+
+Goal:
+
+- allow fast and simple booking (especially for small jobs)
+- remove confusion between items vs load size
+- clearly communicate:
+  • minimum charge (£60)
+  • working hours (8 AM – 12 AM)
+  • ability to add custom items
+
+- keep mobile experience clean, compact, and intuitive
+
+Important:
+- do NOT change desktop layout structure
+- focus on clarity, simplicity, and usability

@@ -33,15 +33,21 @@ export default function BookingPolicyPage() {
             <p>All bookings have a minimum duration of 2 hours.</p>
           </section>
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">6. Quotes</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">6. Waste Removal — Minimum Booking</h2>
+            <p>Waste removal bookings are subject to a minimum charge of £60.</p>
+            <p>If the total value of selected items is below £60, the final price will be adjusted to £60.</p>
+            <p>For small jobs, users can select individual items without choosing a load size. Additional items can be added in the notes section. Final pricing may be adjusted accordingly.</p>
+          </section>
+          <section>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">7. Quotes</h2>
             <p>All quotes are estimates based on the information provided. Final pricing may change if the job conditions differ on the day (extra items, additional stairs, parking issues, etc.).</p>
           </section>
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">7. Changes to Bookings</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">8. Changes to Bookings</h2>
             <p>If you need to change the date, time or address of a confirmed booking, please let us know as early as possible. We will do our best to accommodate changes subject to availability.</p>
           </section>
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">8. Contact</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">9. Contact</h2>
             <p>For any booking questions, contact us at move4foru@gmail.com or call +44 7946 259714.</p>
           </section>
         </div>
