@@ -136,33 +136,58 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Why Choose Us — distinct visual identity from Services.
-          Editorial 2-column layout on mobile (no boxes), softer colours,
-          tiny icon chips beside each point. */}
-      <section id="about" className="py-12 sm:py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-14">
-            <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2.5">
+      {/* Why Choose Us — full-width branded purple highlight (desktop + mobile).
+          Single bold brand surface using the same violet gradient as the logo
+          and primary CTAs. White text, transparent circular icon chips, no
+          inner boxes. Compact list-style layout. */}
+      <section
+        id="about"
+        className="py-10 sm:py-16 text-white relative overflow-hidden"
+        style={{
+          backgroundImage:
+            "linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%)",
+        }}
+      >
+        {/* Soft glow accents — subtle depth without breaking the brand wash */}
+        <div
+          aria-hidden="true"
+          className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-white/5 blur-3xl pointer-events-none"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute -bottom-32 -right-20 w-80 h-80 rounded-full bg-white/5 blur-3xl pointer-events-none"
+        />
+
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-7 sm:mb-12">
+            <p className="text-[10.5px] sm:text-[11px] font-semibold tracking-[0.22em] text-purple-200 mb-2">
               WHY MOVE4U
             </p>
-            <h2 className="text-[26px] sm:text-4xl font-bold text-gray-900 tracking-tight mb-2.5">
+            <h2 className="text-[24px] sm:text-4xl font-bold text-white tracking-tight mb-2">
               Why Choose Us
             </h2>
-            <p className="text-gray-500 text-[14px] sm:text-base max-w-xl mx-auto leading-relaxed">
+            <p className="text-purple-100/90 text-[13.5px] sm:text-base max-w-xl mx-auto leading-relaxed">
               Hundreds of customers trust Move4U for stress-free moves across London.
             </p>
           </div>
 
-          {/* Borderless feature list — feels editorial, not card-after-card */}
+          {/* Clean list-style layout — no card boxes, transparent icon circles */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7 max-w-5xl mx-auto">
             {whyChoose.map(({ icon: Icon, label, text }) => (
-              <div key={label} className="flex sm:flex-col items-start sm:items-start gap-3.5 sm:gap-4">
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100/60 text-purple-700 w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ring-1 ring-purple-100">
+              <div
+                key={label}
+                className="flex sm:flex-col items-start sm:items-start gap-3 sm:gap-4"
+              >
+                <div className="bg-white/10 text-white w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shrink-0 ring-1 ring-white/20">
                   <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-[15px] mb-1 tracking-tight">{label}</h3>
-                  <p className="text-gray-500 text-[13.5px] leading-relaxed">{text}</p>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-white text-[14.5px] sm:text-[15px] mb-0.5 sm:mb-1 tracking-tight">
+                    {label}
+                  </h3>
+                  <p className="text-purple-100/85 text-[13px] sm:text-[13.5px] leading-relaxed">
+                    {text}
+                  </p>
                 </div>
               </div>
             ))}

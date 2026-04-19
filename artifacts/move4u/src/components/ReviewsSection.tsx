@@ -5,41 +5,41 @@ import { REVIEWS } from "@/data/constants";
 // soft author row instead of stacked admin cards.
 export default function ReviewsSection() {
   return (
-    <section id="reviews" className="py-12 sm:py-16 bg-gradient-to-b from-[#faf8fd] via-purple-50/40 to-white">
+    <section id="reviews" className="py-9 sm:py-16 bg-gradient-to-b from-[#faf8fd] via-purple-50/40 to-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-10 sm:mb-14">
-          <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2.5">
+        <div className="text-center mb-6 sm:mb-14">
+          <p className="text-[10.5px] sm:text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2">
             REVIEWS
           </p>
-          <h2 className="text-[26px] sm:text-4xl font-bold text-gray-900 tracking-tight mb-2.5">
+          <h2 className="text-[22px] sm:text-4xl font-bold text-gray-900 tracking-tight mb-1.5 sm:mb-2.5">
             What Our Customers Say
           </h2>
-          <p className="text-gray-500 text-[14px] sm:text-base leading-relaxed">
+          <p className="text-gray-500 text-[13px] sm:text-base leading-relaxed">
             Trusted by hundreds of customers across London.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
           {REVIEWS.map((review) => (
             <figure
               key={review.id}
-              className="relative bg-white rounded-3xl p-6 sm:p-7 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(124,58,237,0.3)] hover:-translate-y-1 transition-all duration-300 flex flex-col"
+              className="relative bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-7 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(124,58,237,0.3)] sm:hover:-translate-y-1 transition-all duration-300 flex flex-col"
               data-testid={`review-${review.id}`}
             >
               {/* Big editorial quote mark */}
               <Quote
-                className="w-9 h-9 text-purple-200 -mt-1 -ml-1 mb-3"
+                className="w-6 h-6 sm:w-9 sm:h-9 text-purple-200 -mt-0.5 -ml-0.5 mb-2 sm:mb-3"
                 aria-hidden="true"
                 fill="currentColor"
               />
 
               {/* The quote — typographic hierarchy as the hero */}
-              <blockquote className="text-gray-800 text-[15.5px] leading-[1.65] font-normal mb-6 flex-1">
+              <blockquote className="text-gray-800 text-[13.5px] sm:text-[15.5px] leading-[1.55] sm:leading-[1.65] font-normal mb-3 sm:mb-6 flex-1">
                 "{review.text}"
               </blockquote>
 
               {/* Author row — refined, separated from the quote with a hairline */}
-              <figcaption className="flex items-center gap-3 pt-4 border-t border-gray-100">
+              <figcaption className="flex items-center gap-2.5 sm:gap-3 pt-2.5 sm:pt-4 border-t border-gray-100">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200/70 text-purple-700 flex items-center justify-center font-semibold text-[14px] ring-1 ring-purple-200/40">
                   {review.name.charAt(0)}
                 </div>

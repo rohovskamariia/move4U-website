@@ -1,0 +1,159 @@
+Refine the website UI with a focus on MOBILE optimization, and update the "Why Choose Us" section as a branded highlight.
+
+IMPORTANT:
+- "Why Choose Us" background → apply on BOTH desktop and mobile
+- All layout/spacing/UI fixes → apply ONLY on mobile (max-width: 768px)
+- Do NOT redesign desktop layout structure
+
+---
+
+1. "Why Choose Us" section (DESKTOP + MOBILE)
+
+Convert this section into a strong brand highlight:
+
+- full-width purple background
+- use SAME purple style as logo and primary buttons
+- do NOT introduce new colors
+
+Text:
+- all text must be white or soft white
+- remove all black/dark text
+
+Layout:
+- remove white card boxes
+- use clean list layout:
+  icon + title + description
+
+Icons:
+- reduce size
+- make consistent
+- place in subtle transparent circle
+
+Mobile:
+- reduce spacing
+- make compact (not stretched)
+
+---
+
+2. Mobile layout optimization (MOBILE ONLY)
+
+General:
+- reduce padding across sections
+- reduce vertical spacing
+- make layout tighter and faster to scan
+
+---
+
+3. Services section (MOBILE ONLY)
+
+Convert into grid layout:
+
+- 2 columns × 3 items
+
+Each item:
+- icon
+- title only
+- NO description
+- NO buttons
+
+Each item should be clickable
+
+---
+
+4. Reviews section (MOBILE ONLY)
+
+- reduce card padding
+- reduce text size slightly
+- reduce spacing
+- make cards more compact
+
+---
+
+5. Contact section (MOBILE ONLY)
+
+Replace large blocks with compact layout:
+
+[ WhatsApp ]   [ Call ]   [ Email ]
+
+- small buttons
+- icon + label only
+- no long descriptions
+- each opens correct action
+
+---
+
+6. Footer (MOBILE ONLY)
+
+- split into 2 columns
+- reduce spacing
+- make compact
+
+---
+
+7. Booking flow (MOBILE ONLY)
+
+- reduce card sizes (~30%)
+- reduce padding
+- smaller icons
+- smaller text
+
+Header:
+- smaller step title
+- thinner progress bar
+
+Button:
+- slimmer "Continue"
+
+Bottom:
+- inline "Call | WhatsApp"
+
+---
+
+8. Icon consistency (GLOBAL)
+
+- fix oversized icons everywhere
+- all icons same size & style
+
+---
+
+9. Typography (MOBILE ONLY)
+
+- reduce heading sizes slightly
+- reduce line spacing
+- keep readable but compact
+
+---
+
+FINAL GOAL:
+
+Desktop:
+- clean and professional
+- one strong branded section ("Why Choose Us")
+
+Mobile:
+- compact, fast, app-like experience
+- no oversized elements. Refine the van selection step in the booking flow (mobile only).
+
+Focus ONLY on the "Select your van" section.
+
+Current issue:
+Van cards (Small / Medium / Large) are too large and take too much vertical space on mobile.
+
+Required changes:
+
+- reduce height of each van card (by around 20–30%)
+- reduce padding inside the card
+- make the layout more compact
+- slightly reduce text size:
+  - "Small Van / Medium Van / Large Van"
+  - "From £XX/hr"
+- reduce icon size inside the cards
+- reduce spacing between cards
+
+Important:
+- keep cards easy to tap (do not make them too small)
+- keep selection state visible (highlight when selected)
+- do NOT change desktop layout
+
+Goal:
+Make the "Select your van" step feel compact, clean, and mobile-friendly.

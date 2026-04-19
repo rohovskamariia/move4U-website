@@ -26,33 +26,54 @@ export default function ServicesSection() {
   const [, setLocation] = useLocation();
 
   return (
-    <section id="services" className="py-12 sm:py-16 bg-white">
+    <section id="services" className="py-9 sm:py-16 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-9 sm:mb-14">
-          <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2.5">
+        <div className="text-center mb-6 sm:mb-14">
+          <p className="text-[10.5px] sm:text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2">
             WHAT WE OFFER
           </p>
-          <h2 className="text-[26px] sm:text-4xl font-bold text-gray-900 tracking-tight mb-2.5">
+          <h2 className="text-[22px] sm:text-4xl font-bold text-gray-900 tracking-tight mb-1.5 sm:mb-2.5">
             Our Services
           </h2>
-          <p className="text-gray-500 max-w-xl mx-auto text-[14px] sm:text-base leading-relaxed">
+          <p className="text-gray-500 max-w-xl mx-auto text-[13px] sm:text-base leading-relaxed">
             From single items to full house moves — we cover it all across London.
           </p>
         </div>
 
-        {/* Lighter, more elegant cards. Reduced visual weight, tighter
-            rhythm, smaller icons. Hover state gently lifts the card with a
-            soft purple glow rather than a hard shadow. */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
+        {/* MOBILE: tight 2x3 grid — icon + title only, every tile is one tap. */}
+        <div className="grid grid-cols-2 gap-2.5 sm:hidden">
+          {SERVICES.map((service) => {
+            const Icon = iconMap[service.icon] || Package;
+            return (
+              <button
+                key={service.id}
+                type="button"
+                onClick={() => setLocation(`/book/${service.id}`)}
+                className="bg-white rounded-2xl ring-1 ring-gray-100 p-3.5 flex flex-col items-center justify-center text-center min-h-[108px] active:bg-purple-50/40 active:scale-[0.98] transition-all"
+                data-testid={`service-card-${service.id}`}
+              >
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100/70 text-purple-700 w-10 h-10 rounded-xl flex items-center justify-center ring-1 ring-purple-100 mb-2">
+                  <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
+                </div>
+                <h3 className="font-semibold text-gray-900 text-[12.5px] tracking-tight leading-tight">
+                  {service.title}
+                </h3>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* DESKTOP / TABLET: full cards with description, price, CTAs.
+            Hidden on mobile — kept identical to the original layout. */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {SERVICES.map((service) => {
             const Icon = iconMap[service.icon] || Package;
             return (
               <div
                 key={service.id}
                 className="group relative bg-white rounded-3xl p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] transition-all duration-300 hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(124,58,237,0.28)] hover:-translate-y-1 flex flex-col"
-                data-testid={`service-card-${service.id}`}
+                data-testid={`service-card-desktop-${service.id}`}
               >
-                {/* Header row — small icon chip + price tag */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="bg-gradient-to-br from-purple-50 to-purple-100/70 text-purple-700 w-10 h-10 rounded-xl flex items-center justify-center ring-1 ring-purple-100 group-hover:from-purple-700 group-hover:to-purple-800 group-hover:text-white group-hover:ring-purple-700 transition-all duration-300">
                     <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
@@ -62,7 +83,7 @@ export default function ServicesSection() {
                   </span>
                 </div>
 
-                <h3 className="font-semibold text-gray-900 text-[16px] sm:text-[17px] mb-1 tracking-tight">
+                <h3 className="font-semibold text-gray-900 text-[17px] mb-1 tracking-tight">
                   {service.title}
                 </h3>
                 <p className="text-gray-500 text-[13.5px] leading-relaxed flex-1 mb-5">

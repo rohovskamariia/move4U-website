@@ -8,21 +8,70 @@ export default function ContactSection() {
   const waHref = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(CONTACT.whatsappDefaultMessage)}`;
 
   return (
-    <section id="contact" className="py-12 sm:py-16 bg-[#faf8fd]">
+    <section id="contact" className="py-9 sm:py-16 bg-[#faf8fd]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-10 sm:mb-14">
-          <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2.5">
+        <div className="text-center mb-6 sm:mb-14">
+          <p className="text-[10.5px] sm:text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2">
             CONTACT
           </p>
-          <h2 className="text-[26px] sm:text-4xl font-bold text-gray-900 tracking-tight mb-2.5">
+          <h2 className="text-[22px] sm:text-4xl font-bold text-gray-900 tracking-tight mb-1.5 sm:mb-2.5">
             Get in Touch
           </h2>
-          <p className="text-gray-500 text-[14px] sm:text-base leading-relaxed">
+          <p className="text-gray-500 text-[13px] sm:text-base leading-relaxed">
             Ready to book or have a question? Reach us any time.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 max-w-4xl mx-auto">
+        {/* MOBILE: compact 3-button row — icon + label, each opens its action */}
+        <div className="grid grid-cols-3 gap-2 sm:hidden max-w-md mx-auto">
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center justify-center gap-1.5 bg-white rounded-2xl ring-1 ring-gray-100 py-3.5 px-2 active:scale-[0.97] transition-transform"
+            data-testid="contact-mobile-whatsapp"
+          >
+            <span className="w-9 h-9 rounded-full bg-[#25D366] text-white flex items-center justify-center">
+              <MessageCircle className="w-[17px] h-[17px]" strokeWidth={2.25} />
+            </span>
+            <span className="text-[12px] font-semibold text-gray-800">WhatsApp</span>
+          </a>
+          <a
+            href={`tel:${CONTACT.driver}`}
+            className="flex flex-col items-center justify-center gap-1.5 bg-white rounded-2xl ring-1 ring-gray-100 py-3.5 px-2 active:scale-[0.97] transition-transform"
+            data-testid="contact-mobile-call"
+          >
+            <span
+              className="w-9 h-9 rounded-full text-white flex items-center justify-center"
+              style={{
+                backgroundImage:
+                  "linear-gradient(135deg, #7c3aed 0%, #6d28d9 60%, #5b21b6 100%)",
+              }}
+            >
+              <Phone className="w-[17px] h-[17px]" strokeWidth={2.25} />
+            </span>
+            <span className="text-[12px] font-semibold text-gray-800">Call</span>
+          </a>
+          <a
+            href={`mailto:${CONTACT.email}`}
+            className="flex flex-col items-center justify-center gap-1.5 bg-white rounded-2xl ring-1 ring-gray-100 py-3.5 px-2 active:scale-[0.97] transition-transform"
+            data-testid="contact-mobile-email"
+          >
+            <span
+              className="w-9 h-9 rounded-full text-white flex items-center justify-center"
+              style={{
+                backgroundImage:
+                  "linear-gradient(135deg, #7c3aed 0%, #6d28d9 60%, #5b21b6 100%)",
+              }}
+            >
+              <Mail className="w-[17px] h-[17px]" strokeWidth={2.25} />
+            </span>
+            <span className="text-[12px] font-semibold text-gray-800">Email</span>
+          </a>
+        </div>
+
+        {/* DESKTOP: original three premium contact cards */}
+        <div className="hidden sm:grid sm:grid-cols-3 gap-4 sm:gap-5 max-w-4xl mx-auto">
           {/* WhatsApp — premium gradient, primary contact method */}
           <a
             href={waHref}
