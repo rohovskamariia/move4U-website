@@ -1,4 +1,8 @@
-import { HELP_PRICING, VAN_SIZES, STAIR_CHARGES } from "@/data/constants";
+import { HELP_PRICING, VAN_SIZES } from "@/data/constants";
+import {
+  getFloorChargeFromValue,
+  getFloorLabelFromValue,
+} from "./StairsAccessSection";
 
 interface SummaryStepProps {
   service: string;
@@ -11,25 +15,6 @@ interface SummaryStepProps {
   hours: number;
   notes: string;
   onContinue: () => void;
-}
-
-function getFloorLabel(floorKey: string) {
-  const labels: Record<string, string> = {
-    none: "No stairs",
-    ground: "Ground floor",
-    first: "1st floor",
-    second: "2nd floor",
-    third: "3rd floor",
-    fourth: "4th floor",
-    fifth_plus: "5+ floors",
-    lift: "Lift available",
-  };
-  return labels[floorKey] || floorKey;
-}
-
-function getFloorCharge(floorKey: string) {
-  if (floorKey === "lift" || floorKey === "none" || !floorKey) return 0;
-  return STAIR_CHARGES[floorKey] ?? 0;
 }
 
 function getHelpLabel(id: string) {
@@ -69,21 +54,19 @@ export default function SummaryStep({
   if (helpOption === "driver-help") hourlyRate = pricing.driverHelp;
   if (helpOption === "driver-plus-helper") hourlyRate = pricing.driverPlusHelper;
 
-  const pickupCharge = getFloorCharge(pickupFloor);
-  const dropoffCharge = getFloorCharge(dropoffFloor);
+  const pickupCharge = getFloorChargeFromValue(pickupFloor);
+  const dropoffCharge = getFloorChargeFromValue(dropoffFloor);
   const totalExtras = pickupCharge + dropoffCharge;
   const estimatedBase = hourlyRate * hours;
   const estimatedTotal = estimatedBase + totalExtras;
 
-  const contactUs = pickupFloor === "fifth_plus" || dropoffFloor === "fifth_plus";
-
   const rows = [
     { label: "Service", value: service },
     { label: "Pickup", value: pickup || "—" },
-    pickup ? { label: "Pickup floor", value: getFloorLabel(pickupFloor) } : null,
+    pickup ? { label: "Pickup floor", value: getFloorLabelFromValue(pickupFloor) } : null,
     pickupCharge > 0 ? { label: "Pickup stair charge", value: `+£${pickupCharge}` } : null,
     { label: "Drop-off", value: dropoff || "—" },
-    dropoff ? { label: "Drop-off floor", value: getFloorLabel(dropoffFloor) } : null,
+    dropoff ? { label: "Drop-off floor", value: getFloorLabelFromValue(dropoffFloor) } : null,
     dropoffCharge > 0 ? { label: "Drop-off stair charge", value: `+£${dropoffCharge}` } : null,
     { label: "Van size", value: getVanLabel(vanSize) },
     { label: "Help option", value: getHelpLabel(helpOption) },
@@ -109,24 +92,17 @@ export default function SummaryStep({
       </div>
 
       {/* Estimated price */}
-      <div className={`rounded-xl p-4 mb-5 ${contactUs ? "bg-amber-50 border border-amber-100" : "bg-purple-50 border border-purple-100"}`}>
-        {contactUs ? (
-          <p className="text-amber-700 text-sm font-medium">
-            Please contact us for 5+ floor pricing — we'll give you a custom quote.
-          </p>
-        ) : (
-          <>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-700 text-sm font-medium">Estimated total</span>
-              <span className="text-2xl font-bold text-purple-700">
-                £{estimatedTotal.toFixed(0)}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Based on £{hourlyRate}/hr × {formatTime(hours)}{totalExtras > 0 ? ` + £${totalExtras} stair charges` : ""}
-            </p>
-          </>
-        )}
+      <div className="rounded-xl p-4 mb-5 bg-purple-50 border border-purple-100">
+        <div className="flex justify-between items-center">
+          <span className="text-gray-700 text-sm font-medium">Estimated total</span>
+          <span className="text-2xl font-bold text-purple-700">
+            £{estimatedTotal.toFixed(0)}
+          </span>
+        </div>
+        <p className="text-xs text-gray-500 mt-1">
+          Based on £{hourlyRate}/hr × {formatTime(hours)}
+          {totalExtras > 0 ? ` + £${totalExtras} stair charges` : ""}
+        </p>
       </div>
 
       {notes && (

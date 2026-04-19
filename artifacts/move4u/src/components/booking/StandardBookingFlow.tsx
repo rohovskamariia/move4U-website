@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft } from "lucide-react";
-import { STAIR_CHARGES, HELP_PRICING, VAN_SIZES } from "@/data/constants";
+import { HELP_PRICING, VAN_SIZES } from "@/data/constants";
+import {
+  getFloorChargeFromValue,
+  getFloorLabelFromValue,
+} from "./StairsAccessSection";
 import { submitBooking, uploadPhotos } from "@/lib/api";
 import AddressStep from "./AddressStep";
 import VanStep from "./VanStep";
@@ -31,10 +35,7 @@ const STEP_LABELS: Record<Step, string> = {
 
 const STEPS: Step[] = ["pickup", "dropoff", "van", "help", "time", "notes", "summary", "final"];
 
-function getFloorCharge(floorKey: string) {
-  if (floorKey === "lift" || floorKey === "none" || !floorKey) return 0;
-  return STAIR_CHARGES[floorKey] ?? 0;
-}
+const getFloorCharge = getFloorChargeFromValue;
 
 // Standard booking flow — used for House Move, Commercial Move, Single Item, Small Move
 // Edit steps and flow logic here
@@ -49,13 +50,11 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
 
   // Pickup state
   const [pickupAddress, setPickupAddress] = useState("");
-  const [pickupStairs, setPickupStairs] = useState("");
   const [pickupLift, setPickupLift] = useState("");
   const [pickupFloor, setPickupFloor] = useState("none");
 
   // Drop-off state
   const [dropoffAddress, setDropoffAddress] = useState("");
-  const [dropoffStairs, setDropoffStairs] = useState("");
   const [dropoffLift, setDropoffLift] = useState("");
   const [dropoffFloor, setDropoffFloor] = useState("none");
 
@@ -90,8 +89,8 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
   const dropoffCharge = getFloorCharge(dropoffFloor);
 
   const canProceed = () => {
-    if (step === "pickup") return !!pickupAddress;
-    if (step === "dropoff") return !!dropoffAddress;
+    if (step === "pickup") return !!pickupAddress && !!pickupLift;
+    if (step === "dropoff") return !!dropoffAddress && !!dropoffLift;
     if (step === "van") return !!vanSize;
     if (step === "help") return !!helpOption;
     return true;
@@ -106,13 +105,10 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
             label="Pickup address"
             addressValue={pickupAddress}
             onAddressChange={setPickupAddress}
-            stairsValue={pickupStairs}
-            onStairsChange={setPickupStairs}
             liftValue={pickupLift}
             onLiftChange={setPickupLift}
             floorValue={pickupFloor}
             onFloorChange={setPickupFloor}
-            extraCharge={pickupCharge}
           />
         );
       case "dropoff":
@@ -122,13 +118,10 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
             label="Drop-off address"
             addressValue={dropoffAddress}
             onAddressChange={setDropoffAddress}
-            stairsValue={dropoffStairs}
-            onStairsChange={setDropoffStairs}
             liftValue={dropoffLift}
             onLiftChange={setDropoffLift}
             floorValue={dropoffFloor}
             onFloorChange={setDropoffFloor}
-            extraCharge={dropoffCharge}
           />
         );
       case "van":
@@ -176,11 +169,10 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
                 "driver-help": "2 (driver + you carry)",
                 "driver-plus-helper": "3 (driver + 1 helper)",
               };
-              const floorLabels: Record<string, string> = {
-                none: "", ground: "Ground floor",
-                first: "1st floor (+£10)", second: "2nd floor (+£20)",
-                third: "3rd floor (+£30)", fourth: "4th floor (+£40)",
-                fifth_plus: "5+ floors", lift: "Lift available",
+              const formatFloorDetail = (key: string, charge: number) => {
+                const label = getFloorLabelFromValue(key);
+                if (!label || label === "—") return "";
+                return charge > 0 ? `${label} (+£${charge})` : label;
               };
               const wholeHours = Math.floor(hours);
               const halfHour = hours % 1 !== 0;
@@ -193,9 +185,9 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
                 phone,
                 contactMethod,
                 pickup: pickupAddress,
-                pickupDetails: floorLabels[pickupFloor] ?? "",
+                pickupDetails: formatFloorDetail(pickupFloor, pickupCharge),
                 dropoff: dropoffAddress,
-                dropoffDetails: floorLabels[dropoffFloor] ?? "",
+                dropoffDetails: formatFloorDetail(dropoffFloor, dropoffCharge),
                 extraAddress: "",
                 vanSize: vanLabel,
                 helpOption: helpLabels[helpOption] ?? helpOption,

@@ -308,36 +308,21 @@ html {
   max-height: 100dvh;
 }
 
-/* Anchor the page so iOS Safari + in-app browsers (Telegram, Instagram)
- * don't get the "floating / shifting" feeling caused by the address bar
- * collapsing/expanding mid-scroll. */
+/* iOS / mobile niceties only — never block the document scroller.
+ *
+ * Earlier versions set `overflow-x: hidden` on both html and body to
+ * prevent off-screen content from causing horizontal jiggle. That had a
+ * nasty side-effect: it broke wheel and touch scrolling on the body
+ * (only the scrollbar itself responded). We instead use `overflow-x:
+ * clip` on `body` which clips overflowing children without making the
+ * element a scroll container. The document keeps scrolling normally. */
 html {
-  /* Disable the elastic top/bottom bounce that makes sticky headers
-   * appear to "lift off" on iOS. */
-  overscroll-behavior-y: none;
-  /* Prevent any horizontal jiggle from off-screen content. */
-  overflow-x: hidden;
-  /* Smoother momentum scrolling on iOS. */
-  -webkit-overflow-scrolling: touch;
-  /* Don't let mobile browsers up-scale text after rotation. */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 body {
-  overscroll-behavior-y: none;
-  overflow-x: hidden;
-  /* Background colour matches the body so any over-scroll area never
-   * flashes a different colour. */
   background: #ffffff;
-  min-height: 100dvh;
-}
-
-/* Sticky elements (the header) feel much more stable on iOS when
- * promoted to their own compositor layer. */
-.sticky,
-.fixed {
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  /* `clip` (unlike `hidden`) does NOT establish a new scroll container,
+   * so wheel/touch scrolling continues to work everywhere on the page. */
+  overflow-x: clip;
 }

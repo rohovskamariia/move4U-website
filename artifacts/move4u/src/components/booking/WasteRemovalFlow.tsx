@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2, ChevronLeft, Info, Plus, Minus, ArrowUpDown, Route, Check, Hash } from "lucide-react";
+import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2, ChevronLeft, Info, Plus, Minus, Route, Check, Hash } from "lucide-react";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS } from "@/data/constants";
 import { submitBooking, uploadPhotos } from "@/lib/api";
 import WasteSizeModal from "@/components/WasteSizeModal";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import BookingTermsNotice from "./BookingTermsNotice";
+import StairsAccessSection, {
+  getFloorChargeFromValue,
+  getFloorLabelFromValue,
+} from "./StairsAccessSection";
 
-/** Flat surcharges for waste removal — keep simple, no per-floor maths. */
-const STAIRS_NO_LIFT_SURCHARGE = 10;
+/** Flat surcharge for restricted-access pickups (long carry, narrow lane, etc). */
 const RESTRICTED_ACCESS_SURCHARGE = 10;
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -61,7 +64,9 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
     setUnitNumber(val);
     commitPickup(corePickupRef.current, val);
   };
-  const [stairsNoLift, setStairsNoLift] = useState(false);
+  // Stairs & access — same model as the standard flow.
+  const [liftValue, setLiftValue] = useState<string>("");
+  const [floorValue, setFloorValue] = useState<string>("lift");
   const [restrictedAccess, setRestrictedAccess] = useState(false);
   const [notes, setNotes] = useState("");
   const [photos, setPhotos] = useState<File[]>([]);
@@ -100,7 +105,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
       return { id, qty, label: item?.label ?? id, price: item?.price ?? 0 };
     });
   const extrasTotal = selectedExtras.reduce((sum, e) => sum + e.price * e.qty, 0);
-  const stairsCharge = stairsNoLift ? STAIRS_NO_LIFT_SURCHARGE : 0;
+  const stairsCharge = getFloorChargeFromValue(floorValue);
   const accessCharge = restrictedAccess ? RESTRICTED_ACCESS_SURCHARGE : 0;
   const surchargeTotal = stairsCharge + accessCharge;
   const estimatedTotal = loadPrice + extrasTotal + surchargeTotal;
@@ -214,7 +219,11 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                   .map((e) => `${e.label} × ${e.qty} (£${e.price * e.qty})`)
                   .join(", ");
                 const accessNotes = [
-                  stairsNoLift ? `Stairs (no lift) +£${STAIRS_NO_LIFT_SURCHARGE}` : null,
+                  stairsCharge > 0
+                    ? `${getFloorLabelFromValue(floorValue)} — no lift (+£${stairsCharge})`
+                    : liftValue === "yes"
+                    ? "Lift available"
+                    : null,
                   restrictedAccess ? `Restricted access +£${RESTRICTED_ACCESS_SURCHARGE}` : null,
                 ]
                   .filter(Boolean)
@@ -276,7 +285,11 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
               label: `${e.label} × ${e.qty}`,
               value: `+£${e.price * e.qty}`,
             })),
-            stairsNoLift ? { label: "Stairs (no lift)", value: `+£${STAIRS_NO_LIFT_SURCHARGE}` } : null,
+            liftValue === "yes"
+              ? { label: "Lift access", value: "Available" }
+              : stairsCharge > 0
+              ? { label: `${getFloorLabelFromValue(floorValue)} — no lift`, value: `+£${stairsCharge}` }
+              : null,
             restrictedAccess ? { label: "Restricted access", value: `+£${RESTRICTED_ACCESS_SURCHARGE}` } : null,
           ]
             .filter(Boolean)
@@ -348,19 +361,18 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
             </div>
           )}
 
-          {/* Access surcharges — premium toggle cards. */}
+          {/* Access surcharges */}
           <div className="mt-4 space-y-2.5">
             <p className="text-xs font-semibold text-gray-700">
               Access details
             </p>
-            <AccessToggleCard
-              icon={ArrowUpDown}
-              title="Stairs — no lift"
-              description="Items need to be carried up or down a staircase."
-              priceLabel={`+£${STAIRS_NO_LIFT_SURCHARGE}`}
-              checked={stairsNoLift}
-              onToggle={() => setStairsNoLift((v) => !v)}
-              testId="waste-stairs-checkbox"
+            <StairsAccessSection
+              title="Stairs & access at pickup"
+              liftValue={liftValue}
+              onLiftChange={setLiftValue}
+              floorValue={floorValue}
+              onFloorChange={setFloorValue}
+              testIdSuffix="waste"
             />
             <AccessToggleCard
               icon={Route}
@@ -484,7 +496,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
 
         <button
           onClick={() => setStep("summary")}
-          disabled={!selectedLoad}
+          disabled={!selectedLoad || !pickup || !liftValue}
           className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           data-testid="waste-continue"
         >
