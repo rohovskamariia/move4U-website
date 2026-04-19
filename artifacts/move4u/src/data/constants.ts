@@ -72,7 +72,8 @@ export const SLIDES: Slide[] = [
     title: "Ready to Book Your Move?",
     text: "Get a quick quote online or call us for instant help.",
     image: slide2Image, // couple packing boxes on couch (high-res)
-    imagePosition: "65% 30%",
+    // Lifted upward so both heads are fully visible — no crop at the top.
+    imagePosition: "65% 12%",
     buttons: [
       { text: "Get a Quote", action: "quote", variant: "primary" },
       { text: "Call Us", action: "call", variant: "secondary" },

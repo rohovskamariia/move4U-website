@@ -41,15 +41,22 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Premium glass header — translucent, soft shadow that strengthens
-          slightly on scroll for added depth. Frosted background uses a
-          gentle purple tint so it ties back to the brand. */}
+      {/* Premium glass header — soft translucent lavender wash, never plain
+          white or harsh transparent. The shadow strengthens on scroll for
+          added depth while the brand tint stays subtle and readable. */}
       <header
         className={`sticky top-0 z-50 transition-all duration-300 backdrop-blur-xl border-b ${
           scrolled
-            ? "bg-white/85 border-gray-200/80 shadow-[0_8px_30px_-12px_rgba(76,29,149,0.18)]"
-            : "bg-white/70 border-white/60 shadow-[0_2px_12px_-6px_rgba(76,29,149,0.10)]"
+            ? "border-purple-200/60 shadow-[0_10px_32px_-12px_rgba(91,33,182,0.22)]"
+            : "border-purple-100/60 shadow-[0_4px_18px_-8px_rgba(91,33,182,0.14)]"
         }`}
+        style={{
+          backgroundColor: scrolled
+            ? "rgba(241,234,255,0.82)"
+            : "rgba(244,238,255,0.72)",
+          backgroundImage:
+            "linear-gradient(180deg, rgba(237,229,255,0.55) 0%, rgba(245,240,255,0.35) 100%)",
+        }}
       >
         <nav className="max-w-6xl mx-auto px-4 sm:px-6">
           {/* Slim refined silhouette — slightly taller on desktop for breathing room */}
