@@ -69,19 +69,14 @@ export default function Navbar() {
                   strokeWidth={2.4}
                 />
               </span>
-              <span className="flex flex-col leading-none">
-                <span
-                  className="font-bold text-[17px] md:text-[20px] tracking-tight bg-clip-text text-transparent"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, #5b21b6 0%, #7c3aed 60%, #6d28d9 100%)",
-                  }}
-                >
-                  Move4U
-                </span>
-                <span className="hidden md:block text-[10px] font-semibold tracking-[0.22em] text-gray-400 uppercase mt-1">
-                  London Removals
-                </span>
+              <span
+                className="font-bold text-[18px] md:text-[22px] tracking-tight bg-clip-text text-transparent leading-none"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(135deg, #5b21b6 0%, #7c3aed 60%, #6d28d9 100%)",
+                }}
+              >
+                Move4U
               </span>
             </Link>
 

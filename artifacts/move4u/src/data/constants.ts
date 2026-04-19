@@ -60,8 +60,9 @@ export const SLIDES: Slide[] = [
     id: 2,
     title: "Professional Team You Can Trust",
     text: "Careful handling, fast service and flexible booking times. We treat your belongings like our own.",
-    image: slide2Image, // couple packing boxes on couch (high-res)
-    imagePosition: "65% 30%",
+    image: slide3Image, // movers carrying furniture up stairs (high-res)
+    // Lifted upward so the worker's head is never cropped on desktop
+    imagePosition: "60% 18%",
     buttons: [
       { text: "Get a Quote", action: "quote", variant: "primary" },
     ],
@@ -70,8 +71,8 @@ export const SLIDES: Slide[] = [
     id: 3,
     title: "Ready to Book Your Move?",
     text: "Get a quick quote online or call us for instant help.",
-    image: slide3Image, // movers carrying furniture up stairs (high-res)
-    imagePosition: "60% 35%",
+    image: slide2Image, // couple packing boxes on couch (high-res)
+    imagePosition: "65% 30%",
     buttons: [
       { text: "Get a Quote", action: "quote", variant: "primary" },
       { text: "Call Us", action: "call", variant: "secondary" },

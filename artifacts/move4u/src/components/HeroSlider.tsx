@@ -66,7 +66,7 @@ export default function HeroSlider() {
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "linear-gradient(100deg, rgba(46,16,101,0.62) 0%, rgba(76,29,149,0.42) 30%, rgba(91,33,182,0.18) 60%, rgba(124,58,237,0.05) 85%, rgba(0,0,0,0) 100%)",
+            "linear-gradient(100deg, rgba(46,16,101,0.55) 0%, rgba(76,29,149,0.34) 32%, rgba(91,33,182,0.14) 62%, rgba(124,58,237,0.04) 86%, rgba(0,0,0,0) 100%)",
         }}
       />
 
