@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle, Loader2, ChevronLeft } from "lucide-react";
 import { submitBooking } from "@/lib/api";
 import BookingTermsNotice from "./BookingTermsNotice";
@@ -32,6 +32,17 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
 
   const canSubmit =
     form.pickupLocation && form.deliveryLocation && form.name && form.phone && form.contactMethod && agreedToTerms;
+
+  // When the confirmation screen replaces the form, jump to the top so the
+  // user immediately sees the success card instead of being left at the
+  // submit button further down the page.
+  useEffect(() => {
+    if (!submitted) return;
+    if (typeof window === "undefined") return;
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+    });
+  }, [submitted]);
 
   if (submitted) {
     return (

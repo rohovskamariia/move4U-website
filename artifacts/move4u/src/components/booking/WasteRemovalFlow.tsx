@@ -84,8 +84,18 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
 
   // Scroll to top whenever the step changes so the user always starts at
   // the top of the new step instead of the bottom of the previous one.
+  // For the final "submitted" confirmation step we use an instant jump
+  // (deferred a frame) so the user immediately sees the success icon and
+  // booking reference — smooth scroll can be flaky on mobile browsers.
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window === "undefined") return;
+    if (step === "submitted") {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+      });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }, [step]);
 
   const setQty = (id: string, qty: number) => {

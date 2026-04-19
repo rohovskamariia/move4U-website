@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle, Loader2 } from "lucide-react";
 import BookingTermsNotice from "./BookingTermsNotice";
 
@@ -40,6 +40,18 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
     selected.setHours(0, 0, 0, 0);
     return selected.getTime() === today.getTime() || selected.getTime() === tomorrow.getTime();
   })();
+
+  // When the booking succeeds and the confirmation card replaces the form,
+  // jump the window to the very top so the user immediately sees the
+  // success icon, thank-you message and reference — instead of being left
+  // partway down the (long) form they just submitted.
+  useEffect(() => {
+    if (!bookingRef) return;
+    if (typeof window === "undefined") return;
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+    });
+  }, [bookingRef]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
