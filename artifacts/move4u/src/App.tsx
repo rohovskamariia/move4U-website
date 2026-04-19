@@ -31,6 +31,7 @@ function Router() {
         <Route path="/privacy" component={PrivacyPage} />
         <Route path="/booking-policy" component={BookingPolicyPage} />
         <Route path="/cancellation-policy" component={CancellationPolicyPage} />
+        <Route path="/pricing" component={PricingGuidePage} />
         <Route path="/pricing-guide" component={PricingGuidePage} />
         <Route path="/van-guide" component={VanGuidePage} />
         <Route path="/waste-guide" component={WasteGuidePage} />

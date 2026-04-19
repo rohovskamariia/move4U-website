@@ -48,7 +48,7 @@ const POLICY_LINKS: DrawerLinkRow[] = [
   { href: "/privacy", label: "Privacy Policy", Icon: Shield },
   { href: "/booking-policy", label: "Booking Policy", Icon: CreditCard },
   { href: "/cancellation-policy", label: "Cancellation Policy", Icon: XCircle },
-  { href: "/pricing-guide", label: "Pricing Guide", Icon: Tag },
+  { href: "/pricing", label: "Pricing", Icon: Tag },
   { href: "/van-guide", label: "Van Size Guide", Icon: Truck },
   { href: "/waste-guide", label: "Waste Load Guide", Icon: Recycle },
 ];

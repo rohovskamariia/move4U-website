@@ -94,12 +94,12 @@ export default function Navbar() {
               >
                 How It Works
               </button>
-              <button
-                onClick={() => scrollTo("reviews")}
+              <Link
+                href="/pricing"
                 className="hover:text-purple-700 transition-colors"
               >
-                Reviews
-              </button>
+                Pricing
+              </Link>
               <button
                 onClick={() => scrollTo("contact")}
                 className="hover:text-purple-700 transition-colors"
