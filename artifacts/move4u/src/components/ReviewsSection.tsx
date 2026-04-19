@@ -40,14 +40,23 @@ export default function ReviewsSection() {
 
               {/* Author row — refined, separated from the quote with a hairline */}
               <figcaption className="flex items-center gap-2.5 sm:gap-3 pt-2.5 sm:pt-4 border-t border-gray-100">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200/70 text-purple-700 flex items-center justify-center font-semibold text-[14px] ring-1 ring-purple-200/40">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200/70 text-purple-700 flex items-center justify-center font-semibold text-[12.5px] sm:text-[14px] ring-1 ring-purple-200/40 shrink-0">
                   {review.name.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 text-[14px] leading-tight">{review.name}</p>
-                  <p className="text-gray-400 text-[12px] mt-0.5">{review.location}</p>
+                  {/* Mobile: name + compact "★ 5.0" rating on a single row.
+                      Desktop: name on top, location below; full 5-star row sits to the right. */}
+                  <div className="flex items-center justify-between gap-2 sm:block">
+                    <p className="font-semibold text-gray-900 text-[13px] sm:text-[14px] leading-tight truncate">{review.name}</p>
+                    <span className="sm:hidden inline-flex items-center gap-1 text-[12px] font-semibold text-gray-700 tabular-nums shrink-0">
+                      <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                      {review.rating.toFixed(1)}
+                    </span>
+                  </div>
+                  <p className="text-gray-400 text-[11.5px] sm:text-[12px] mt-0.5 truncate">{review.location}</p>
                 </div>
-                <div className="flex items-center gap-0.5">
+                {/* Desktop only: traditional 5-star row */}
+                <div className="hidden sm:flex items-center gap-0.5">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
