@@ -1,15 +1,13 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Link } from "wouter";
+import BackToHome from "@/components/BackToHome";
 
 export default function CancellationPolicyPage() {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
-        <Link href="/" className="text-sm text-purple-700 hover:underline mb-6 inline-block">
-          &larr; Back to home
-        </Link>
+        <BackToHome className="mb-6" />
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Cancellation Policy</h1>
         <p className="text-gray-500 text-sm mb-8">Last updated: April 2025</p>
 

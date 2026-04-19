@@ -52,19 +52,17 @@ export default function Navbar() {
       <header
         className={`sticky top-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 backdrop-blur-xl border-b ${
           scrolled
-            ? "border-purple-200/60 shadow-[0_10px_32px_-12px_rgba(91,33,182,0.22)]"
-            : "border-purple-100/60 shadow-[0_4px_18px_-8px_rgba(91,33,182,0.14)]"
+            ? "border-gray-200/80 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.18)]"
+            : "border-gray-100/80 shadow-[0_2px_10px_-8px_rgba(15,23,42,0.10)]"
         }`}
         style={{
-          // Mostly opaque on mobile to stay visually stable inside in-app
-          // browsers (Telegram / Instagram) where backdrop-filter can be
-          // unreliable. Adds a touch more transparency on desktop where
-          // backdrop-blur is consistent.
+          // Near-white with the faintest whisper of lavender — keeps the
+          // header light and clean instead of a heavy purple wash. Stays
+          // mostly opaque so it renders consistently inside Telegram /
+          // Instagram in-app browsers where backdrop-filter is flaky.
           backgroundColor: scrolled
-            ? "rgba(241,234,255,0.94)"
-            : "rgba(244,238,255,0.92)",
-          backgroundImage:
-            "linear-gradient(180deg, rgba(237,229,255,0.55) 0%, rgba(245,240,255,0.35) 100%)",
+            ? "rgba(255,255,255,0.94)"
+            : "rgba(252,251,254,0.92)",
           // Promote the header to its own GPU layer so iOS Safari and
           // in-app browsers don't repaint/jitter on scroll.
           transform: "translateZ(0)",
@@ -191,6 +189,7 @@ export default function Navbar() {
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
         onSectionLink={scrollTo}
+        onHome={goHome}
       />
     </>
   );

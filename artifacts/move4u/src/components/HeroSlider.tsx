@@ -58,24 +58,25 @@ export default function HeroSlider() {
         ))}
       </div>
 
-      {/* Branded gradient overlay — left side a touch darker for headline
-          legibility, with a soft purple tint that fades into the
-          photograph. Tuned to feel premium and on-brand without
-          overpowering the image or looking artificial. */}
+      {/* Soft neutral readability gradient — only darkens the left edge
+          where the headline sits, then fades quickly so the photograph
+          stays clean, sharp and natural across the rest of the frame.
+          No purple tint — the brand colour lives in the CTAs, not on top
+          of the photo. */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "linear-gradient(100deg, rgba(46,16,101,0.55) 0%, rgba(76,29,149,0.34) 32%, rgba(91,33,182,0.14) 62%, rgba(124,58,237,0.04) 86%, rgba(0,0,0,0) 100%)",
+            "linear-gradient(100deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.32) 28%, rgba(0,0,0,0.12) 52%, rgba(0,0,0,0.02) 78%, rgba(0,0,0,0) 100%)",
         }}
       />
 
       {/* Whisper-thin bottom vignette so the dot indicators stay readable */}
       <div
-        className="absolute inset-x-0 bottom-0 h-28 pointer-events-none"
+        className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(46,16,101,0.28) 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.28) 100%)",
         }}
       />
 

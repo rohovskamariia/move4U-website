@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "wouter";
+import BackToHome from "@/components/BackToHome";
 import smallVan from "@assets/IMG_3410_1776508670556.jpeg";
 import mediumVan from "@assets/IMG_3409_1776508670556.jpeg";
 import largeVan from "@assets/IMG_3408_1776508670556.jpeg";
@@ -64,13 +65,7 @@ export default function VanGuidePage() {
       <Navbar />
 
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-10">
-        <Link
-          href="/"
-          className="text-sm text-purple-700 hover:underline mb-6 inline-block"
-          data-testid="back-home-van-guide"
-        >
-          &larr; Back to home
-        </Link>
+        <BackToHome className="mb-6" />
 
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Van Size Guide</h1>

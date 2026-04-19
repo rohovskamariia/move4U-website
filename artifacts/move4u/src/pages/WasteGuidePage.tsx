@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "wouter";
+import BackToHome from "@/components/BackToHome";
 import { WASTE_LOADS } from "@/data/constants";
 import minLoad from "@assets/IMG_3575_1776610167208.jpeg";
 import quarterLoad from "@assets/IMG_3576_1776610167208.jpeg";
@@ -26,13 +27,7 @@ export default function WasteGuidePage() {
       <Navbar />
 
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-10">
-        <Link
-          href="/"
-          className="text-sm text-purple-700 hover:underline mb-6 inline-block"
-          data-testid="back-home-waste-guide"
-        >
-          &larr; Back to home
-        </Link>
+        <BackToHome className="mb-6" />
 
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">

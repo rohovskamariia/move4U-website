@@ -4,11 +4,6 @@ import {
   X,
   ChevronDown,
   Home,
-  Trash2,
-  Package,
-  Building2,
-  Globe,
-  HelpCircle,
   FileText,
   Shield,
   CreditCard,
@@ -27,6 +22,8 @@ interface MobileDrawerProps {
   onClose: () => void;
   /** Scroll to a section on the home page (handles cross-page nav). */
   onSectionLink: (id: string) => void;
+  /** Always go to the very top of the homepage. */
+  onHome: () => void;
 }
 
 interface DrawerLinkRow {
@@ -34,15 +31,6 @@ interface DrawerLinkRow {
   label: string;
   Icon: React.ComponentType<{ className?: string }>;
 }
-
-const SERVICE_LINKS: DrawerLinkRow[] = [
-  { href: "/book/house-move", label: "House Moving", Icon: Home },
-  { href: "/book/waste-removal", label: "Waste Removal", Icon: Trash2 },
-  { href: "/book/single-item", label: "Single Item Delivery", Icon: Package },
-  { href: "/book/commercial-move", label: "Commercial Moving", Icon: Building2 },
-  { href: "/book/international", label: "International Moving", Icon: Globe },
-  { href: "/book/something-else", label: "Custom Request", Icon: HelpCircle },
-];
 
 const POLICY_LINKS: DrawerLinkRow[] = [
   { href: "/pricing", label: "Pricing Guide", Icon: Tag },
@@ -59,28 +47,25 @@ const POLICY_LINKS: DrawerLinkRow[] = [
  * overlay behind it. Designed to feel like a modern booking-app menu.
  *
  * Structure (top → bottom):
- *   Main nav: Home, Services (collapsible), How It Works, Pricing, Contact
+ *   Main nav: Home, Services, How It Works, Pricing, Contact (one tap each)
  *   Policies & Guides (collapsible)
  *   Pinned CTAs: Get a Quote, Book Now
  *
- * Both collapsible groups start closed each time the drawer opens — the
- * menu must feel compact when first revealed.
+ * Each main nav item is a single, intentional destination — no nested
+ * service list under "Services" so the menu never feels repetitive.
  */
 export default function MobileDrawer({
   open,
   onClose,
   onSectionLink,
+  onHome,
 }: MobileDrawerProps) {
-  const [servicesOpen, setServicesOpen] = useState(false);
   const [policiesOpen, setPoliciesOpen] = useState(false);
 
-  // Reset both groups to collapsed every time the drawer is opened so the
+  // Reset the collapsible to closed every time the drawer opens so the
   // first impression is always clean and compact.
   useEffect(() => {
-    if (open) {
-      setServicesOpen(false);
-      setPoliciesOpen(false);
-    }
+    if (open) setPoliciesOpen(false);
   }, [open]);
 
   // Lock body scroll while open + close on Escape.
@@ -121,9 +106,12 @@ export default function MobileDrawer({
           open ? "translate-x-0" : "translate-x-full"
         }`}
         style={{
-          backgroundColor: "#fbfaff",
+          // Clean near-white surface — the drawer should feel light and
+          // airy, not a heavy lavender block. Brand purple stays reserved
+          // for the logo, the pinned Book Now CTA, and key icons.
+          backgroundColor: "#ffffff",
           backgroundImage:
-            "linear-gradient(180deg, #f6f1ff 0%, #fbfaff 18%, #fbfaff 100%)",
+            "linear-gradient(180deg, #fbfafe 0%, #ffffff 14%, #ffffff 100%)",
         }}
         role="dialog"
         aria-modal="true"
@@ -131,13 +119,13 @@ export default function MobileDrawer({
         data-testid="mobile-drawer"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-purple-100/70">
-          <span className="text-base font-bold text-purple-700">Menu</span>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <span className="text-base font-bold text-gray-900">Menu</span>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close menu"
-            className="p-2 rounded-lg text-gray-500 hover:bg-white/70 active:bg-white"
+            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors"
             data-testid="mobile-drawer-close"
           >
             <X className="w-5 h-5" />
@@ -150,44 +138,32 @@ export default function MobileDrawer({
           <SectionLabel>Navigate</SectionLabel>
 
           <NavRow
-            icon={<Home className="w-[18px] h-[18px] text-purple-600" />}
+            icon={<Home className="w-[18px] h-[18px] text-gray-500" />}
             label="Home"
-            href="/"
-            onClick={onClose}
+            onClick={onHome}
             testId="drawer-home"
           />
-          <Group
-            label="Services"
-            icon={<Briefcase className="w-[18px] h-[18px] text-purple-600" />}
-            open={servicesOpen}
-            onToggle={() => setServicesOpen((v) => !v)}
-            testId="drawer-group-services"
-          >
-            {SERVICE_LINKS.map(({ href, label, Icon }) => (
-              <DrawerLink
-                key={href}
-                href={href}
-                label={label}
-                Icon={Icon}
-                onClick={onClose}
-              />
-            ))}
-          </Group>
           <NavRow
-            icon={<Compass className="w-[18px] h-[18px] text-purple-600" />}
+            icon={<Briefcase className="w-[18px] h-[18px] text-gray-500" />}
+            label="Services"
+            onClick={() => handleSection("services")}
+            testId="drawer-services"
+          />
+          <NavRow
+            icon={<Compass className="w-[18px] h-[18px] text-gray-500" />}
             label="How It Works"
             onClick={() => handleSection("how-it-works")}
             testId="drawer-how-it-works"
           />
           <NavRow
-            icon={<Tag className="w-[18px] h-[18px] text-purple-600" />}
+            icon={<Tag className="w-[18px] h-[18px] text-gray-500" />}
             label="Pricing"
             href="/pricing"
             onClick={onClose}
             testId="drawer-pricing"
           />
           <NavRow
-            icon={<Phone className="w-[18px] h-[18px] text-purple-600" />}
+            icon={<Phone className="w-[18px] h-[18px] text-gray-500" />}
             label="Contact"
             onClick={() => handleSection("contact")}
             testId="drawer-contact"
@@ -200,7 +176,7 @@ export default function MobileDrawer({
           <SectionLabel>More</SectionLabel>
           <Group
             label="Policies & Guides"
-            icon={<BookOpen className="w-[18px] h-[18px] text-purple-600" />}
+            icon={<BookOpen className="w-[18px] h-[18px] text-gray-500" />}
             open={policiesOpen}
             onToggle={() => setPoliciesOpen((v) => !v)}
             testId="drawer-group-policies"
@@ -219,16 +195,16 @@ export default function MobileDrawer({
 
         {/* Pinned CTAs */}
         <div
-          className="border-t border-purple-100/70 p-4 space-y-2.5"
+          className="border-t border-gray-100 p-4 space-y-2.5"
           style={{
             paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
-            backgroundColor: "rgba(251,250,255,0.96)",
+            backgroundColor: "rgba(255,255,255,0.96)",
           }}
         >
           <Link
             href="/book?action=quote"
             onClick={onClose}
-            className="block w-full text-center font-semibold text-purple-700 border border-purple-200 px-4 py-3 rounded-full hover:bg-white transition-colors text-sm"
+            className="block w-full text-center font-semibold text-purple-700 border border-purple-200 px-4 py-3 rounded-full hover:bg-purple-50 transition-colors text-sm"
             data-testid="drawer-get-quote"
           >
             Get a Quote
@@ -279,7 +255,7 @@ function NavRow({
   testId?: string;
 }) {
   const className =
-    "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-[14.5px] font-medium text-gray-800 hover:bg-white/70 active:bg-white transition-colors";
+    "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-[14.5px] font-medium text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors";
 
   if (href) {
     return (
@@ -326,7 +302,7 @@ function Group({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-[14.5px] font-medium text-gray-800 hover:bg-white/70 active:bg-white transition-colors"
+        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-[14.5px] font-medium text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
         aria-expanded={open}
         data-testid={testId}
       >
@@ -344,7 +320,7 @@ function Group({
         }`}
       >
         <div className="overflow-hidden">
-          <div className="ml-7 mr-1 my-1 pl-2 border-l border-purple-100/80 space-y-0.5">
+          <div className="ml-7 mr-1 my-1 pl-2 border-l border-gray-100 space-y-0.5">
             {children}
           </div>
         </div>
@@ -363,9 +339,9 @@ function DrawerLink({
     <Link
       href={href}
       onClick={onClick}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] text-gray-700 hover:bg-white/70 active:bg-white transition-colors"
+      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
     >
-      <Icon className="w-[15px] h-[15px] text-purple-500/80 shrink-0" />
+      <Icon className="w-[15px] h-[15px] text-gray-400 shrink-0" />
       <span>{label}</span>
     </Link>
   );

@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "wouter";
+import BackToHome from "@/components/BackToHome";
 import { MessageCircle } from "lucide-react";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS, CONTACT } from "@/data/constants";
 import smallVan from "@assets/IMG_3410_1776508670556.jpeg";
@@ -51,12 +52,7 @@ export default function PricingGuidePage() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         {/* Page header */}
         <header className="mb-10 sm:mb-12">
-          <Link
-            href="/"
-            className="text-sm text-purple-700 hover:underline mb-4 inline-block"
-          >
-            &larr; Back to home
-          </Link>
+          <BackToHome className="mb-4" />
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mb-2">
             Pricing
           </h1>

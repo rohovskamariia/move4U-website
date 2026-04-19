@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BackToHome from "@/components/BackToHome";
 import ServiceSelector from "@/components/booking/ServiceSelector";
 import StandardBookingFlow from "@/components/booking/StandardBookingFlow";
 import WasteRemovalFlow from "@/components/booking/WasteRemovalFlow";
@@ -65,7 +66,8 @@ export default function BookingPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-4 sm:pt-5 pb-10">
+        <BackToHome className="mb-4" />
         {/* Page header */}
         {!selectedService && (
           <div className="text-center mb-8">

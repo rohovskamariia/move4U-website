@@ -1,0 +1,84 @@
+Update the website navigation behavior, hero visual style, and service-page usability.
+
+Do NOT redesign the whole website.
+Focus only on the issues below.
+
+1. Navigation behavior must be clear and logical on both desktop and mobile
+
+Current issue:
+On mobile, if I click Contact / Services / How It Works from another page, it takes me to the homepage but only lower down at that section.
+Then if I click Home, it does not feel clear or useful because I am already on the homepage, only lower on the page.
+
+I want the navigation to behave more clearly and consistently.
+
+Required behavior:
+- Home → always go to the TOP of the homepage
+- Services → go directly to the Services section on the homepage
+- How It Works → go directly to the How It Works section on the homepage
+- Contact → go directly to the Contact section on the homepage
+- Pricing → go to the Pricing page
+
+This must work correctly from every page, including:
+- booking pages
+- service pages
+- pricing page
+- guide pages
+- mobile sidebar menu
+- desktop header menu
+
+Important:
+Make the navigation feel intentional and clear.
+Do not make it confusing when the user is already on the homepage.
+Home should always mean the top of the homepage.
+
+2. Add “Back to home” on service / booking pages
+
+Current issue:
+When a user opens a service page or booking flow, there is no clear visible way to go back home except using the logo.
+
+Required:
+- Add a visible “← Back to home” link near the top of service pages and booking pages
+- Show it on both desktop and mobile
+- Keep it clean and subtle
+- It should go to the top of the homepage
+
+3. Reduce the purple visual weight
+
+Current issue:
+There is too much purple across the site and it feels heavy.
+
+Please reduce the amount of purple used in the visual design.
+
+Important:
+- Keep the Move4U brand purple for the logo, main CTA buttons, and important accents
+- But reduce unnecessary purple overlays, purple backgrounds, and heavy purple tints
+- Make the site feel lighter, cleaner, and more natural
+
+4. Hero images: test a cleaner version without heavy purple overlay
+
+Please update the hero / slider images to look cleaner and more natural.
+
+Required:
+- remove the strong purple overlay from the hero images
+- keep the photos clear and sharp
+- only use a very soft dark gradient on the left side if needed for text readability
+- do NOT tint the whole photo purple
+- let the photos stay more natural and realistic
+
+Goal:
+Try a cleaner version with clear photos in the background and less purple effect.
+
+5. Mobile menu behavior
+
+Keep the mobile sidebar menu easy to understand:
+- Home should always mean homepage top
+- Services should mean Services section
+- How It Works should mean How It Works section
+- Contact should mean Contact section
+- Pricing should mean Pricing page
+
+Do not make the mobile navigation confusing or repetitive.
+
+Goal:
+Make the website feel cleaner, lighter, and easier to use on mobile and desktop.
+Do not redesign other sections yet.

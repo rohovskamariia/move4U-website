@@ -61,7 +61,7 @@ export default function HomePage() {
           Desktop: 4-column horizontal flow with subtle dotted connector. */}
       <section
         id="how-it-works"
-        className="py-12 sm:py-16 bg-gradient-to-b from-purple-50/50 via-white to-[#faf8fd]"
+        className="py-12 sm:py-16 bg-white"
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10 sm:mb-14">
@@ -170,27 +170,30 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* About strip — refined deep-purple call-out */}
-      <section className="py-12 sm:py-16 bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900 text-white relative overflow-hidden">
-        {/* Soft glow accents — subtle, not "cosmic" */}
-        <div className="absolute -top-24 -right-24 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-fuchsia-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* About strip — clean, light call-out. Brand purple lives in the
+          CTA button only, not as a heavy background block. */}
+      <section className="py-14 sm:py-18 bg-white border-y border-gray-100 relative overflow-hidden">
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-[24px] sm:text-3xl font-bold mb-3 tracking-tight">London's Trusted Moving Service</h2>
-          <p className="text-purple-100/90 text-[14px] sm:text-base leading-relaxed max-w-2xl mx-auto mb-7">
+          <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2.5">
+            ABOUT MOVE4U
+          </p>
+          <h2 className="text-[24px] sm:text-3xl font-bold text-gray-900 mb-3 tracking-tight">
+            London's Trusted Moving Service
+          </h2>
+          <p className="text-gray-600 text-[14px] sm:text-base leading-relaxed max-w-2xl mx-auto mb-7">
             Move4U offers house moving, waste removal, single item delivery, commercial moving and international moving across London and surrounding areas. Clear pricing, flexible booking and professional service every time.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={() => setLocation("/book")}
-              className="bg-white text-purple-700 font-semibold px-7 py-3 rounded-full hover:bg-purple-50 hover:-translate-y-0.5 hover:shadow-[0_14px_30px_-12px_rgba(0,0,0,0.4)] transition-all text-[14px]"
+              className="btn-purple inline-flex items-center justify-center font-semibold px-7 py-3 rounded-full text-[14px]"
               data-testid="about-book-now"
             >
               Book Now
             </button>
             <a
               href={`tel:${CONTACT.driver}`}
-              className="border border-white/40 text-white font-semibold px-7 py-3 rounded-full hover:bg-white/10 hover:-translate-y-0.5 transition-all text-[14px]"
+              className="border border-gray-200 text-gray-800 font-semibold px-7 py-3 rounded-full hover:bg-gray-50 hover:-translate-y-0.5 transition-all text-[14px]"
               data-testid="about-call-us"
             >
               Call: {CONTACT.driverDisplay}
