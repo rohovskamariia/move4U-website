@@ -8,7 +8,7 @@ export default function ContactSection() {
   const waHref = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(CONTACT.whatsappDefaultMessage)}`;
 
   return (
-    <section id="contact" className="py-14 sm:py-20 bg-white">
+    <section id="contact" className="py-12 sm:py-16 bg-[#faf8fd]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-10 sm:mb-14">
           <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2.5">
@@ -28,7 +28,7 @@ export default function ContactSection() {
             href={waHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 via-green-500 to-green-600 text-white rounded-2xl p-5 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-18px_rgba(34,197,94,0.55)] transition-all duration-300"
+            className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 via-green-500 to-green-600 text-white rounded-3xl p-6 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(34,197,94,0.25)] hover:-translate-y-1 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(34,197,94,0.55)] transition-all duration-300"
             data-testid="contact-whatsapp"
           >
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
@@ -46,8 +46,7 @@ export default function ContactSection() {
           {/* Call — soft purple */}
           <a
             href={`tel:${CONTACT.driver}`}
-            className="group relative bg-white border border-gray-150 rounded-2xl p-5 hover:-translate-y-0.5 hover:border-purple-200 hover:shadow-[0_18px_40px_-22px_rgba(124,58,237,0.35)] transition-all duration-300"
-            style={{ borderColor: "rgb(238 238 242)" }}
+            className="group relative bg-white rounded-3xl p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] hover:-translate-y-1 hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(124,58,237,0.3)] transition-all duration-300"
             data-testid="contact-call-driver"
           >
             <div className="flex items-start justify-between mb-5">
@@ -64,8 +63,7 @@ export default function ContactSection() {
           {/* Email */}
           <a
             href={`mailto:${CONTACT.email}`}
-            className="group relative bg-white border border-gray-150 rounded-2xl p-5 hover:-translate-y-0.5 hover:border-purple-200 hover:shadow-[0_18px_40px_-22px_rgba(124,58,237,0.35)] transition-all duration-300"
-            style={{ borderColor: "rgb(238 238 242)" }}
+            className="group relative bg-white rounded-3xl p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] hover:-translate-y-1 hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(124,58,237,0.3)] transition-all duration-300"
             data-testid="contact-email"
           >
             <div className="flex items-start justify-between mb-5">

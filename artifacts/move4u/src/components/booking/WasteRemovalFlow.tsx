@@ -275,7 +275,35 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
         <Header />
         <h3 className="text-base font-semibold text-gray-900 mb-1">Booking summary</h3>
         <p className="text-gray-500 text-sm mb-5">Review your waste removal details.</p>
-        <div className="bg-gray-50 border border-gray-100 rounded-xl overflow-hidden mb-5">
+
+        {/* Prominent total — gradient hero card matching the standard flow */}
+        <div
+          className="rounded-2xl p-5 mb-5 text-white relative overflow-hidden"
+          style={{
+            backgroundImage:
+              "linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%)",
+            boxShadow: "0 10px 30px -12px rgba(124,58,237,0.45)",
+          }}
+        >
+          <p className="text-xs font-semibold tracking-[0.18em] text-white uppercase mb-1">
+            Estimated total
+          </p>
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span
+              className="text-4xl font-bold tracking-tight tabular-nums"
+              data-testid="waste-summary-total"
+            >
+              £{estimatedTotal}
+            </span>
+            <span className="text-white text-sm font-medium">
+              Load £{loadPrice}
+              {extrasTotal > 0 ? ` + £${extrasTotal} items` : ""}
+              {surchargeTotal > 0 ? ` + £${surchargeTotal} access` : ""}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden mb-3 divide-y divide-gray-50">
           {[
             { label: "Service", value: "Waste Removal" },
             { label: "Pickup address", value: pickup || "—" },
@@ -296,26 +324,21 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
             .map((row, i) => {
               const r = row as { label: string; value: string };
               return (
-                <div key={i} className={`flex justify-between px-4 py-2.5 text-sm ${i % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
-                  <span className="text-gray-500">{r.label}</span>
-                  <span className="font-medium text-gray-900 text-right">{r.value}</span>
+                <div key={i} className="flex justify-between items-baseline gap-3 px-4 py-2 text-[13px]">
+                  <span className="text-gray-500 shrink-0">{r.label}</span>
+                  <span className="font-medium text-gray-900 text-right truncate">{r.value}</span>
                 </div>
               );
             })}
         </div>
-        <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 mb-3">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-700 text-sm font-medium">Estimated total</span>
-            <span
-              className="text-2xl font-bold text-purple-700"
-              data-testid="waste-summary-total"
-            >£{estimatedTotal}</span>
-          </div>
-        </div>
+
         <p className="text-xs text-gray-500 mb-5 leading-relaxed">
           Final price may vary depending on access and loading conditions.
         </p>
-        <button onClick={() => setStep("final")} className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm">
+        <button
+          onClick={() => setStep("final")}
+          className="btn-purple w-full py-3.5 font-semibold rounded-xl text-sm"
+        >
           Continue booking
         </button>
       </div>
@@ -404,7 +427,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
               View load sizes &amp; pictures
             </button>
           </div>
-          <p className="text-xs text-gray-500 mb-3">Not sure what size you need? View load sizes &amp; pictures.</p>
+          <p className="text-xs text-gray-500 mb-3">Pick the closest match — we'll confirm the right size before pickup.</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {WASTE_LOADS.map((load) => (
               <button

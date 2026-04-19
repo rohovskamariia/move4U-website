@@ -58,21 +58,22 @@ export default function HeroSlider() {
         ))}
       </div>
 
-      {/* Purple gradient overlay — softer so the photo reads through clearly */}
+      {/* Purple gradient overlay — deeper on the left so headline reads
+          cleanly against the photograph without feeling muddy. */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "linear-gradient(90deg, rgba(88,28,135,0.55) 0%, rgba(88,28,135,0.25) 55%, rgba(0,0,0,0) 100%)",
+            "linear-gradient(95deg, rgba(46,16,101,0.78) 0%, rgba(76,29,149,0.55) 40%, rgba(88,28,135,0.18) 75%, rgba(0,0,0,0) 100%)",
         }}
       />
 
-      {/* Subtle bottom darken so dots/arrows always read */}
+      {/* Soft full-frame darken to keep contrast on lighter photos */}
       <div
-        className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
+        className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "linear-gradient(to top, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.32) 100%)",
         }}
       />
 
@@ -109,8 +110,8 @@ export default function HeroSlider() {
                     onClick={() => handleAction(btn.action)}
                     className={
                       isPrimary
-                        ? "inline-flex items-center justify-center bg-white text-gray-900 font-semibold px-6 py-3 rounded-full hover:bg-gray-100 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shadow-lg shadow-black/10 text-sm sm:text-base"
-                        : "inline-flex items-center justify-center bg-transparent text-white font-semibold px-6 py-3 rounded-full border border-white/70 hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 text-sm sm:text-base"
+                        ? "btn-purple inline-flex items-center justify-center font-semibold px-7 py-3 rounded-full text-sm sm:text-base"
+                        : "inline-flex items-center justify-center bg-white/10 backdrop-blur-sm text-white font-semibold px-7 py-3 rounded-full border border-white/60 hover:bg-white/20 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 text-sm sm:text-base"
                     }
                     data-testid={`slide-${slide.id}-cta-${i}`}
                   >

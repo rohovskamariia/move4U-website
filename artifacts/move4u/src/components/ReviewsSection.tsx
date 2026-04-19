@@ -5,7 +5,7 @@ import { REVIEWS } from "@/data/constants";
 // soft author row instead of stacked admin cards.
 export default function ReviewsSection() {
   return (
-    <section id="reviews" className="py-14 sm:py-20 bg-gradient-to-b from-white via-purple-50/30 to-white">
+    <section id="reviews" className="py-12 sm:py-16 bg-gradient-to-b from-[#faf8fd] via-purple-50/40 to-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-10 sm:mb-14">
           <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2.5">
@@ -23,7 +23,7 @@ export default function ReviewsSection() {
           {REVIEWS.map((review) => (
             <figure
               key={review.id}
-              className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 sm:p-7 ring-1 ring-gray-100 hover:ring-purple-200/70 transition-all duration-300 hover:shadow-[0_18px_40px_-22px_rgba(124,58,237,0.35)] flex flex-col"
+              className="relative bg-white rounded-3xl p-6 sm:p-7 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(124,58,237,0.3)] hover:-translate-y-1 transition-all duration-300 flex flex-col"
               data-testid={`review-${review.id}`}
             >
               {/* Big editorial quote mark */}
