@@ -19,44 +19,78 @@ export default function ReviewsSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+        {/* MOBILE: horizontal swipe carousel — compact app-style cards.
+            Each card ~85vw wide so the next card peeks in, encouraging swipe.
+            Quote text is line-clamped to 4 lines to prevent tall cards. */}
+        <div
+          className="sm:hidden -mx-4 px-4 flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          data-testid="reviews-mobile-carousel"
+        >
           {REVIEWS.map((review) => (
             <figure
               key={review.id}
-              className="relative bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-7 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(124,58,237,0.3)] sm:hover:-translate-y-1 transition-all duration-300 flex flex-col"
+              className="snap-start shrink-0 w-[85%] bg-white rounded-2xl p-3.5 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.05)] flex flex-col"
               data-testid={`review-${review.id}`}
             >
-              {/* Big editorial quote mark */}
+              {/* Compact header row — small quote glyph, rating tag on right */}
+              <div className="flex items-start justify-between mb-1.5">
+                <Quote
+                  className="w-4 h-4 text-purple-200/80"
+                  aria-hidden="true"
+                  fill="currentColor"
+                />
+                <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-gray-700 tabular-nums">
+                  <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                  {review.rating.toFixed(1)}
+                </span>
+              </div>
+
+              {/* Quote — clamped to 4 lines, tight leading */}
+              <blockquote className="text-gray-800 text-[13px] leading-[1.5] font-normal mb-3 flex-1 line-clamp-4">
+                "{review.text}"
+              </blockquote>
+
+              {/* Single-line author row: avatar + "Name • Location" */}
+              <figcaption className="flex items-center gap-2 pt-2.5 border-t border-gray-100">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-100 to-purple-200/70 text-purple-700 flex items-center justify-center font-semibold text-[11.5px] ring-1 ring-purple-200/40 shrink-0">
+                  {review.name.charAt(0)}
+                </div>
+                <p className="text-[12px] text-gray-700 truncate min-w-0">
+                  <span className="font-semibold text-gray-900">{review.name}</span>
+                  <span className="text-gray-400"> · {review.location}</span>
+                </p>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+
+        {/* DESKTOP / TABLET: original editorial grid */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {REVIEWS.map((review) => (
+            <figure
+              key={review.id}
+              className="relative bg-white rounded-3xl p-7 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(124,58,237,0.3)] hover:-translate-y-1 transition-all duration-300 flex flex-col"
+              data-testid={`review-desktop-${review.id}`}
+            >
               <Quote
-                className="w-6 h-6 sm:w-9 sm:h-9 text-purple-200 -mt-0.5 -ml-0.5 mb-2 sm:mb-3"
+                className="w-9 h-9 text-purple-200 -mt-0.5 -ml-0.5 mb-3"
                 aria-hidden="true"
                 fill="currentColor"
               />
 
-              {/* The quote — typographic hierarchy as the hero */}
-              <blockquote className="text-gray-800 text-[13.5px] sm:text-[15.5px] leading-[1.55] sm:leading-[1.65] font-normal mb-3 sm:mb-6 flex-1">
+              <blockquote className="text-gray-800 text-[15.5px] leading-[1.65] font-normal mb-6 flex-1">
                 "{review.text}"
               </blockquote>
 
-              {/* Author row — refined, separated from the quote with a hairline */}
-              <figcaption className="flex items-center gap-2.5 sm:gap-3 pt-2.5 sm:pt-4 border-t border-gray-100">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200/70 text-purple-700 flex items-center justify-center font-semibold text-[12.5px] sm:text-[14px] ring-1 ring-purple-200/40 shrink-0">
+              <figcaption className="flex items-center gap-3 pt-4 border-t border-gray-100">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200/70 text-purple-700 flex items-center justify-center font-semibold text-[14px] ring-1 ring-purple-200/40 shrink-0">
                   {review.name.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  {/* Mobile: name + compact "★ 5.0" rating on a single row.
-                      Desktop: name on top, location below; full 5-star row sits to the right. */}
-                  <div className="flex items-center justify-between gap-2 sm:block">
-                    <p className="font-semibold text-gray-900 text-[13px] sm:text-[14px] leading-tight truncate">{review.name}</p>
-                    <span className="sm:hidden inline-flex items-center gap-1 text-[12px] font-semibold text-gray-700 tabular-nums shrink-0">
-                      <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                      {review.rating.toFixed(1)}
-                    </span>
-                  </div>
-                  <p className="text-gray-400 text-[11.5px] sm:text-[12px] mt-0.5 truncate">{review.location}</p>
+                  <p className="font-semibold text-gray-900 text-[14px] leading-tight">{review.name}</p>
+                  <p className="text-gray-400 text-[12px] mt-0.5">{review.location}</p>
                 </div>
-                {/* Desktop only: traditional 5-star row */}
-                <div className="hidden sm:flex items-center gap-0.5">
+                <div className="flex items-center gap-0.5">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
