@@ -1,0 +1,421 @@
+We need a full mobile-first redesign and UX improvement of the website. This is not a small fix — this is a structured redesign to make the site look professional, modern, logical, and smooth on mobile devices.
+
+The goal:
+- clean, premium, service-based design
+- similar UX level to Uber / Bolt / Deliveroo
+- no messy layouts
+- no repeated elements
+- no broken mobile behaviour
+- strong visual hierarchy
+- easy and comfortable booking on phone
+- polished, professional appearance
+
+Please follow ALL instructions carefully and implement consistently.
+
+-----------------------------------
+1. GLOBAL MOBILE UX RULES
+-----------------------------------
+
+- Design mobile-first (not desktop scaled down)
+- Reduce unnecessary vertical spacing
+- Remove duplicate content
+- Improve hierarchy (clear titles, sections, actions)
+- Keep UI clean and minimal
+- Buttons must be large and easy to tap
+- Avoid long text blocks where possible
+- Make everything feel fast and smooth
+- Use consistent spacing, font sizing, card design, and button design
+- Avoid anything that feels like a default template or raw form
+
+-----------------------------------
+2. HEADER & TOP AREA FIX
+-----------------------------------
+
+Problems:
+- header feels bulky
+- top purple strip looks messy on mobile
+- layout jumps on Safari
+- floating browser behaviour makes layout feel unstable
+
+Fix:
+- make header more compact
+- reduce height and padding
+- keep logo left, hamburger right
+- cleaner spacing and tighter visual structure
+- remove or redesign the top purple info strip on mobile
+- preferably hide the top purple strip on mobile completely
+- if not hidden, make it much smaller and non-intrusive
+- it must not dominate the viewport
+- it must not create layout conflicts or awkward scrolling
+
+IMPORTANT:
+Replace:
+- height: 100vh
+
+With:
+- min-height: 100dvh
+
+Also fix Safari/iPhone viewport issues so the layout does not jump or float strangely.
+
+-----------------------------------
+3. MOBILE MENU MUST BE SIDE DRAWER
+-----------------------------------
+
+The mobile menu must NOT open from the top.
+
+Replace current menu with a side drawer / off-canvas menu.
+
+Requirements:
+- menu slides in from the RIGHT side
+- smooth animation (~300ms ease)
+- semi-transparent dark overlay behind menu
+- clicking outside closes menu
+- close button inside menu
+- must feel like a modern mobile app
+
+Menu panel:
+- full height
+- width around 80% of screen, max 320px
+- white background
+- subtle rounded left corners
+- clean internal spacing
+
+Menu structure:
+
+Services ▼
+  - House Moving
+  - Waste Removal
+  - Single Item Delivery
+  - Commercial Moving
+  - International Moving
+  - Custom Request
+
+Policies ▼
+  - Terms & Conditions
+  - Privacy Policy
+  - Booking Policy
+  - Cancellation Policy
+  - Pricing Guide
+  - Van Size Guide
+  - Waste Load Guide
+
+Other:
+- How It Works
+- Reviews
+- Contact
+
+Bottom of menu:
+- Get a Quote (outline button)
+- Book Now (primary purple button)
+
+UX rules:
+- each item easy to tap (minimum 44px tap height)
+- collapsible dropdown sections must animate smoothly
+- hierarchy must be clear
+- spacing must feel premium, not cramped and not empty
+- do NOT use a plain basic vertical list
+- do NOT make it look like a default template
+
+-----------------------------------
+
+-----------------------------------
+4. ADDRESS AUTOCOMPLETE (CRITICAL)
+-----------------------------------
+
+This is one of the most important parts of the product and must feel smooth, fast, and reliable on mobile.
+
+UI requirements:
+- dropdown must appear directly under the input
+- clean white background
+- rounded corners
+- no dark / black fullscreen overlay
+- no page jumping or layout shifting
+- clear spacing between items
+- large tap targets (mobile-friendly)
+- loading indicator inside input while searching
+- clean “no results” state
+- dropdown closes after selection
+
+UX requirements:
+- address selection must feel instant and smooth (like Uber / delivery apps)
+- user must clearly understand they are selecting a real address, not typing freely
+- Continue button must remain disabled until a valid selection is made
+
+Data quality requirements:
+
+The system should always TRY to return full addresses including:
+- house / building number
+- street name
+- postcode
+- city
+
+Example of ideal result:
+233 Alexandra Park Rd, London N22 7BJ, UK
+
+Do NOT prioritize:
+- postcode-only results
+- area / borough names
+- vague locations
+- incomplete street-only results
+
+Filtering:
+- prioritize full UK addresses
+- bias results towards London where relevant
+- avoid irrelevant or overly broad results
+
+Important balance (UX vs accuracy):
+
+If the provider does NOT return a house number in some cases:
+- DO NOT block the user completely
+- allow selection of the closest valid address
+- THEN require a follow-up field:
+
+"House / Flat number" (required)
+
+This ensures:
+- the user is never stuck
+- address remains complete and usable
+- booking flow stays smooth
+
+Final rule:
+- user must NOT be able to continue with random typed text
+- a real suggestion must be selected OR completed via house/flat field
+
+Goal:
+A fast, clean, mobile-friendly address experience that feels like a modern booking app, not a form.
+
+-----------------------------------
+5. REMOVE DUPLICATES
+-----------------------------------
+
+Remove repeated elements across UI.
+
+Specifically:
+- “Size guide” must appear ONLY once on the van size screen
+- keep it only near the heading / helper area
+- remove duplicate size guide link lower down
+- remove repeated helper text where duplicated
+- remove repeated visual patterns that do not add value
+
+-----------------------------------
+6. BOOKING FLOW IMPROVEMENTS
+-----------------------------------
+
+Booking flow must feel smooth, logical, and mobile-friendly.
+
+Van size screen:
+- keep cards but improve spacing and hierarchy
+- selected state must be clear (border + background + label)
+- cards must be comfortable to tap
+- keep only 3 van options if that is current logic
+- size guide should open elegantly and clearly
+
+Minimum booking rule:
+- do NOT show minimum booking notice in summary
+- show it on the time selection step, where it is relevant
+- move “Minimum booking time is 2 hours” from summary to time step
+- apply this consistently anywhere minimum booking matters
+
+Time selection screen:
+- keep +/- controls
+- make controls feel more premium and balanced
+- show:
+  “Minimum booking: 2 hours”
+  directly on the time screen under the main value / helper text
+- apply same rule consistently across all booking flows where minimum booking applies
+
+Scroll behaviour:
+- when user presses Continue and moves to next step, page must scroll to the TOP of the next step
+- do not leave the user in the middle or bottom of the new step
+
+-----------------------------------
+7. BOOKING SUMMARY CLEANUP
+-----------------------------------
+
+Make summary more compact and premium.
+
+Current issues:
+- summary feels too heavy
+- too much repeated information
+- terms/min booking note is in wrong place
+
+Fix:
+- reduce padding
+- align labels left, values right
+- improve readability
+- reduce line height where needed
+- make total section more prominent
+- summary must feel clean and trustworthy
+- remove minimum booking note from summary
+- keep only relevant final review info
+
+Estimated total block:
+- highlight clearly
+- large price
+- supporting text smaller underneath
+
+Booking terms:
+- keep booking policy / terms link accessible
+- but do not overload this area
+- deposit agreement should only appear at the proper final submit step
+
+-----------------------------------
+8. DEPOSIT / TERMS LOGIC (ALL SERVICES)
+-----------------------------------
+
+Apply consistently across all services:
+- House Moving
+- Waste Removal
+- Single Item Delivery
+- Commercial Moving
+- International Moving
+- Custom Request
+
+Use same final-step message everywhere:
+
+"By submitting this form, you agree to our booking terms.
+A 30% deposit is required to secure your booking."
+
+Rules:
+- show this ONLY at final submit / confirm step
+- do NOT show this too early in the flow
+- add checkbox:
+  "I agree to the booking terms"
+- user must tick it before submitting
+
+Booking policy:
+- must open as modal / popup where relevant
+- user must NOT lose progress
+- if opened, user can close and continue booking exactly where they were
+
+-----------------------------------
+9. SERVICES SECTION REDESIGN
+-----------------------------------
+
+Current services section feels too templated and repetitive.
+
+Improve:
+- better spacing between cards
+- stronger titles
+- slightly larger icons
+- less dead/empty feeling
+- more premium visual rhythm
+- keep cards clear and service-focused
+
+Each service card must feel:
+- premium
+- trustworthy
+- clear
+- clickable
+
+Keep two buttons if needed:
+- Book Now
+- Get a Quote
+
+But refine spacing and proportions so cards do not feel oversized or generic.
+
+-----------------------------------
+10. HOW IT WORKS SECTION
+-----------------------------------
+
+Redesign this section to feel more intentional and less templated.
+
+Instead of basic repeated stacked boxes, create a cleaner step-based design.
+
+Goal:
+- easier to scan
+- visually stronger
+- better spacing
+- less “same box repeated”
+
+It should feel like a process / journey, not just copied cards.
+
+-----------------------------------
+11. WASTE REMOVAL PRICING & UX
+-----------------------------------
+
+Improve waste removal logic and presentation.
+
+Keep pricing simple and clear.
+
+Allowed additional charges:
+- Stairs (no lift) → +£10
+- Restricted / difficult access → +£10
+
+Restricted access examples:
+- long carry
+- narrow passage
+- no nearby parking
+- difficult loading access
+
+UI:
+- do not use tiny checkboxes only
+- make selection clearer and easier to tap
+- better mobile presentation
+- summary must show:
+  - base price
+  - selected load size
+  - extras / surcharges
+  - total
+
+Add note:
+"Final price may vary depending on access and loading conditions."
+
+-----------------------------------
+12. WHATSAPP BUTTON FIX
+-----------------------------------
+
+Current floating WhatsApp button can clash with content.
+
+Fix:
+- reposition so it does NOT overlap important text, cards or buttons
+- add proper spacing from edges
+- ensure it is visible but not intrusive
+- on mobile it must never block important actions
+
+-----------------------------------
+13. SAFARI / MOBILE BROWSER STABILITY
+-----------------------------------
+
+Fix layout issues on Safari and in-app mobile browsers where possible.
+
+Problems:
+- floating browser bar behaviour makes layout feel unstable
+- sticky/fixed elements can look messy
+- viewport feels jumpy
+
+Fix:
+- use mobile-safe viewport sizing
+- reduce sticky conflicts
+- ensure stable layout while scrolling
+- test mobile Safari behaviour carefully
+
+-----------------------------------
+14. FINAL POLISH / PRODUCT-QUALITY PASS
+-----------------------------------
+
+Do a final cleanup across the entire site.
+
+Check:
+- consistent spacing everywhere
+- consistent button sizes
+- consistent heading hierarchy
+- consistent card styles
+- consistent mobile padding
+- no random repeated links
+- no default-looking elements
+- no awkward oversized empty areas
+- no clunky transitions
+- no broken alignment
+
+The final result must feel like:
+- a real professional booking product
+- premium mobile UX
+- clean, modern, trustworthy service website
+- easy to use with one hand
+- smooth and intentional, not patched together
+
+Important:
+Do NOT partially fix things.
+Apply changes consistently across ALL relevant pages and booking steps.
+This should be a proper mobile-first redesign pass, not a small patch.
