@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Minus, Plus, Clock } from "lucide-react";
+import BookingPolicyModal from "@/components/BookingPolicyModal";
 
 interface TimeStepProps {
   hours: number;
@@ -10,6 +12,7 @@ interface TimeStepProps {
 export default function TimeStep({ hours, onHoursChange }: TimeStepProps) {
   const MIN = 2;
   const STEP = 0.5;
+  const [showPolicy, setShowPolicy] = useState(false);
 
   const format = (h: number) => {
     const whole = Math.floor(h);
@@ -65,18 +68,20 @@ export default function TimeStep({ hours, onHoursChange }: TimeStepProps) {
         </div>
       </div>
 
-      {/* Minimum-booking notice — relevant here, not in the summary. */}
-      <div className="flex items-start gap-2.5 bg-purple-50 border border-purple-100 rounded-xl px-4 py-3">
-        <Clock className="w-4 h-4 text-purple-700 mt-0.5 shrink-0" />
-        <div className="text-sm">
-          <p className="font-semibold text-purple-900">
-            Minimum booking: 2 hours
-          </p>
-          <p className="text-xs text-purple-700/80 mt-0.5">
-            Final duration is confirmed after we review your job.
-          </p>
-        </div>
-      </div>
+      {/* Minimum-booking notice — clickable link to the booking policy. */}
+      <button
+        type="button"
+        onClick={() => setShowPolicy(true)}
+        className="w-full flex items-center gap-2 bg-purple-50 border border-purple-100 rounded-xl px-4 py-3 text-sm font-semibold text-purple-700 hover:bg-purple-100 hover:border-purple-200 transition-colors text-left"
+        data-testid="time-min-booking-link"
+      >
+        <Clock className="w-4 h-4 shrink-0" />
+        <span className="underline underline-offset-2 decoration-purple-300">
+          Minimum booking: 2 hours
+        </span>
+      </button>
+
+      {showPolicy && <BookingPolicyModal onClose={() => setShowPolicy(false)} />}
     </div>
   );
 }

@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { HELP_PRICING, VAN_SIZES, STAIR_CHARGES } from "@/data/constants";
-import BookingPolicyModal from "@/components/BookingPolicyModal";
 
 interface SummaryStepProps {
   service: string;
@@ -66,7 +64,6 @@ export default function SummaryStep({
   notes,
   onContinue,
 }: SummaryStepProps) {
-  const [showPolicy, setShowPolicy] = useState(false);
   const pricing = HELP_PRICING[vanSize] || HELP_PRICING.medium;
   let hourlyRate = pricing.noHelp;
   if (helpOption === "driver-help") hourlyRate = pricing.driverHelp;
@@ -139,20 +136,6 @@ export default function SummaryStep({
         </div>
       )}
 
-      {/* Booking-policy link only — the minimum-booking note already lives
-       * on the time step where it's relevant. The deposit notice +
-       * agreement checkbox appear on the final step above Submit. */}
-      <div className="mb-5 text-center">
-        <button
-          type="button"
-          onClick={() => setShowPolicy(true)}
-          className="text-xs text-purple-700 hover:text-purple-900 underline underline-offset-2 inline-block bg-transparent border-0 p-0 cursor-pointer"
-          data-testid="learn-more-booking-fees"
-        >
-          Read full booking terms
-        </button>
-      </div>
-
       <button
         onClick={onContinue}
         className="w-full py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm"
@@ -160,8 +143,6 @@ export default function SummaryStep({
       >
         Continue booking
       </button>
-
-      {showPolicy && <BookingPolicyModal onClose={() => setShowPolicy(false)} />}
     </div>
   );
 }

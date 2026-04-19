@@ -7,15 +7,14 @@ interface BookingTermsNoticeProps {
 }
 
 /**
- * Shared "deposit + agreement" notice shown immediately above the final
- * Submit button on every booking flow (House Move, Waste Removal,
- * Single Item, Commercial, International, Custom Request).
+ * Final-step booking terms block — appears only on the LAST step of every
+ * booking flow, immediately above the Submit button.
  *
- * Includes:
- *  - Deposit message
- *  - "I agree" checkbox (controlled — parent enforces it before submit)
- *  - "Read full booking terms" link that opens the policy modal in place
- *    (no route change, no progress lost).
+ *  - Deposit message + payment-link explanation
+ *  - "I agree to the booking terms" checkbox (parent disables Submit until
+ *    it's checked)
+ *  - "booking terms" is an inline link that opens the Booking Policy modal
+ *    in place — no route change, no progress lost.
  */
 export default function BookingTermsNotice({
   agreed,
@@ -25,27 +24,19 @@ export default function BookingTermsNotice({
 
   return (
     <div
-      className="bg-purple-50 border border-purple-100 rounded-xl px-4 py-3.5 text-sm text-gray-700"
+      className="bg-purple-50 border border-purple-100 rounded-xl px-4 py-4 text-sm text-gray-700"
       data-testid="booking-terms-notice"
     >
       <p className="leading-relaxed">
-        By submitting this form, you agree to our booking terms.{" "}
         <span className="font-semibold text-gray-900">
           A 30% deposit is required to secure your booking.
-        </span>
+        </span>{" "}
+        A secure payment link will be sent to your phone or email after
+        confirmation.
       </p>
 
-      <button
-        type="button"
-        onClick={() => setShowPolicy(true)}
-        className="text-xs text-purple-700 hover:text-purple-900 underline underline-offset-2 mt-1.5 inline-block bg-transparent border-0 p-0 cursor-pointer"
-        data-testid="open-booking-terms"
-      >
-        Read full booking terms
-      </button>
-
       <label
-        className="flex items-start gap-2.5 mt-3 cursor-pointer select-none"
+        className="flex items-start gap-2.5 mt-3.5 cursor-pointer select-none"
         data-testid="booking-terms-agree-row"
       >
         <input
@@ -56,7 +47,20 @@ export default function BookingTermsNotice({
           data-testid="booking-terms-agree-checkbox"
         />
         <span className="text-sm text-gray-800 leading-snug">
-          I agree to the booking terms
+          I agree to the{" "}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowPolicy(true);
+            }}
+            className="text-purple-700 hover:text-purple-900 underline underline-offset-2 font-medium bg-transparent border-0 p-0 cursor-pointer"
+            data-testid="open-booking-terms"
+          >
+            booking terms
+          </button>
+          .
         </span>
       </label>
 
