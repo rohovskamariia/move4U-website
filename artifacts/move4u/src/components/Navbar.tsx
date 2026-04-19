@@ -1,11 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Menu, Truck } from "lucide-react";
 import MobileDrawer from "./MobileDrawer";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
+
+  // Track scroll so the header gains a touch more depth once the user
+  // scrolls past the hero — empty-feeling pure white at top, with
+  // soft glass + subtle shadow as content scrolls underneath.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const scrollTo = (id: string) => {
     setMenuOpen(false);
@@ -19,27 +30,63 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Premium app-style header — translucent, ultra-light hairline
-          border, almost no shadow. The translucent background + backdrop
-          blur make it feel like a native app bar rather than a default
-          web header. */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100/70">
+      {/* Premium glass header — translucent, soft shadow that strengthens
+          slightly on scroll for added depth. Frosted background uses a
+          gentle purple tint so it ties back to the brand. */}
+      <header
+        className={`sticky top-0 z-50 transition-all duration-300 backdrop-blur-xl border-b ${
+          scrolled
+            ? "bg-white/85 border-gray-200/80 shadow-[0_8px_30px_-12px_rgba(76,29,149,0.18)]"
+            : "bg-white/70 border-white/60 shadow-[0_2px_12px_-6px_rgba(76,29,149,0.10)]"
+        }`}
+      >
         <nav className="max-w-6xl mx-auto px-4 sm:px-6">
-          {/* Slimmer 52px row on mobile for a more refined silhouette */}
-          <div className="flex items-center justify-between h-[52px] md:h-16">
-            {/* Logo — smaller, more elegant proportions */}
+          {/* Slim refined silhouette — slightly taller on desktop for breathing room */}
+          <div className="flex items-center justify-between h-[56px] md:h-[68px]">
+            {/* Premium wordmark — gradient mark, gradient text, micro-tagline */}
             <Link
               href="/"
-              className="flex items-center gap-2 font-semibold text-base md:text-xl text-purple-700"
+              className="flex items-center gap-2.5 group"
+              aria-label="Move4U — home"
             >
-              <div className="bg-gradient-to-br from-purple-600 to-purple-800 text-white p-1.5 rounded-lg shadow-[0_2px_6px_-2px_rgba(124,58,237,0.4)]">
-                <Truck className="w-3.5 h-3.5 md:w-5 md:h-5" strokeWidth={2.25} />
-              </div>
-              <span className="tracking-tight">Move4U</span>
+              <span
+                className="relative flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-xl text-white shadow-[0_6px_18px_-6px_rgba(124,58,237,0.55)] transition-transform duration-200 group-hover:-translate-y-0.5"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 45%, #5b21b6 100%)",
+                }}
+              >
+                {/* Soft inner highlight for a glassy, premium logo mark */}
+                <span
+                  className="absolute inset-0 rounded-xl pointer-events-none"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 55%)",
+                  }}
+                />
+                <Truck
+                  className="relative w-4 h-4 md:w-5 md:h-5"
+                  strokeWidth={2.4}
+                />
+              </span>
+              <span className="flex flex-col leading-none">
+                <span
+                  className="font-bold text-[17px] md:text-[20px] tracking-tight bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(135deg, #5b21b6 0%, #7c3aed 60%, #6d28d9 100%)",
+                  }}
+                >
+                  Move4U
+                </span>
+                <span className="hidden md:block text-[10px] font-semibold tracking-[0.22em] text-gray-400 uppercase mt-1">
+                  London Removals
+                </span>
+              </span>
             </Link>
 
             {/* Desktop nav */}
-            <div className="hidden md:flex items-center gap-7 text-sm font-medium text-gray-700">
+            <div className="hidden md:flex items-center gap-8 text-[14px] font-medium text-gray-700">
               <button
                 onClick={() => scrollTo("services")}
                 className="hover:text-purple-700 transition-colors"
@@ -77,7 +124,12 @@ export default function Navbar() {
               </Link>
               <Link
                 href="/book"
-                className="text-sm font-semibold text-white bg-purple-700 px-5 py-2 rounded-full hover:bg-purple-800 hover:shadow-[0_8px_20px_-8px_rgba(124,58,237,0.6)] transition-all"
+                className="text-sm font-semibold text-white px-5 py-2 rounded-full transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-10px_rgba(124,58,237,0.7)]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(135deg, #7c3aed 0%, #6d28d9 60%, #5b21b6 100%)",
+                  boxShadow: "0 6px 18px -8px rgba(124,58,237,0.5)",
+                }}
                 data-testid="nav-book-now"
               >
                 Book Now

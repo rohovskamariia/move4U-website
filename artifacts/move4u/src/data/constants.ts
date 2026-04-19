@@ -18,8 +18,11 @@ export const CONTACT = {
 // Hero background images — imported so Vite hashes / optimises them.
 // To swap images, update the imports below.
 import slide1Image from "@assets/IMG_3267_1776604323710.png";
-import slide2Image from "@assets/IMG_3539_1776604338384.jpeg";
-import slide3Image from "@assets/IMG_3293_1776604338384.jpeg";
+// Higher-quality versions — order intentionally swapped:
+// the new "couch / packing" photo is now slide 2,
+// the new "stairs / furniture" photo is now slide 3.
+import slide2Image from "@assets/IMG_3549_1776605362190.jpeg";
+import slide3Image from "@assets/IMG_3548_1776605362190.jpeg";
 
 export type SlideButton = {
   text: string;
@@ -57,8 +60,8 @@ export const SLIDES: Slide[] = [
     id: 2,
     title: "Professional Team You Can Trust",
     text: "Careful handling, fast service and flexible booking times. We treat your belongings like our own.",
-    image: slide3Image, // loading van at sunset
-    imagePosition: "60% 30%",
+    image: slide2Image, // couple packing boxes on couch (high-res)
+    imagePosition: "65% 30%",
     buttons: [
       { text: "Get a Quote", action: "quote", variant: "primary" },
     ],
@@ -67,8 +70,8 @@ export const SLIDES: Slide[] = [
     id: 3,
     title: "Ready to Book Your Move?",
     text: "Get a quick quote online or call us for instant help.",
-    image: slide2Image, // couple packing boxes on couch (landscape)
-    imagePosition: "65% 28%",
+    image: slide3Image, // movers carrying furniture up stairs (high-res)
+    imagePosition: "60% 35%",
     buttons: [
       { text: "Get a Quote", action: "quote", variant: "primary" },
       { text: "Call Us", action: "call", variant: "secondary" },

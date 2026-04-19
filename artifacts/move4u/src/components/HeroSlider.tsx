@@ -58,30 +58,32 @@ export default function HeroSlider() {
         ))}
       </div>
 
-      {/* Subtle left-side darken — keeps the photo natural and sharp,
-          only just dark enough on the left for headline legibility.
-          No heavy purple wash. */}
+      {/* Branded gradient overlay — left side a touch darker for headline
+          legibility, with a soft purple tint that fades into the
+          photograph. Tuned to feel premium and on-brand without
+          overpowering the image or looking artificial. */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "linear-gradient(95deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.32) 35%, rgba(0,0,0,0.08) 65%, rgba(0,0,0,0) 100%)",
+            "linear-gradient(100deg, rgba(46,16,101,0.62) 0%, rgba(76,29,149,0.42) 30%, rgba(91,33,182,0.18) 60%, rgba(124,58,237,0.05) 85%, rgba(0,0,0,0) 100%)",
         }}
       />
 
       {/* Whisper-thin bottom vignette so the dot indicators stay readable */}
       <div
-        className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
+        className="absolute inset-x-0 bottom-0 h-28 pointer-events-none"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(46,16,101,0.28) 100%)",
         }}
       />
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-24 sm:py-32 md:py-36">
         <div className="max-w-2xl">
-          {/* Slide content — re-keyed so each change replays the fade */}
-          <div key={slide.id} className="animate-fade-in-up">
+          {/* Slide content — re-keyed so each change replays the
+              staggered rise-in for headline / subtext / buttons. */}
+          <div key={slide.id} className="hero-stagger">
             {slide.subtitle && (
               <p
                 className="text-white/90 font-semibold text-xs sm:text-sm uppercase tracking-[0.18em] mb-4"
