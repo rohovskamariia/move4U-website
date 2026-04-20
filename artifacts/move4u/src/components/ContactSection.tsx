@@ -45,7 +45,7 @@ export default function ContactSection() {
               className="w-9 h-9 rounded-full text-white flex items-center justify-center"
               style={{
                 backgroundImage:
-                  "linear-gradient(135deg, #7c3aed 0%, #6d28d9 60%, #5b21b6 100%)",
+                  "linear-gradient(135deg, #5b3fb8 0%, #4a319c 60%, #3a267f 100%)",
               }}
             >
               <Phone className="w-[17px] h-[17px]" strokeWidth={2.25} />
@@ -61,7 +61,7 @@ export default function ContactSection() {
               className="w-9 h-9 rounded-full text-white flex items-center justify-center"
               style={{
                 backgroundImage:
-                  "linear-gradient(135deg, #7c3aed 0%, #6d28d9 60%, #5b21b6 100%)",
+                  "linear-gradient(135deg, #5b3fb8 0%, #4a319c 60%, #3a267f 100%)",
               }}
             >
               <Mail className="w-[17px] h-[17px]" strokeWidth={2.25} />
@@ -95,7 +95,7 @@ export default function ContactSection() {
           {/* Call — soft purple */}
           <a
             href={`tel:${CONTACT.driver}`}
-            className="group relative bg-white rounded-3xl p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] hover:-translate-y-1 hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(124,58,237,0.3)] transition-all duration-300"
+            className="group relative bg-white rounded-3xl p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] hover:-translate-y-1 hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(74,49,156,0.3)] transition-all duration-300"
             data-testid="contact-call-driver"
           >
             <div className="flex items-start justify-between mb-5">
@@ -112,7 +112,7 @@ export default function ContactSection() {
           {/* Email */}
           <a
             href={`mailto:${CONTACT.email}`}
-            className="group relative bg-white rounded-3xl p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] hover:-translate-y-1 hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(124,58,237,0.3)] transition-all duration-300"
+            className="group relative bg-white rounded-3xl p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] hover:-translate-y-1 hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(74,49,156,0.3)] transition-all duration-300"
             data-testid="contact-email"
           >
             <div className="flex items-start justify-between mb-5">

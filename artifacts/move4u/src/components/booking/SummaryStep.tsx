@@ -85,8 +85,8 @@ export default function SummaryStep({
         className="rounded-2xl p-5 mb-5 text-white relative overflow-hidden"
         style={{
           backgroundImage:
-            "linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%)",
-          boxShadow: "0 10px 30px -12px rgba(124,58,237,0.45)",
+            "linear-gradient(135deg, #5b3fb8 0%, #4a319c 55%, #3a267f 100%)",
+          boxShadow: "0 10px 30px -12px rgba(74,49,156,0.45)",
         }}
       >
         <p className="text-xs font-semibold tracking-[0.18em] text-white uppercase mb-1">

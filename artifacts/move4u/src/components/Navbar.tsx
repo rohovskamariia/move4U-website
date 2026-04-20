@@ -89,10 +89,10 @@ export default function Navbar() {
               aria-label="Move4U — home"
             >
               <span
-                className="relative flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-xl text-white shadow-[0_6px_18px_-6px_rgba(124,58,237,0.55)] transition-transform duration-200 group-hover:-translate-y-0.5"
+                className="relative flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-xl text-white shadow-[0_6px_18px_-6px_rgba(74,49,156,0.55)] transition-transform duration-200 group-hover:-translate-y-0.5"
                 style={{
                   backgroundImage:
-                    "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 45%, #5b21b6 100%)",
+                    "linear-gradient(135deg, #6d4ed3 0%, #5b3fb8 45%, #3a267f 100%)",
                 }}
               >
                 {/* Soft inner highlight for a glassy, premium logo mark */}
@@ -112,7 +112,7 @@ export default function Navbar() {
                 className="font-bold text-[18px] md:text-[22px] tracking-tight bg-clip-text text-transparent leading-none"
                 style={{
                   backgroundImage:
-                    "linear-gradient(135deg, #5b21b6 0%, #7c3aed 60%, #6d28d9 100%)",
+                    "linear-gradient(135deg, #3a267f 0%, #5b3fb8 60%, #4a319c 100%)",
                 }}
               >
                 Move4U
@@ -169,11 +169,11 @@ export default function Navbar() {
               </Link>
               <Link
                 href="/book"
-                className="text-sm font-semibold text-white px-5 py-2 rounded-full transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-10px_rgba(124,58,237,0.7)]"
+                className="text-sm font-semibold text-white px-5 py-2 rounded-full transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-10px_rgba(74,49,156,0.7)]"
                 style={{
                   backgroundImage:
-                    "linear-gradient(135deg, #7c3aed 0%, #6d28d9 60%, #5b21b6 100%)",
-                  boxShadow: "0 6px 18px -8px rgba(124,58,237,0.5)",
+                    "linear-gradient(135deg, #5b3fb8 0%, #4a319c 60%, #3a267f 100%)",
+                  boxShadow: "0 6px 18px -8px rgba(74,49,156,0.5)",
                 }}
                 data-testid="nav-book-now"
               >

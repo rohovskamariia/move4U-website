@@ -71,7 +71,7 @@ export default function ServicesSection() {
             return (
               <div
                 key={service.id}
-                className="group relative bg-white rounded-3xl p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] transition-all duration-300 hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(124,58,237,0.28)] hover:-translate-y-1 flex flex-col"
+                className="group relative bg-white rounded-3xl p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] transition-all duration-300 hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(74,49,156,0.28)] hover:-translate-y-1 flex flex-col"
                 data-testid={`service-card-desktop-${service.id}`}
               >
                 <div className="flex items-center justify-between mb-4">

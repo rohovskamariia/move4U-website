@@ -212,8 +212,8 @@ export default function PricingGuidePage() {
           className="rounded-3xl p-6 sm:p-10 text-white text-center"
           style={{
             backgroundImage:
-              "linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%)",
-            boxShadow: "0 18px 40px -18px rgba(124,58,237,0.55)",
+              "linear-gradient(135deg, #5b3fb8 0%, #4a319c 55%, #3a267f 100%)",
+            boxShadow: "0 18px 40px -18px rgba(74,49,156,0.55)",
           }}
         >
           <h2 className="text-xl sm:text-2xl font-bold mb-2">

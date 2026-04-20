@@ -87,7 +87,7 @@ export default function HomePage() {
               <li key={title} className="relative pb-7 last:pb-0">
                 {/* Numbered node — sits on the rail */}
                 <div className="absolute -left-12 top-0 flex items-center justify-center">
-                  <div className="relative w-10 h-10 rounded-full bg-white ring-1 ring-purple-100 shadow-[0_4px_12px_-4px_rgba(124,58,237,0.25)] flex items-center justify-center text-purple-700">
+                  <div className="relative w-10 h-10 rounded-full bg-white ring-1 ring-purple-100 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.25)] flex items-center justify-center text-purple-700">
                     <Icon className="w-[17px] h-[17px]" strokeWidth={2} />
                   </div>
                   <span className="absolute -top-1 -right-1 bg-purple-700 text-white w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold ring-2 ring-white">
@@ -114,7 +114,7 @@ export default function HomePage() {
               {steps.map(({ icon: Icon, title, text }, i) => (
                 <div key={title} className="relative flex flex-col items-center text-center">
                   <div className="relative shrink-0">
-                    <div className="bg-white border-2 border-purple-100 shadow-[0_8px_20px_-8px_rgba(124,58,237,0.3)] w-14 h-14 rounded-full flex items-center justify-center text-purple-700">
+                    <div className="bg-white border-2 border-purple-100 shadow-[0_8px_20px_-8px_rgba(74,49,156,0.3)] w-14 h-14 rounded-full flex items-center justify-center text-purple-700">
                       <Icon className="w-5 h-5" strokeWidth={2} />
                     </div>
                     <div className="absolute -top-1 -right-1 bg-purple-700 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ring-2 ring-white">
@@ -145,7 +145,7 @@ export default function HomePage() {
         className="py-10 sm:py-16 text-white relative overflow-hidden"
         style={{
           backgroundImage:
-            "linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%)",
+            "linear-gradient(135deg, #5b3fb8 0%, #4a319c 55%, #3a267f 100%)",
         }}
       >
         {/* Soft glow accents — subtle depth without breaking the brand wash */}

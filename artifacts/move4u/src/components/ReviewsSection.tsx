@@ -69,7 +69,7 @@ export default function ReviewsSection() {
           {REVIEWS.map((review) => (
             <figure
               key={review.id}
-              className="relative bg-white rounded-3xl p-7 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(124,58,237,0.3)] hover:-translate-y-1 transition-all duration-300 flex flex-col"
+              className="relative bg-white rounded-3xl p-7 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(74,49,156,0.3)] hover:-translate-y-1 transition-all duration-300 flex flex-col"
               data-testid={`review-desktop-${review.id}`}
             >
               <Quote

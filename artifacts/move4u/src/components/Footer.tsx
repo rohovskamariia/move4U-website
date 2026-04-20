@@ -11,7 +11,7 @@ export default function Footer() {
         {/* Brand block — full width above the link grid on every breakpoint */}
         <div className="mb-6 sm:mb-10">
           <div className="flex items-center gap-2.5 font-bold text-lg sm:text-xl text-white mb-2 sm:mb-3">
-            <div className="bg-gradient-to-br from-purple-600 to-purple-800 text-white p-1.5 sm:p-2 rounded-xl">
+            <div className="bg-gradient-to-br from-purple-700 to-purple-900 text-white p-1.5 sm:p-2 rounded-xl">
               <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             Move4U
@@ -21,8 +21,8 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* Mobile: 2 columns. Desktop: 3 columns. */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-5 gap-y-6 sm:gap-8 mb-7 sm:mb-10">
+        {/* Mobile: 2 columns. Desktop: 4 columns (Services / Contact / Policies / Guides). */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 sm:gap-x-8 gap-y-6 sm:gap-y-8 mb-7 sm:mb-10">
           {/* Services */}
           <div>
             <h4 className="text-white font-semibold text-[13px] sm:text-sm mb-2.5 sm:mb-4">Services</h4>
@@ -46,14 +46,21 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Policies — spans both mobile cols on its own row to stay scannable */}
-          <div className="col-span-2 md:col-span-1">
-            <h4 className="text-white font-semibold text-[13px] sm:text-sm mb-2.5 sm:mb-4">Policies &amp; Guides</h4>
-            <ul className="grid grid-cols-2 md:grid-cols-1 gap-x-4 gap-y-1.5 sm:gap-y-2 text-[12.5px] sm:text-sm">
+          {/* Policies — left column of the policies/guides pair */}
+          <div>
+            <h4 className="text-white font-semibold text-[13px] sm:text-sm mb-2.5 sm:mb-4">Policies</h4>
+            <ul className="space-y-1.5 sm:space-y-2 text-[12.5px] sm:text-sm">
               <li><Link href="/terms" className="hover:text-purple-400 transition-colors">Terms &amp; Conditions</Link></li>
               <li><Link href="/privacy" className="hover:text-purple-400 transition-colors">Privacy Policy</Link></li>
               <li><Link href="/booking-policy" className="hover:text-purple-400 transition-colors">Booking Policy</Link></li>
               <li><Link href="/cancellation-policy" className="hover:text-purple-400 transition-colors">Cancellation Policy</Link></li>
+            </ul>
+          </div>
+
+          {/* Guides & Pricing — right column of the policies/guides pair */}
+          <div>
+            <h4 className="text-white font-semibold text-[13px] sm:text-sm mb-2.5 sm:mb-4">Guides &amp; Pricing</h4>
+            <ul className="space-y-1.5 sm:space-y-2 text-[12.5px] sm:text-sm">
               <li><Link href="/pricing" className="hover:text-purple-400 transition-colors">Pricing</Link></li>
               <li><Link href="/van-guide" className="hover:text-purple-400 transition-colors">Van Size Guide</Link></li>
               <li><Link href="/waste-guide" className="hover:text-purple-400 transition-colors">Waste Load Guide</Link></li>

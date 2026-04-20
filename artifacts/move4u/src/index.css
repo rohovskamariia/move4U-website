@@ -68,25 +68,25 @@
 
   /* ----------------------------------------------------------------
      Move4U brand purple — single source of truth.
-     We remap Tailwind's `purple-*` palette to the violet shades that
-     match the Move4U logo and the gradient "Book Now" button so every
-     existing purple-700 / purple-600 / etc. across the codebase renders
-     in the exact same brand tone, on desktop and mobile.
+     A deep, premium violet inspired by the Move4U uniform — toned down
+     from the previous neon/cosmic violet so the UI feels more elegant
+     and less saturated. All `purple-*` Tailwind classes across the
+     codebase render in this brand tone on desktop and mobile.
 
-     Brand gradient: #8b5cf6 → #7c3aed → #6d28d9 → #5b21b6 → #4c1d95
-     (mid-tone #6d28d9 = brand primary).
+     Brand gradient: #6d4ed3 → #5b3fb8 → #4a319c → #3a267f → #2c1d63
+     (mid-tone #4a319c = brand primary).
   ---------------------------------------------------------------- */
-  --color-purple-50:  #f5f0ff;
-  --color-purple-100: #ede4ff;
-  --color-purple-200: #dccdff;
-  --color-purple-300: #c3a8ff;
-  --color-purple-400: #a78bfa;
-  --color-purple-500: #8b5cf6;
-  --color-purple-600: #7c3aed;
-  --color-purple-700: #6d28d9;
-  --color-purple-800: #5b21b6;
-  --color-purple-900: #4c1d95;
-  --color-purple-950: #2e1065;
+  --color-purple-50:  #f3f1fa;
+  --color-purple-100: #e6e1f4;
+  --color-purple-200: #cdc1ea;
+  --color-purple-300: #ad9bdc;
+  --color-purple-400: #8a73cb;
+  --color-purple-500: #6d4ed3;
+  --color-purple-600: #5b3fb8;
+  --color-purple-700: #4a319c;
+  --color-purple-800: #3a267f;
+  --color-purple-900: #2c1d63;
+  --color-purple-950: #1a103e;
 }
 
 /* LIGHT MODE — Purple brand theme */
@@ -373,21 +373,22 @@ body {
 /* Reusable purple gradient button — primary CTA across the site.    */
 /* ---------------------------------------------------------------- */
 .btn-purple {
-  background-image: linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%);
+  /* Deep brand violet — softer glow, less neon. */
+  background-image: linear-gradient(135deg, #5b3fb8 0%, #4a319c 55%, #3a267f 100%);
   color: #ffffff;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.18) inset,
-    0 8px 22px -10px rgba(124, 58, 237, 0.55);
+    0 1px 0 rgba(255, 255, 255, 0.14) inset,
+    0 6px 18px -10px rgba(74, 49, 156, 0.45);
   transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
               box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1),
               filter 200ms ease;
 }
 .btn-purple:hover {
   transform: translateY(-1px);
-  filter: brightness(1.05);
+  filter: brightness(1.04);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.22) inset,
-    0 14px 30px -12px rgba(124, 58, 237, 0.65);
+    0 1px 0 rgba(255, 255, 255, 0.18) inset,
+    0 10px 24px -12px rgba(74, 49, 156, 0.55);
 }
 .btn-purple:active {
   transform: translateY(0);
