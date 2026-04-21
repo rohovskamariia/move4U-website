@@ -124,10 +124,10 @@ export default function ReviewsSection() {
             </div>
           </div>
 
-          {/* RIGHT — stacked carousel (3D perspective, centered) */}
+          {/* RIGHT — stacked carousel (layered cards, visible back stack) */}
           <div className="lg:col-span-7">
             <div
-              className="relative h-[420px] [perspective:1400px]"
+              className="relative h-[360px] [perspective:1400px] flex items-center justify-center"
               onMouseEnter={() => {
                 if (resumeTimer.current) window.clearTimeout(resumeTimer.current);
                 setPaused(true);
@@ -151,14 +151,13 @@ export default function ReviewsSection() {
               {REVIEWS.map((review, idx) => {
                 const pos = relativePos(idx);
                 if (pos < 0) return null;
-                // Centered 3D stack — cards recede backwards (translateZ + slight
-                // upward shift + tiny rotateX) instead of sliding sideways. This
-                // gives a layered "depth" feel rather than a horizontal slider.
+                // Layered stack — back cards peek UP and slightly to the side
+                // so they're clearly visible behind the active card. Front
+                // card is full-size; back cards are smaller and faded.
                 const styles: React.CSSProperties =
                   pos === 0
                     ? {
-                        transform:
-                          "translate3d(0, 0, 0) rotateX(0deg) scale(1)",
+                        transform: "translate3d(0, 0, 0) scale(1)",
                         opacity: 1,
                         zIndex: 30,
                         filter: "none",
@@ -166,15 +165,15 @@ export default function ReviewsSection() {
                     : pos === 1
                       ? {
                           transform:
-                            "translate3d(0, -22px, -90px) rotateX(3deg) scale(0.94)",
-                          opacity: 0.55,
+                            "translate3d(28px, -26px, 0) scale(0.93)",
+                          opacity: 0.7,
                           zIndex: 20,
                           filter: "blur(0.3px)",
                         }
                       : {
                           transform:
-                            "translate3d(0, -40px, -180px) rotateX(5deg) scale(0.88)",
-                          opacity: 0.28,
+                            "translate3d(56px, -50px, 0) scale(0.86)",
+                          opacity: 0.45,
                           zIndex: 10,
                           filter: "blur(0.6px)",
                         };
@@ -183,33 +182,36 @@ export default function ReviewsSection() {
                   <article
                     key={review.id}
                     aria-hidden={pos !== 0}
-                    className="absolute inset-0 mx-auto max-w-[520px] bg-white rounded-3xl p-7 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.06),_0_30px_60px_-22px_rgba(74,49,156,0.35)] flex flex-col transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] [transform-style:preserve-3d] [will-change:transform,opacity]"
-                    style={styles}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[88%] max-w-[420px] bg-white rounded-3xl p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-20px_rgba(74,49,156,0.35)] flex flex-col transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] [will-change:transform,opacity]"
+                    style={{
+                      ...styles,
+                      transform: `translate(-50%, -50%) ${styles.transform}`,
+                    }}
                     data-testid={`review-desktop-${review.id}`}
                   >
                     <Quote
-                      className="w-9 h-9 text-purple-200 -mt-0.5 -ml-0.5 mb-3"
+                      className="w-7 h-7 text-purple-200 -mt-0.5 -ml-0.5 mb-2"
                       aria-hidden="true"
                       fill="currentColor"
                     />
-                    <blockquote className="text-gray-800 text-[15.5px] leading-[1.65] font-normal mb-6 flex-1">
+                    <blockquote className="text-gray-800 text-[14px] leading-[1.6] font-normal mb-5 flex-1 line-clamp-5">
                       &ldquo;{review.text}&rdquo;
                     </blockquote>
-                    <footer className="flex items-center gap-3 pt-4 border-t border-gray-100">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200/70 text-purple-700 flex items-center justify-center font-semibold text-[14px] ring-1 ring-purple-200/40 shrink-0">
+                    <footer className="flex items-center gap-2.5 pt-3 border-t border-gray-100">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-100 to-purple-200/70 text-purple-700 flex items-center justify-center font-semibold text-[13px] ring-1 ring-purple-200/40 shrink-0">
                         {review.name.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 text-[14px] leading-tight">
+                        <p className="font-semibold text-gray-900 text-[13px] leading-tight truncate">
                           {review.name}
                         </p>
-                        <p className="text-gray-400 text-[12px] mt-0.5">{review.location}</p>
+                        <p className="text-gray-400 text-[11.5px] mt-0.5 truncate">{review.location}</p>
                       </div>
                       <div className="flex items-center gap-0.5">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-3.5 h-3.5 ${
+                            className={`w-3 h-3 ${
                               i < review.rating
                                 ? "text-yellow-400 fill-yellow-400"
                                 : "text-gray-200 fill-gray-200"
@@ -293,9 +295,9 @@ export default function ReviewsSection() {
             </div>
           </div>
 
-          {/* Stacked carousel — centered, 3D depth, swipeable */}
+          {/* Stacked carousel — centered layered cards, swipeable */}
           <div
-            className="relative h-[280px] sm:h-[320px] [perspective:1200px]"
+            className="relative h-[260px] sm:h-[290px] flex items-center justify-center"
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
             data-testid="reviews-mobile-stack"
@@ -325,9 +327,8 @@ export default function ReviewsSection() {
                       zIndex: 30,
                     }
                   : {
-                      transform:
-                        "translate3d(0, -14px, -60px) rotateX(2.5deg) scale(0.93)",
-                      opacity: 0.45,
+                      transform: "translate3d(16px, -18px, 0) scale(0.94)",
+                      opacity: 0.6,
                       zIndex: 20,
                       filter: "blur(0.3px)",
                     };
@@ -336,8 +337,11 @@ export default function ReviewsSection() {
                 <article
                   key={review.id}
                   aria-hidden={pos !== 0}
-                  className="absolute inset-x-2 sm:inset-x-6 top-0 bg-white rounded-2xl p-4 sm:p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-20px_rgba(74,49,156,0.35)] flex flex-col transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] [transform-style:preserve-3d] [will-change:transform,opacity]"
-                  style={styles}
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[340px] bg-white rounded-2xl p-4 sm:p-5 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.06),_0_22px_44px_-18px_rgba(74,49,156,0.35)] flex flex-col transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] [will-change:transform,opacity]"
+                  style={{
+                    ...styles,
+                    transform: `translate(-50%, -50%) ${styles.transform}`,
+                  }}
                   data-testid={`review-mobile-${review.id}`}
                 >
                   <div className="flex items-start justify-between mb-2">
