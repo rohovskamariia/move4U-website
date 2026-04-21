@@ -18,6 +18,12 @@ uri = "file://artifacts/move4u/src/assets/hero/move4u_hero_v3.png"
 type = "image"
 title = "move4u_hero_v3"
 
+[[generated]]
+id = "MlL9D3Pf0dDb_5mwK_I5U"
+uri = "file://attached_assets/generated_images/move4u_happy_customers.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "TLaqR2zwqYo7bZyQ2hYHo"
 uri = "file://artifacts/move4u/src/assets/hero/move4u_hero_v1.png"

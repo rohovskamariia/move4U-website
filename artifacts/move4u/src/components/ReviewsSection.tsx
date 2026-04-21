@@ -1,13 +1,81 @@
-import { Star, Quote } from "lucide-react";
+import { useEffect, useRef, useState, useCallback, type TouchEvent } from "react";
+import { Star, Quote, ChevronLeft, ChevronRight } from "lucide-react";
 import { REVIEWS } from "@/data/constants";
+import customersImg from "@/assets/reviews/move4u_happy_customers.png";
 
-// Editorial testimonial layout — large pull-quote feel, generous whitespace,
-// soft author row instead of stacked admin cards.
+const AUTO_ROTATE_MS = 6000;
+const RESUME_AFTER_MS = 8000;
+const SWIPE_THRESHOLD_PX = 40;
+
 export default function ReviewsSection() {
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const resumeTimer = useRef<number | null>(null);
+  const touchStartX = useRef<number | null>(null);
+
+  const total = REVIEWS.length;
+  const next = useCallback(() => setActive((i) => (i + 1) % total), [total]);
+  const prev = useCallback(() => setActive((i) => (i - 1 + total) % total), [total]);
+
+  // Auto-rotate
+  useEffect(() => {
+    if (paused) return;
+    const id = window.setInterval(next, AUTO_ROTATE_MS);
+    return () => window.clearInterval(id);
+  }, [paused, next]);
+
+  // Pause helper — resumes auto-rotation after a short idle
+  const pauseTemporarily = useCallback(() => {
+    setPaused(true);
+    if (resumeTimer.current) window.clearTimeout(resumeTimer.current);
+    resumeTimer.current = window.setTimeout(() => setPaused(false), RESUME_AFTER_MS);
+  }, []);
+
+  useEffect(() => () => {
+    if (resumeTimer.current) window.clearTimeout(resumeTimer.current);
+  }, []);
+
+  const onTouchStart = (e: TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    pauseTemporarily();
+  };
+  const onTouchEnd = (e: TouchEvent) => {
+    if (touchStartX.current == null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > SWIPE_THRESHOLD_PX) {
+      if (dx < 0) next();
+      else prev();
+    }
+    touchStartX.current = null;
+  };
+
+  // Helper for stacked-card offsets — relative position to active.
+  // returns 0 (active), 1 (one behind), 2 (two behind), -1 (skip)
+  const relativePos = (idx: number): number => {
+    const diff = (idx - active + total) % total;
+    if (diff === 0) return 0;
+    if (diff === 1) return 1;
+    if (diff === 2) return 2;
+    return -1;
+  };
+
   return (
-    <section id="reviews" className="py-9 sm:py-16 bg-gradient-to-b from-[#faf8fd] via-purple-50/40 to-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-6 sm:mb-14">
+    <section
+      id="reviews"
+      className="relative py-9 sm:py-20 bg-gradient-to-b from-[#faf8fd] via-purple-50/40 to-white overflow-hidden"
+    >
+      {/* Subtle ambient purple glow behind the whole section */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-0"
+        style={{
+          background:
+            "radial-gradient(60% 60% at 80% 50%, rgba(74,49,156,0.10) 0%, rgba(74,49,156,0) 70%)",
+        }}
+      />
+
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-6 sm:mb-12">
           <p className="text-[10.5px] sm:text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2">
             REVIEWS
           </p>
@@ -19,88 +87,296 @@ export default function ReviewsSection() {
           </p>
         </div>
 
-        {/* MOBILE: horizontal swipe carousel — compact app-style cards.
-            Each card ~85vw wide so the next card peeks in, encouraging swipe.
-            Quote text is line-clamped to 4 lines to prevent tall cards. */}
-        <div
-          className="sm:hidden -mx-4 px-4 flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-          data-testid="reviews-mobile-carousel"
-        >
-          {REVIEWS.map((review) => (
-            <figure
-              key={review.id}
-              className="snap-start shrink-0 w-[85%] bg-white rounded-2xl p-3.5 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.05)] flex flex-col"
-              data-testid={`review-${review.id}`}
-            >
-              {/* Compact header row — small quote glyph, rating tag on right */}
-              <div className="flex items-start justify-between mb-1.5">
-                <Quote
-                  className="w-4 h-4 text-purple-200/80"
-                  aria-hidden="true"
-                  fill="currentColor"
-                />
-                <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-gray-700 tabular-nums">
-                  <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                  {review.rating.toFixed(1)}
-                </span>
-              </div>
-
-              {/* Quote — clamped to 4 lines, tight leading */}
-              <blockquote className="text-gray-800 text-[13px] leading-[1.5] font-normal mb-3 flex-1 line-clamp-4">
-                "{review.text}"
-              </blockquote>
-
-              {/* Single-line author row: avatar + "Name • Location" */}
-              <figcaption className="flex items-center gap-2 pt-2.5 border-t border-gray-100">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-100 to-purple-200/70 text-purple-700 flex items-center justify-center font-semibold text-[11.5px] ring-1 ring-purple-200/40 shrink-0">
-                  {review.name.charAt(0)}
-                </div>
-                <p className="text-[12px] text-gray-700 truncate min-w-0">
-                  <span className="font-semibold text-gray-900">{review.name}</span>
-                  <span className="text-gray-400"> · {review.location}</span>
-                </p>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-
-        {/* DESKTOP / TABLET: original editorial grid */}
-        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {REVIEWS.map((review) => (
-            <figure
-              key={review.id}
-              className="relative bg-white rounded-3xl p-7 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(74,49,156,0.3)] hover:-translate-y-1 transition-all duration-300 flex flex-col"
-              data-testid={`review-desktop-${review.id}`}
-            >
-              <Quote
-                className="w-9 h-9 text-purple-200 -mt-0.5 -ml-0.5 mb-3"
+        {/* ============ DESKTOP: split image + stacked carousel ============ */}
+        <div className="hidden lg:grid lg:grid-cols-12 lg:gap-10 items-center">
+          {/* LEFT — clean independent image, no text overlay */}
+          <div className="lg:col-span-5">
+            <div className="relative">
+              {/* soft purple backlight */}
+              <div
                 aria-hidden="true"
-                fill="currentColor"
+                className="absolute -inset-6 -z-10 rounded-[2rem] blur-2xl opacity-60"
+                style={{
+                  background:
+                    "radial-gradient(circle at 30% 40%, rgba(74,49,156,0.28), transparent 70%)",
+                }}
               />
-
-              <blockquote className="text-gray-800 text-[15.5px] leading-[1.65] font-normal mb-6 flex-1">
-                "{review.text}"
-              </blockquote>
-
-              <figcaption className="flex items-center gap-3 pt-4 border-t border-gray-100">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200/70 text-purple-700 flex items-center justify-center font-semibold text-[14px] ring-1 ring-purple-200/40 shrink-0">
-                  {review.name.charAt(0)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 text-[14px] leading-tight">{review.name}</p>
-                  <p className="text-gray-400 text-[12px] mt-0.5">{review.location}</p>
-                </div>
+              <div className="relative rounded-3xl overflow-hidden ring-1 ring-purple-100/70 shadow-[0_30px_70px_-30px_rgba(74,49,156,0.45)]">
+                <img
+                  src={customersImg}
+                  alt="Happy Move4U customers smiling after a successful move in London"
+                  className="w-full h-[460px] object-cover"
+                  loading="lazy"
+                />
+              </div>
+              {/* small floating rating badge — subtle social proof */}
+              <div className="absolute -bottom-5 left-6 bg-white rounded-2xl px-4 py-3 shadow-[0_18px_40px_-18px_rgba(17,12,46,0.25)] ring-1 ring-gray-100 flex items-center gap-3">
                 <div className="flex items-center gap-0.5">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-3.5 h-3.5 ${i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-200 fill-gray-200"}`}
-                    />
+                    <Star key={i} className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
                   ))}
                 </div>
-              </figcaption>
-            </figure>
-          ))}
+                <div className="text-[12px] leading-tight">
+                  <p className="font-semibold text-gray-900">4.9 / 5</p>
+                  <p className="text-gray-500">Hundreds of moves</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT — stacked carousel */}
+          <div className="lg:col-span-7">
+            <div
+              className="relative h-[420px]"
+              onMouseEnter={() => {
+                if (resumeTimer.current) window.clearTimeout(resumeTimer.current);
+                setPaused(true);
+              }}
+              onMouseLeave={() => setPaused(false)}
+            >
+              {/* Backlight glow centered behind active card */}
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 -z-10 flex items-center justify-center"
+              >
+                <div
+                  className="w-[78%] h-[78%] rounded-full blur-3xl opacity-70"
+                  style={{
+                    background:
+                      "radial-gradient(closest-side, rgba(74,49,156,0.30), rgba(74,49,156,0) 70%)",
+                  }}
+                />
+              </div>
+
+              {REVIEWS.map((review, idx) => {
+                const pos = relativePos(idx);
+                if (pos < 0) return null;
+                // Stacking: pos=0 front center, pos=1 behind+right, pos=2 further behind+right
+                const styles: React.CSSProperties =
+                  pos === 0
+                    ? {
+                        transform: "translate(0, 0) scale(1)",
+                        opacity: 1,
+                        zIndex: 30,
+                        filter: "none",
+                      }
+                    : pos === 1
+                      ? {
+                          transform: "translate(36px, 22px) scale(0.94)",
+                          opacity: 0.7,
+                          zIndex: 20,
+                          filter: "blur(0.3px)",
+                        }
+                      : {
+                          transform: "translate(64px, 40px) scale(0.88)",
+                          opacity: 0.4,
+                          zIndex: 10,
+                          filter: "blur(0.6px)",
+                        };
+
+                return (
+                  <article
+                    key={review.id}
+                    aria-hidden={pos !== 0}
+                    className="absolute inset-0 mx-auto max-w-[520px] bg-white rounded-3xl p-7 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.06),_0_30px_60px_-22px_rgba(74,49,156,0.35)] flex flex-col transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                    style={styles}
+                    data-testid={`review-desktop-${review.id}`}
+                  >
+                    <Quote
+                      className="w-9 h-9 text-purple-200 -mt-0.5 -ml-0.5 mb-3"
+                      aria-hidden="true"
+                      fill="currentColor"
+                    />
+                    <blockquote className="text-gray-800 text-[15.5px] leading-[1.65] font-normal mb-6 flex-1">
+                      &ldquo;{review.text}&rdquo;
+                    </blockquote>
+                    <footer className="flex items-center gap-3 pt-4 border-t border-gray-100">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200/70 text-purple-700 flex items-center justify-center font-semibold text-[14px] ring-1 ring-purple-200/40 shrink-0">
+                        {review.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 text-[14px] leading-tight">
+                          {review.name}
+                        </p>
+                        <p className="text-gray-400 text-[12px] mt-0.5">{review.location}</p>
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-3.5 h-3.5 ${
+                              i < review.rating
+                                ? "text-yellow-400 fill-yellow-400"
+                                : "text-gray-200 fill-gray-200"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </footer>
+                  </article>
+                );
+              })}
+            </div>
+
+            {/* Controls + dots */}
+            <div className="mt-6 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    prev();
+                    pauseTemporarily();
+                  }}
+                  className="w-10 h-10 rounded-full bg-white ring-1 ring-gray-200 hover:ring-purple-300 hover:text-purple-700 text-gray-500 flex items-center justify-center transition-all shadow-sm"
+                  aria-label="Previous review"
+                  data-testid="reviews-prev"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    next();
+                    pauseTemporarily();
+                  }}
+                  className="w-10 h-10 rounded-full bg-white ring-1 ring-gray-200 hover:ring-purple-300 hover:text-purple-700 text-gray-500 flex items-center justify-center transition-all shadow-sm"
+                  aria-label="Next review"
+                  data-testid="reviews-next"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {REVIEWS.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      setActive(i);
+                      pauseTemporarily();
+                    }}
+                    aria-label={`Go to review ${i + 1}`}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === active ? "w-7 bg-purple-700" : "w-1.5 bg-gray-300 hover:bg-gray-400"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ============ MOBILE / TABLET: image on top, stacked single-card carousel ============ */}
+        <div className="lg:hidden">
+          {/* compact top visual */}
+          <div className="relative mb-7 sm:mb-9">
+            <div
+              aria-hidden="true"
+              className="absolute -inset-3 -z-10 rounded-3xl blur-2xl opacity-60"
+              style={{
+                background:
+                  "radial-gradient(circle at 50% 50%, rgba(74,49,156,0.22), transparent 70%)",
+              }}
+            />
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden ring-1 ring-purple-100/70 shadow-[0_20px_50px_-22px_rgba(74,49,156,0.4)]">
+              <img
+                src={customersImg}
+                alt="Happy Move4U customers after a successful move"
+                className="w-full h-44 sm:h-72 object-cover"
+                loading="lazy"
+              />
+            </div>
+          </div>
+
+          {/* Stacked carousel */}
+          <div
+            className="relative h-[280px] sm:h-[320px]"
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+            data-testid="reviews-mobile-stack"
+          >
+            {/* backlight glow */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 -z-10 flex items-center justify-center"
+            >
+              <div
+                className="w-[80%] h-[80%] rounded-full blur-3xl opacity-60"
+                style={{
+                  background:
+                    "radial-gradient(closest-side, rgba(74,49,156,0.25), rgba(74,49,156,0) 70%)",
+                }}
+              />
+            </div>
+
+            {REVIEWS.map((review, idx) => {
+              const pos = relativePos(idx);
+              if (pos < 0 || pos > 1) return null; // mobile: only active + 1 behind
+              const styles: React.CSSProperties =
+                pos === 0
+                  ? { transform: "translate(0, 0) scale(1)", opacity: 1, zIndex: 30 }
+                  : {
+                      transform: "translate(18px, 14px) scale(0.94)",
+                      opacity: 0.55,
+                      zIndex: 20,
+                      filter: "blur(0.3px)",
+                    };
+
+              return (
+                <article
+                  key={review.id}
+                  aria-hidden={pos !== 0}
+                  className="absolute inset-x-2 sm:inset-x-6 top-0 bg-white rounded-2xl p-4 sm:p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-20px_rgba(74,49,156,0.35)] flex flex-col transition-all duration-600 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                  style={styles}
+                  data-testid={`review-mobile-${review.id}`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <Quote
+                      className="w-5 h-5 sm:w-6 sm:h-6 text-purple-200"
+                      aria-hidden="true"
+                      fill="currentColor"
+                    />
+                    <span className="inline-flex items-center gap-1 text-[11.5px] sm:text-[12.5px] font-semibold text-gray-700 tabular-nums">
+                      <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                      {review.rating.toFixed(1)}
+                    </span>
+                  </div>
+
+                  <blockquote className="text-gray-800 text-[13.5px] sm:text-[14.5px] leading-[1.55] font-normal mb-3 flex-1 line-clamp-5 sm:line-clamp-none">
+                    &ldquo;{review.text}&rdquo;
+                  </blockquote>
+
+                  <footer className="flex items-center gap-2.5 pt-2.5 border-t border-gray-100">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-100 to-purple-200/70 text-purple-700 flex items-center justify-center font-semibold text-[12px] ring-1 ring-purple-200/40 shrink-0">
+                      {review.name.charAt(0)}
+                    </div>
+                    <p className="text-[12.5px] text-gray-700 truncate min-w-0">
+                      <span className="font-semibold text-gray-900">{review.name}</span>
+                      <span className="text-gray-400"> · {review.location}</span>
+                    </p>
+                  </footer>
+                </article>
+              );
+            })}
+          </div>
+
+          {/* Mobile dots */}
+          <div className="mt-4 flex items-center justify-center gap-1.5">
+            {REVIEWS.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => {
+                  setActive(i);
+                  pauseTemporarily();
+                }}
+                aria-label={`Go to review ${i + 1}`}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === active ? "w-6 bg-purple-700" : "w-1.5 bg-gray-300"
+                }`}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>

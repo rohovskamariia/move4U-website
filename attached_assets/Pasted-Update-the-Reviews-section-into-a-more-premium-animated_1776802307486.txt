@@ -1,0 +1,102 @@
+Update the Reviews section into a more premium animated testimonial area.
+
+I want this section improved on BOTH desktop and mobile, but with different layouts adapted to screen size.
+
+1. Desktop layout
+
+Create a split Reviews section:
+
+- LEFT side:
+  - one separate large image
+  - do NOT place review text on top of the image
+  - image must be independent and clean
+
+- RIGHT side:
+  - a premium review carousel
+  - one main active review card in front
+  - one or two review cards slightly visible behind it
+  - the stack should feel layered and elegant
+
+2. Create / generate the image for the Reviews section
+
+Please generate or create a realistic supporting image for this section.
+
+Image direction:
+- happy satisfied customers after a moving job
+- people should look genuinely pleased
+- ideally 2–3 people smiling and giving a thumbs up
+- scene should feel natural and believable
+- can be near a van, house, building, or after a completed move
+- realistic daylight
+- clean, professional, trustworthy
+
+Important:
+- no fake-looking studio style
+- no text on the image
+- no heavy filters
+- keep it realistic and premium
+- it should fit the Move4U brand and service style
+
+3. Desktop review carousel behavior
+
+On desktop:
+- show one active review card in front
+- show one or two review cards behind it
+- cards behind should be partially visible
+- the layout should feel like a premium stacked carousel
+
+4. Desktop animation
+
+- reviews should rotate automatically
+- movement must be smooth and slow
+- not too fast
+- when the next review becomes active, cards should shift naturally
+- no harsh jumps
+- active card comes forward
+- background cards move smoothly behind it
+
+5. Glow / highlight effect
+
+- add a soft purple backlight / glow behind the review cards
+- especially behind the active card and partially behind the background cards
+- keep it subtle and premium
+- not flashy
+- use the darker brand purple, not neon purple
+
+6. Mobile version
+
+I also want to try a mobile version of this concept.
+
+For mobile:
+- keep the same idea, but adapted to small screens
+- show the image first or as a compact top visual
+- below it, show one main active review card
+- if possible, keep one background card slightly visible behind it
+- maintain automatic rotation on mobile too
+- allow swipe left/right manually
+- if the user touches/swipes, pause auto movement
+- after interaction, auto movement can continue
+
+Important for mobile:
+- keep everything clean and readable
+- do NOT make it heavy or cluttered
+- do NOT let cards become too large
+- keep spacing compact
+- make sure it still feels premium, but mobile-friendly
+
+7. Reviews content
+
+Use the current review content, but improve presentation:
+- keep cards clean and readable
+- keep star rating visible
+- keep name and location visible
+- spacing should feel premium and balanced
+
+8. Final goal
+
+Create a stronger, more premium Reviews section on both desktop and mobile:
+- realistic happy-customer image
+- automatically rotating reviews
+- layered / stacked review-card effect
+- subtle purple glow
+- more trust, more motion, and better visual impact
