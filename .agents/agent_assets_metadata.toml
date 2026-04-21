@@ -24,6 +24,12 @@ uri = "file://attached_assets/generated_images/move4u_happy_customers.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "mgOdT5jJyKIw412vHyHRR"
+uri = "file://attached_assets/generated_images/move4u_real_move.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "TLaqR2zwqYo7bZyQ2hYHo"
 uri = "file://artifacts/move4u/src/assets/hero/move4u_hero_v1.png"

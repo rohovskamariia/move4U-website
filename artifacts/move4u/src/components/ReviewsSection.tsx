@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback, type TouchEvent } from "react";
 import { Star, Quote, ChevronLeft, ChevronRight } from "lucide-react";
 import { REVIEWS } from "@/data/constants";
-import customersImg from "@/assets/reviews/move4u_happy_customers.png";
+import customersImg from "@/assets/reviews/move4u_real_move.png";
 
 const AUTO_ROTATE_MS = 6000;
 const RESUME_AFTER_MS = 8000;
@@ -124,10 +124,10 @@ export default function ReviewsSection() {
             </div>
           </div>
 
-          {/* RIGHT — stacked carousel */}
+          {/* RIGHT — stacked carousel (3D perspective, centered) */}
           <div className="lg:col-span-7">
             <div
-              className="relative h-[420px]"
+              className="relative h-[420px] [perspective:1400px]"
               onMouseEnter={() => {
                 if (resumeTimer.current) window.clearTimeout(resumeTimer.current);
                 setPaused(true);
@@ -151,25 +151,30 @@ export default function ReviewsSection() {
               {REVIEWS.map((review, idx) => {
                 const pos = relativePos(idx);
                 if (pos < 0) return null;
-                // Stacking: pos=0 front center, pos=1 behind+right, pos=2 further behind+right
+                // Centered 3D stack — cards recede backwards (translateZ + slight
+                // upward shift + tiny rotateX) instead of sliding sideways. This
+                // gives a layered "depth" feel rather than a horizontal slider.
                 const styles: React.CSSProperties =
                   pos === 0
                     ? {
-                        transform: "translate(0, 0) scale(1)",
+                        transform:
+                          "translate3d(0, 0, 0) rotateX(0deg) scale(1)",
                         opacity: 1,
                         zIndex: 30,
                         filter: "none",
                       }
                     : pos === 1
                       ? {
-                          transform: "translate(36px, 22px) scale(0.94)",
-                          opacity: 0.7,
+                          transform:
+                            "translate3d(0, -22px, -90px) rotateX(3deg) scale(0.94)",
+                          opacity: 0.55,
                           zIndex: 20,
                           filter: "blur(0.3px)",
                         }
                       : {
-                          transform: "translate(64px, 40px) scale(0.88)",
-                          opacity: 0.4,
+                          transform:
+                            "translate3d(0, -40px, -180px) rotateX(5deg) scale(0.88)",
+                          opacity: 0.28,
                           zIndex: 10,
                           filter: "blur(0.6px)",
                         };
@@ -178,7 +183,7 @@ export default function ReviewsSection() {
                   <article
                     key={review.id}
                     aria-hidden={pos !== 0}
-                    className="absolute inset-0 mx-auto max-w-[520px] bg-white rounded-3xl p-7 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.06),_0_30px_60px_-22px_rgba(74,49,156,0.35)] flex flex-col transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                    className="absolute inset-0 mx-auto max-w-[520px] bg-white rounded-3xl p-7 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.06),_0_30px_60px_-22px_rgba(74,49,156,0.35)] flex flex-col transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] [transform-style:preserve-3d] [will-change:transform,opacity]"
                     style={styles}
                     data-testid={`review-desktop-${review.id}`}
                   >
@@ -288,9 +293,9 @@ export default function ReviewsSection() {
             </div>
           </div>
 
-          {/* Stacked carousel */}
+          {/* Stacked carousel — centered, 3D depth, swipeable */}
           <div
-            className="relative h-[280px] sm:h-[320px]"
+            className="relative h-[280px] sm:h-[320px] [perspective:1200px]"
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
             data-testid="reviews-mobile-stack"
@@ -314,10 +319,15 @@ export default function ReviewsSection() {
               if (pos < 0 || pos > 1) return null; // mobile: only active + 1 behind
               const styles: React.CSSProperties =
                 pos === 0
-                  ? { transform: "translate(0, 0) scale(1)", opacity: 1, zIndex: 30 }
+                  ? {
+                      transform: "translate3d(0, 0, 0) scale(1)",
+                      opacity: 1,
+                      zIndex: 30,
+                    }
                   : {
-                      transform: "translate(18px, 14px) scale(0.94)",
-                      opacity: 0.55,
+                      transform:
+                        "translate3d(0, -14px, -60px) rotateX(2.5deg) scale(0.93)",
+                      opacity: 0.45,
                       zIndex: 20,
                       filter: "blur(0.3px)",
                     };
@@ -326,7 +336,7 @@ export default function ReviewsSection() {
                 <article
                   key={review.id}
                   aria-hidden={pos !== 0}
-                  className="absolute inset-x-2 sm:inset-x-6 top-0 bg-white rounded-2xl p-4 sm:p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-20px_rgba(74,49,156,0.35)] flex flex-col transition-all duration-600 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                  className="absolute inset-x-2 sm:inset-x-6 top-0 bg-white rounded-2xl p-4 sm:p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-20px_rgba(74,49,156,0.35)] flex flex-col transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] [transform-style:preserve-3d] [will-change:transform,opacity]"
                   style={styles}
                   data-testid={`review-mobile-${review.id}`}
                 >
