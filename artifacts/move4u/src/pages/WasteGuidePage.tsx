@@ -116,7 +116,7 @@ export default function WasteGuidePage() {
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/book/waste-removal"
-              className="text-sm font-semibold text-white bg-purple-700 px-5 py-2.5 rounded-full hover:bg-purple-800 transition-colors"
+              className="btn-purple text-sm font-semibold px-5 py-2.5 rounded-full"
             >
               Start Waste Removal Booking
             </Link>

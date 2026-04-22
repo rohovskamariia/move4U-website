@@ -664,7 +664,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
         <button
           onClick={() => setStep("summary")}
           disabled={!hasSelection || !pickup || !liftValue}
-          className="w-full py-2.5 sm:py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-purple w-full py-2.5 sm:py-3.5 font-semibold rounded-xl text-sm"
           data-testid="waste-continue"
         >
           See Summary

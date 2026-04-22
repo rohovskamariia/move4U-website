@@ -241,11 +241,7 @@ export default function MobileDrawer({
           <Link
             href="/book"
             onClick={onClose}
-            className="block w-full text-center font-semibold text-white px-4 py-3 rounded-full hover:opacity-95 transition-opacity text-sm shadow-[0_8px_20px_-10px_rgba(74,49,156,0.6)]"
-            style={{
-              backgroundImage:
-                "linear-gradient(135deg, #5b3fb8 0%, #4a319c 60%, #3a267f 100%)",
-            }}
+            className="btn-purple block w-full text-center font-semibold px-4 py-3 rounded-full text-sm"
             data-testid="drawer-book-now"
           >
             Book Now

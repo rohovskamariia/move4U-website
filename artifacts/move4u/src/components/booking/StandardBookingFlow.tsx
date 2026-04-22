@@ -255,7 +255,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
         <button
           onClick={goNext}
           disabled={!canProceed()}
-          className="mt-6 w-full py-2.5 sm:py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-purple mt-6 w-full py-2.5 sm:py-3.5 font-semibold rounded-xl text-sm"
           data-testid="booking-next"
         >
           Continue

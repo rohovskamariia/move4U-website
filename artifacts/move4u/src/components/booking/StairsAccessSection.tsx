@@ -236,7 +236,7 @@ export default function StairsAccessSection({
               type="button"
               onClick={() => setFloor(parsedFloor + 1)}
               aria-label="Increase floor"
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-700 text-white flex items-center justify-center hover:bg-purple-800 active:scale-95 transition-all"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#5A3BFF] text-white flex items-center justify-center hover:bg-[#4C2EDB] active:scale-95 transition-all"
               data-testid={`floor-plus${idSuffix}`}
             >
               <Plus className="w-[18px] h-[18px] sm:w-5 sm:h-5" strokeWidth={2.5} />

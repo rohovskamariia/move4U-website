@@ -89,7 +89,7 @@ export default function BookingPolicyModal({ onClose }: BookingPolicyModalProps)
         <div className="sticky bottom-0 bg-white border-t border-gray-100 px-5 py-3.5">
           <button
             onClick={onClose}
-            className="w-full py-3 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm"
+            className="btn-purple w-full py-3 font-semibold rounded-xl text-sm"
             data-testid="continue-booking-from-policy"
           >
             Continue booking

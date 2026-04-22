@@ -268,7 +268,7 @@ export default function SecureBookingPage() {
         <button
           onClick={handlePay}
           disabled={!canSubmit || submitting}
-          className="w-full py-4 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-8"
+          className="btn-purple w-full py-4 font-semibold rounded-xl text-sm flex items-center justify-center gap-2 mb-8"
         >
           <Lock className="w-4 h-4" />
           {submitting ? TEXT.payingText : TEXT.payButtonText}

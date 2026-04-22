@@ -95,7 +95,7 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
       </div>
 
       <div className="space-y-4">
-      <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm text-blue-700 mb-2">
+      <div className="bg-purple-50 border border-purple-100 rounded-xl px-4 py-3 text-sm text-purple-700 mb-2">
         Please contact us directly for a final international moving quote.
       </div>
 

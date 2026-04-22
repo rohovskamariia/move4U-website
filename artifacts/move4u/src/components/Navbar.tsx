@@ -156,10 +156,7 @@ export default function Navbar() {
               </Link>
               <Link
                 href="/book"
-                className="text-sm font-semibold text-white px-5 py-2 rounded-full transition-colors"
-                style={{ backgroundColor: "#5A3BFF" }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#4C2EDB")}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#5A3BFF")}
+                className="btn-purple text-sm font-semibold px-5 py-2 rounded-full"
                 data-testid="nav-book-now"
               >
                 Book Now
