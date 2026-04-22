@@ -1,5 +1,4 @@
 import { Link } from "wouter";
-import { Truck } from "lucide-react";
 import { CONTACT } from "@/data/constants";
 
 export default function Footer() {
@@ -11,9 +10,13 @@ export default function Footer() {
         {/* Brand block — full width above the link grid on every breakpoint */}
         <div className="mb-6 sm:mb-10">
           <div className="flex items-center gap-2.5 font-bold text-lg sm:text-xl text-white mb-2 sm:mb-3">
-            <div className="bg-gradient-to-br from-purple-700 to-purple-900 text-white p-1.5 sm:p-2 rounded-xl">
-              <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
+            <img
+              src="/m4u-icon.png"
+              alt=""
+              aria-hidden="true"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover ring-1 ring-white/10 select-none"
+              draggable={false}
+            />
             Move4U
           </div>
           <p className="text-gray-400 text-[13px] sm:text-sm leading-relaxed max-w-md">

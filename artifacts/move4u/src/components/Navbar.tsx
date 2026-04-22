@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, Truck } from "lucide-react";
+import { Menu } from "lucide-react";
 import MobileDrawer from "./MobileDrawer";
 import { SCROLL_TARGET_KEY } from "@/lib/sectionNav";
 
@@ -82,41 +82,18 @@ export default function Navbar() {
         <nav className="max-w-6xl mx-auto px-4 sm:px-6">
           {/* Slim refined silhouette — slightly taller on desktop for breathing room */}
           <div className="flex items-center justify-between h-[56px] md:h-[68px]">
-            {/* Premium wordmark — gradient mark, gradient text, micro-tagline */}
+            {/* Brand logo — full Move4U logo (van + wordmark) */}
             <Link
               href="/"
-              className="flex items-center gap-2.5 group"
+              className="flex items-center group transition-transform duration-200 group-hover:-translate-y-0.5"
               aria-label="Move4U — home"
             >
-              <span
-                className="relative flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-xl text-white shadow-[0_6px_18px_-6px_rgba(74,49,156,0.55)] transition-transform duration-200 group-hover:-translate-y-0.5"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(135deg, #6d4ed3 0%, #5b3fb8 45%, #3a267f 100%)",
-                }}
-              >
-                {/* Soft inner highlight for a glassy, premium logo mark */}
-                <span
-                  className="absolute inset-0 rounded-xl pointer-events-none"
-                  style={{
-                    background:
-                      "linear-gradient(180deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 55%)",
-                  }}
-                />
-                <Truck
-                  className="relative w-4 h-4 md:w-5 md:h-5"
-                  strokeWidth={2.4}
-                />
-              </span>
-              <span
-                className="font-bold text-[18px] md:text-[22px] tracking-tight bg-clip-text text-transparent leading-none"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(135deg, #3a267f 0%, #5b3fb8 60%, #4a319c 100%)",
-                }}
-              >
-                Move4U
-              </span>
+              <img
+                src="/move4u-logo.png"
+                alt="Move4U"
+                className="h-11 md:h-14 w-auto object-contain select-none"
+                draggable={false}
+              />
             </Link>
 
             {/* Desktop nav */}
