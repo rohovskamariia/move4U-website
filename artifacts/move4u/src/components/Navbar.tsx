@@ -93,12 +93,12 @@ export default function Navbar() {
                 draggable={false}
               />
               <span className="font-bold text-[20px] md:text-[24px] tracking-tight leading-none">
-                <span style={{ color: "#0f172a" }}>Move</span>
+                <span style={{ color: "#0B0F1A" }}>Move</span>
                 <span
                   className="bg-clip-text text-transparent"
                   style={{
                     backgroundImage:
-                      "linear-gradient(135deg, #6d4ed3 0%, #5b3fb8 45%, #3a267f 100%)",
+                      "linear-gradient(135deg, #5b3fb8 0%, #4a319c 60%, #3a267f 100%)",
                   }}
                 >
                   4U

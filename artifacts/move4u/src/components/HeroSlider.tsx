@@ -53,6 +53,7 @@ export default function HeroSlider() {
               }}
               loading={i === 0 ? "eager" : "lazy"}
               decoding="async"
+              {...(i === 0 ? { fetchPriority: "high" as const } : { fetchPriority: "low" as const })}
             />
           </div>
         ))}

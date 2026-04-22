@@ -1,12 +1,12 @@
 import { X } from "lucide-react";
 import { WASTE_LOADS } from "@/data/constants";
-import minLoad from "@assets/IMG_3575_1776610167208.jpeg";
-import quarterLoad from "@assets/IMG_3576_1776610167208.jpeg";
-import thirdLoad from "@assets/IMG_3577_1776610167208.jpeg";
-import halfLoad from "@assets/IMG_3578_1776610167208.jpeg";
-import threeQuarterLoad from "@assets/IMG_3579_1776610167209.jpeg";
-import fullLoad from "@assets/IMG_3580_1776610167209.jpeg";
-import xlLoad from "@assets/IMG_3580_1776610167209.jpeg";
+import minLoad from "@assets/IMG_3575_1776610167208.webp";
+import quarterLoad from "@assets/IMG_3576_1776610167208.webp";
+import thirdLoad from "@assets/IMG_3577_1776610167208.webp";
+import halfLoad from "@assets/IMG_3578_1776610167208.webp";
+import threeQuarterLoad from "@assets/IMG_3579_1776610167209.webp";
+import fullLoad from "@assets/IMG_3580_1776610167209.webp";
+import xlLoad from "@assets/IMG_3580_1776610167209.webp";
 
 interface WasteSizeModalProps {
   onClose: () => void;

@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
-import smallVan from "@assets/IMG_3410_1776508670556.jpeg";
-import mediumVan from "@assets/IMG_3409_1776508670556.jpeg";
-import largeVan from "@assets/IMG_3408_1776508670556.jpeg";
+import smallVan from "@assets/IMG_3410_1776508670556.webp";
+import mediumVan from "@assets/IMG_3409_1776508670556.webp";
+import largeVan from "@assets/IMG_3408_1776508670556.webp";
 
 interface VanSizeModalProps {
   onClose: () => void;

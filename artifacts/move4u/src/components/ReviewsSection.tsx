@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback, type TouchEvent } from "react";
 import { Star, Quote, ChevronLeft, ChevronRight } from "lucide-react";
 import { REVIEWS } from "@/data/constants";
-import customersImg from "@/assets/reviews/move4u_real_move.png";
+import customersImg from "@/assets/reviews/move4u_real_move.webp";
 
 const AUTO_ROTATE_MS = 5500;
 const RESUME_AFTER_MS = 8000;

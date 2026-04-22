@@ -4,16 +4,16 @@ import { Link } from "wouter";
 import BackToHome from "@/components/BackToHome";
 import { MessageCircle } from "lucide-react";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS, CONTACT } from "@/data/constants";
-import smallVan from "@assets/IMG_3410_1776508670556.jpeg";
-import mediumVan from "@assets/IMG_3409_1776508670556.jpeg";
-import largeVan from "@assets/IMG_3408_1776508670556.jpeg";
-import minLoad from "@assets/IMG_3575_1776610167208.jpeg";
-import quarterLoad from "@assets/IMG_3576_1776610167208.jpeg";
-import thirdLoad from "@assets/IMG_3577_1776610167208.jpeg";
-import halfLoad from "@assets/IMG_3578_1776610167208.jpeg";
-import threeQuarterLoad from "@assets/IMG_3579_1776610167209.jpeg";
-import fullLoad from "@assets/IMG_3580_1776610167209.jpeg";
-import xlLoad from "@assets/IMG_3580_1776610167209.jpeg";
+import smallVan from "@assets/IMG_3410_1776508670556.webp";
+import mediumVan from "@assets/IMG_3409_1776508670556.webp";
+import largeVan from "@assets/IMG_3408_1776508670556.webp";
+import minLoad from "@assets/IMG_3575_1776610167208.webp";
+import quarterLoad from "@assets/IMG_3576_1776610167208.webp";
+import thirdLoad from "@assets/IMG_3577_1776610167208.webp";
+import halfLoad from "@assets/IMG_3578_1776610167208.webp";
+import threeQuarterLoad from "@assets/IMG_3579_1776610167209.webp";
+import fullLoad from "@assets/IMG_3580_1776610167209.webp";
+import xlLoad from "@assets/IMG_3580_1776610167209.webp";
 
 const VANS = [
   { name: "Small Van", price: "£35", desc: "Perfect for single items, small flat moves & deliveries.", image: smallVan },
