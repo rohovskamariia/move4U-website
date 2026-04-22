@@ -221,6 +221,7 @@ const ADMIN_HEADER_ROW = [
   "Payment Link",        // U
   "Telegram Message ID", // V
   "Photos",              // W
+  "Preferred Time",      // X — customer's chosen time window (Morning / Afternoon / Evening)
 ];
 
 let adminHeaderPatched = false;
@@ -230,7 +231,7 @@ async function patchAdminHeaders(id: string): Promise<void> {
   try {
     await connectors.proxy(
       "google-sheet",
-      `/v4/spreadsheets/${id}/values/Bookings!P1:W1?valueInputOption=USER_ENTERED`,
+      `/v4/spreadsheets/${id}/values/Bookings!P1:X1?valueInputOption=USER_ENTERED`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -270,6 +271,7 @@ export interface BookingRecord {
   paymentLink: string;
   telegramMessageId: string; // V — stored so status updates can edit the same message
   photoUrls: string;         // W — comma-separated serving URLs for uploaded photos
+  timeWindow: string;        // X — customer's preferred time window (e.g. "Morning (8am–12pm)")
 }
 
 export async function getAllBookings(): Promise<BookingRecord[]> {
@@ -278,7 +280,7 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
 
   const res = await connectors.proxy(
     "google-sheet",
-    `/v4/spreadsheets/${id}/values/Bookings!A:W`,
+    `/v4/spreadsheets/${id}/values/Bookings!A:X`,
   );
   const data = (await res.json()) as { values?: string[][] };
   const rows = data.values ?? [];
@@ -311,6 +313,7 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
       paymentLink:       row[20] ?? "",
       telegramMessageId: row[21] ?? "",
       photoUrls:         row[22] ?? "",
+      timeWindow:        row[23] ?? "",
     }))
     .filter((b) => b.bookingReference)
     .reverse(); // newest first
@@ -327,6 +330,7 @@ export interface BookingAdminUpdate {
   paymentLink?:       string;
   telegramMessageId?: string; // column V
   photoUrls?:         string; // column W — comma-separated photo serving URLs
+  preferredTime?:     string; // column X — customer's chosen time window
 }
 
 // Updates admin-editable fields for a booking identified by its reference.
@@ -363,6 +367,7 @@ export async function updateBookingAdmin(
     if (fields.paymentLink        !== undefined) updates.push({ range: c("U"), values: [[fields.paymentLink]] });
     if (fields.telegramMessageId  !== undefined) updates.push({ range: c("V"), values: [[fields.telegramMessageId]] });
     if (fields.photoUrls          !== undefined) updates.push({ range: c("W"), values: [[fields.photoUrls]] });
+    if (fields.preferredTime      !== undefined) updates.push({ range: c("X"), values: [[fields.preferredTime]] });
 
     if (updates.length === 0) return true;
 

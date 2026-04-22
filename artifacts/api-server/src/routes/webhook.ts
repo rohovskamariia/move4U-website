@@ -145,7 +145,7 @@ webhookRouter.post("/stripe-webhook", express.raw({ type: "application/json", li
             estimatedPrice:   booking.estimatedPrice,
             estimatedTime:    "",
             preferredDate:    booking.date,
-            timeWindow:       "",
+            timeWindow:       booking.timeWindow,
             wasteAddons:      "",
             uploadedFiles:    "",
             notes:            booking.notes,

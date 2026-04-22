@@ -93,10 +93,17 @@ bookingsRouter.post("/bookings", async (req, res) => {
     // 2. Respond immediately — don't block on photo storage or Telegram
     res.json({ success: true, bookingReference });
 
-    // 3. If photos were uploaded, save their URLs to column W (fire-and-forget)
-    if (uploadedFiles) {
-      updateBookingAdmin(bookingReference, { photoUrls: uploadedFiles }).catch((err) =>
-        logger.error({ err, bookingReference }, "Failed to save photo URLs to Sheets"),
+    // 3. Persist the customer's preferred time window to column X, plus any
+    //    uploaded photo URLs to column W. Both are fire-and-forget — they
+    //    must not block the customer's confirmation response. The append
+    //    above only writes columns A:O, so anything outside that range is
+    //    written here as a follow-up update keyed by booking reference.
+    const followUp: Parameters<typeof updateBookingAdmin>[1] = {};
+    if (timeWindow) followUp.preferredTime = timeWindow;
+    if (uploadedFiles) followUp.photoUrls = uploadedFiles;
+    if (Object.keys(followUp).length > 0) {
+      updateBookingAdmin(bookingReference, followUp).catch((err) =>
+        logger.error({ err, bookingReference }, "Failed to save follow-up booking fields to Sheets"),
       );
     }
 

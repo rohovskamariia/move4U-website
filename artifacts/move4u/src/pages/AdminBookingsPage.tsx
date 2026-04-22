@@ -32,6 +32,7 @@ interface BookingRecord {
   driverNotes: string;
   paymentLink: string;
   photoUrls: string; // comma-separated serving URLs for uploaded photos
+  timeWindow: string; // customer's preferred time slot (e.g. "Morning (8am–12pm)")
 }
 
 interface EditForm {
@@ -525,7 +526,10 @@ export default function AdminBookingsPage() {
       ? `£${parseFloat(booking.depositAmount).toFixed(2)}`
       : "—";
     const date = booking.confirmedDate || booking.date || "TBC";
-    const time = booking.confirmedTime || "TBC";
+    // Fall back to the customer's requested time window so the message
+    // always carries SOME time information — never just "TBC" when we
+    // know what slot they asked for.
+    const time = booking.confirmedTime || booking.timeWindow || "TBC";
     const from = booking.pickup  || "—";
     const to   = booking.dropoff || "—";
     const name = booking.name    || "there";
@@ -718,6 +722,10 @@ export default function AdminBookingsPage() {
                         <InfoRow label="Contact via" value={booking.contactMethod} />
                         <InfoRow label="Estimated price" value={booking.estimatedPrice} />
                         <InfoRow label="Requested date" value={booking.date} />
+                        <InfoRow
+                          label="Preferred time"
+                          value={booking.timeWindow || "—"}
+                        />
                         <InfoRow label="Van" value={booking.vanSize} />
                         <InfoRow label="Help" value={booking.helpOption} />
                       </div>

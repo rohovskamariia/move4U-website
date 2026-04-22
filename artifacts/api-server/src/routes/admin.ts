@@ -118,7 +118,7 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
             estimatedPrice:   booking.estimatedPrice,
             estimatedTime:    "",
             preferredDate:    booking.date,
-            timeWindow:       "",
+            timeWindow:       booking.timeWindow,
             wasteAddons:      "",
             uploadedFiles:    "",
             notes:            booking.notes,
