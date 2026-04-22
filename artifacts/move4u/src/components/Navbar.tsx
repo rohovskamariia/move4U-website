@@ -94,15 +94,7 @@ export default function Navbar() {
               />
               <span className="font-extrabold text-[22px] md:text-[27px] tracking-tight leading-none">
                 <span style={{ color: "#0F172A" }}>Move</span>
-                <span
-                  className="bg-clip-text text-transparent"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, #6D5BFF 0%, #5A3BFF 100%)",
-                  }}
-                >
-                  4U
-                </span>
+                <span style={{ color: "#6D4ED3" }}>4U</span>
               </span>
             </Link>
 

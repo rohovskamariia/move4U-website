@@ -373,23 +373,23 @@ body {
 /* Reusable purple gradient button — primary CTA across the site.    */
 /* ---------------------------------------------------------------- */
 .btn-purple {
-  /* Matte brand violet — flat, refined, no glow or shiny gradient. */
-  background-color: #5A3BFF;
+  /* Single brand purple — flat, calm, premium. No glow or shiny gradient. */
+  background-color: #6D4ED3;
   background-image: none;
   color: #ffffff;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
   transition: background-color 180ms ease, transform 180ms ease;
 }
 .btn-purple:hover {
-  background-color: #4C2EDB;
+  background-color: #5B3FC0;
   transform: translateY(-1px);
 }
 .btn-purple:active {
-  background-color: #3F25BF;
+  background-color: #4B32A5;
   transform: translateY(0);
 }
 .btn-purple:disabled {
-  background-color: #A39BD9;
+  background-color: #B5A8E5;
   cursor: not-allowed;
   transform: none;
 }
