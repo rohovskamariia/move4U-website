@@ -57,11 +57,7 @@ export default function PricingGuidePage() {
         </header>
 
         {/* SECTION 1 — House & Commercial Moving (van + help + stairs) */}
-        <div className="mb-5 sm:mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-            House &amp; Commercial Moving
-          </h2>
-        </div>
+        <SectionHeading>House &amp; Commercial Moving</SectionHeading>
 
         <Section title="Choose your van" subtitle="Hourly rate. Minimum 2 hours.">
           <div className="grid sm:grid-cols-3 gap-3 sm:gap-5">
@@ -129,8 +125,10 @@ export default function PricingGuidePage() {
         </Section>
 
         {/* SECTION 4 — Waste removal pricing */}
+        <SectionHeading>Waste Removal</SectionHeading>
+
         <Section
-          title="Waste removal pricing"
+          title="Choose your load size"
           subtitle="Pay by load size — quick, fixed and clear."
         >
           <div className="grid sm:grid-cols-2 gap-4">
@@ -247,6 +245,27 @@ export default function PricingGuidePage() {
   );
 }
 
+/**
+ * Top-level section heading — used for the two main pricing pillars
+ * ("House & Commercial Moving", "Waste Removal"). These are visually
+ * the strongest titles on the page so users can find each pillar fast.
+ */
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mt-6 sm:mt-10 mb-4 sm:mb-6 first:mt-0">
+      <h2 className="text-[20px] sm:text-2xl font-bold text-gray-900 tracking-tight">
+        {children}
+      </h2>
+    </div>
+  );
+}
+
+/**
+ * Subsection within a pillar (e.g. "Choose your van"). Deliberately
+ * less heavy than the top-level heading: medium weight, softer dark
+ * grey, slightly smaller — so it reads as a child of the pillar
+ * rather than a peer.
+ */
 function Section({
   title,
   subtitle,
@@ -257,13 +276,13 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mb-6 sm:mb-12">
-      <div className="mb-3 sm:mb-5">
-        <h2 className="text-[15.5px] sm:text-xl font-bold text-gray-900 tracking-tight">
+    <section className="mb-6 sm:mb-10">
+      <div className="mb-3 sm:mb-4">
+        <h3 className="text-[14px] sm:text-[16px] font-medium text-gray-700 tracking-tight">
           {title}
-        </h2>
+        </h3>
         {subtitle && (
-          <p className="text-[12.5px] sm:text-sm text-gray-500 mt-0.5">{subtitle}</p>
+          <p className="text-[12px] sm:text-[13px] text-gray-500 mt-0.5">{subtitle}</p>
         )}
       </div>
       {children}
