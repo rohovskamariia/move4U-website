@@ -4,7 +4,6 @@ import { Link } from "wouter";
 import BackToHome from "@/components/BackToHome";
 import { MessageCircle } from "lucide-react";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS, CONTACT, EXTRA_STOP_CHARGE, CONGESTION_CHARGE } from "@/data/constants";
-import { Info } from "lucide-react";
 import smallVan from "@assets/IMG_3410_1776508670556.webp";
 import mediumVan from "@assets/IMG_3409_1776508670556.webp";
 import largeVan from "@assets/IMG_3408_1776508670556.webp";
@@ -140,39 +139,15 @@ export default function PricingGuidePage() {
 
         {/* SECTION 3.5 — Additional charges (may apply) */}
         <Section
-          title="Additional charges may apply"
+          title="Additional charges"
           subtitle="Optional or route-dependent fees added to your booking when relevant."
         >
           <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden divide-y divide-gray-50 shadow-[0_4px_18px_-10px_rgba(76,29,149,0.15)]">
-            <ExtraChargeRow
-              label="Congestion Charge"
-              price={`£${CONGESTION_CHARGE}`}
-              note="May apply if your route passes through the Central London congestion zone."
-              conditional
-            />
-            <ExtraChargeRow
-              label="Stairs (no lift)"
-              price="£10 per floor"
-              note="Charged per address with no working lift."
-            />
-            <ExtraChargeRow
-              label="Additional stops"
-              price={`£${EXTRA_STOP_CHARGE} per stop`}
-              note="Automatically added to your estimate when you add extra stops."
-            />
-            <ExtraChargeRow
-              label="Extra time"
-              price="From £15 / 30 min"
-              note="Charged in 30-minute increments at the driver's hourly rate, only if the job runs over the booked time."
-            />
+            <ExtraChargeRow label="Congestion Charge" price={`£${CONGESTION_CHARGE}`} />
+            <ExtraChargeRow label="Stairs (no lift)" price="£10 per floor" />
+            <ExtraChargeRow label="Additional stops" price={`£${EXTRA_STOP_CHARGE} per stop`} />
+            <ExtraChargeRow label="Extra time" price="From £17.50 / 30 min" />
           </div>
-          <p className="mt-3 text-[12.5px] text-gray-500 italic flex items-start gap-1.5">
-            <Info className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-            <span>
-              Conditional charges are shown as &ldquo;may apply&rdquo; in your
-              estimate so there are no surprises on the day.
-            </span>
-          </p>
         </Section>
 
         {/* SECTION 4 — Waste removal pricing */}
@@ -318,35 +293,11 @@ function Section({
   );
 }
 
-function ExtraChargeRow({
-  label,
-  price,
-  note,
-  conditional,
-}: {
-  label: string;
-  price: string;
-  note: string;
-  conditional?: boolean;
-}) {
+function ExtraChargeRow({ label, price }: { label: string; price: string }) {
   return (
-    <div className="flex items-start justify-between gap-3 px-5 py-3.5">
-      <div className="min-w-0">
-        <p className="font-semibold text-gray-900 text-[14px] flex items-center gap-1.5">
-          {label}
-          {conditional && (
-            <span className="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-px">
-              May apply
-            </span>
-          )}
-        </p>
-        <p className="text-[12.5px] text-gray-500 leading-snug mt-0.5">{note}</p>
-      </div>
-      <span
-        className={`font-semibold text-sm shrink-0 tabular-nums ${
-          conditional ? "text-amber-600" : "text-purple-700"
-        }`}
-      >
+    <div className="flex items-center justify-between gap-3 px-5 py-3.5">
+      <p className="font-medium text-gray-800 text-[14px]">{label}</p>
+      <span className="text-purple-700 font-semibold text-sm shrink-0 tabular-nums">
         {price}
       </span>
     </div>
