@@ -32,7 +32,7 @@ const SECTIONS: PolicySection[] = [
   },
   {
     title: "5. Minimum Booking Time",
-    body: "All bookings have a minimum duration of 2 hours.",
+    body: "All bookings have a minimum duration of 2 hours. This includes travel time, loading and unloading, ensuring a smooth and efficient service.",
   },
   {
     title: "6. Quotes",

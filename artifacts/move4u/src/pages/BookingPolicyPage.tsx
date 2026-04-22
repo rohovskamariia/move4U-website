@@ -31,6 +31,7 @@ export default function BookingPolicyPage() {
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">5. Minimum Booking Time</h2>
             <p>All bookings have a minimum duration of 2 hours.</p>
+            <p>This includes travel time, loading and unloading, ensuring a smooth and efficient service.</p>
           </section>
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">6. Waste Removal — Minimum Booking</h2>
