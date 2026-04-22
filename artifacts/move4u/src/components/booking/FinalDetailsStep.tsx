@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { CheckCircle, Loader2, ChevronDown } from "lucide-react";
 import BookingTermsNotice from "./BookingTermsNotice";
+import { isValidPhone, isValidEmail } from "@/lib/validators";
 
 interface FinalDetailsStepProps {
   onSubmit: (data: {
@@ -8,11 +9,12 @@ interface FinalDetailsStepProps {
     timeWindow: string;
     name: string;
     phone: string;
+    email: string;
     contactMethod: string;
   }) => Promise<{ bookingReference: string }>;
 }
 
-const CONTACT_METHODS = ["Phone call", "WhatsApp", "Text message", "Any"];
+const CONTACT_METHODS = ["Phone", "WhatsApp", "Email", "Text message", "Any"];
 const TIME_WINDOWS = ["Morning (8am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–12am)"];
 
 export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
@@ -20,16 +22,22 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
   const [timeWindow, setTimeWindow] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
   const [contactMethod, setContactMethod] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const canSubmit =
-    date && timeWindow && name && phone && contactMethod && agreedToTerms;
+  const phoneValid = isValidPhone(phone);
+  const emailRequired = contactMethod === "Email";
+  const emailValid = email.trim() === "" ? !emailRequired : isValidEmail(email);
 
-  // Detect same-day or last-minute (within next 24h) bookings
+  const canSubmit =
+    date && timeWindow && name && phoneValid && contactMethod && emailValid && agreedToTerms;
+
   const isSameDayOrLastMinute = (() => {
     if (!date) return false;
     const today = new Date();
@@ -41,10 +49,6 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
     return selected.getTime() === today.getTime() || selected.getTime() === tomorrow.getTime();
   })();
 
-  // When the booking succeeds and the confirmation card replaces the form,
-  // jump the window to the very top so the user immediately sees the
-  // success icon, thank-you message and reference — instead of being left
-  // partway down the (long) form they just submitted.
   useEffect(() => {
     if (!bookingRef) return;
     if (typeof window === "undefined") return;
@@ -55,11 +59,13 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPhoneTouched(true);
+    if (emailRequired || email) setEmailTouched(true);
     if (!canSubmit) return;
     setLoading(true);
     setError("");
     try {
-      const result = await onSubmit({ date, timeWindow, name, phone, contactMethod });
+      const result = await onSubmit({ date, timeWindow, name, phone, email, contactMethod });
       setBookingRef(result.bookingReference);
     } catch {
       setError("Something went wrong. Please try again or contact us directly.");
@@ -90,6 +96,10 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
       </div>
     );
   }
+
+  const showPhoneError = phoneTouched && phone.length > 0 && !phoneValid;
+  const showEmailError = emailTouched && email.length > 0 && !isValidEmail(email);
+  const showEmailRequiredError = emailRequired && emailTouched && email.trim() === "";
 
   return (
     <div>
@@ -157,39 +167,92 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone number</label>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Your phone number"
-            required
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            data-testid="final-phone"
-          />
+        {/* Phone + email side-by-side on desktop, stacked on mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Phone number <span className="text-purple-700">*</span>
+            </label>
+            <input
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              onBlur={() => setPhoneTouched(true)}
+              placeholder="07123 456789 or +44…"
+              required
+              className={`w-full border rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                showPhoneError
+                  ? "border-red-300 focus:ring-red-400"
+                  : "border-gray-200 focus:ring-purple-500"
+              }`}
+              data-testid="final-phone"
+            />
+            {showPhoneError && (
+              <p className="text-[11px] text-red-600 mt-1.5" data-testid="phone-error">
+                Please enter a valid UK or international phone number.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Email{" "}
+              {emailRequired ? (
+                <span className="text-purple-700">*</span>
+              ) : (
+                <span className="text-gray-400 font-normal">(optional)</span>
+              )}
+            </label>
+            <input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onBlur={() => setEmailTouched(true)}
+              placeholder="you@example.com"
+              required={emailRequired}
+              className={`w-full border rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                showEmailError || showEmailRequiredError
+                  ? "border-red-300 focus:ring-red-400"
+                  : "border-gray-200 focus:ring-purple-500"
+              }`}
+              data-testid="final-email"
+            />
+            {showEmailError && (
+              <p className="text-[11px] text-red-600 mt-1.5">
+                Please enter a valid email address.
+              </p>
+            )}
+            {showEmailRequiredError && (
+              <p className="text-[11px] text-red-600 mt-1.5">
+                Email is required when "Email" is your preferred contact method.
+              </p>
+            )}
+          </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Preferred contact method
           </label>
-          <div className="flex flex-col gap-2">
-            {CONTACT_METHODS.map((method) => (
-              <button
-                key={method}
-                type="button"
-                onClick={() => setContactMethod(method)}
-                className={`text-left px-4 py-2.5 text-sm rounded-xl border-2 transition-colors ${
-                  contactMethod === method
-                    ? "border-purple-700 bg-purple-50 text-purple-700 font-medium"
-                    : "border-gray-100 text-gray-700 hover:border-purple-300"
-                }`}
-                data-testid={`contact-method-${method.toLowerCase().replace(/\s/g, "-")}`}
-              >
-                {method}
-              </button>
-            ))}
+          <div className="relative">
+            <select
+              value={contactMethod}
+              onChange={(e) => setContactMethod(e.target.value)}
+              className="w-full appearance-none border border-gray-200 rounded-xl px-4 py-3 pr-10 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              data-testid="final-contact-method"
+            >
+              <option value="">Select an option…</option>
+              {CONTACT_METHODS.map((method) => (
+                <option key={method} value={method}>
+                  {method}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
 
@@ -207,7 +270,7 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
         <button
           type="submit"
           disabled={loading || !canSubmit}
-          className="w-full py-2.5 sm:py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="btn-purple w-full py-2.5 sm:py-3.5 font-semibold rounded-xl text-sm mt-2 flex items-center justify-center gap-2"
           data-testid="submit-booking"
         >
           {loading ? (

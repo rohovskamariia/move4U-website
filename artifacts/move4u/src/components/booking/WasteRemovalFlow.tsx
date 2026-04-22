@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2, ChevronLeft, Info, Plus, Minus, Route, Check, Hash, Clock, Sparkles } from "lucide-react";
+import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2, ChevronLeft, ChevronDown, Info, Plus, Minus, Route, Check, Hash, Clock, Sparkles } from "lucide-react";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS } from "@/data/constants";
 import { submitBooking, uploadPhotos } from "@/lib/api";
+import { isValidPhone, isValidEmail } from "@/lib/validators";
 import WasteSizeModal from "@/components/WasteSizeModal";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import BookingTermsNotice from "./BookingTermsNotice";
@@ -9,6 +10,8 @@ import StairsAccessSection, {
   getFloorChargeFromValue,
   getFloorLabelFromValue,
 } from "./StairsAccessSection";
+
+const CONTACT_METHODS = ["Phone", "WhatsApp", "Email", "Text message", "Any"];
 
 /** Flat surcharge for restricted-access pickups (long carry, narrow lane, etc). */
 const RESTRICTED_ACCESS_SURCHARGE = 10;
@@ -78,6 +81,9 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   const [timeWindow, setTimeWindow] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
   const [contactMethod, setContactMethod] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
@@ -219,18 +225,70 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone number</label>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Your phone number" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Preferred contact method</label>
-            <div className="flex flex-col gap-2">
-              {["Phone call", "WhatsApp", "Text message", "Any"].map((method) => (
-                <button key={method} type="button" onClick={() => setContactMethod(method)} className={`text-left px-4 py-2.5 text-sm rounded-xl border-2 transition-colors ${contactMethod === method ? "border-purple-700 bg-purple-50 text-purple-700 font-medium" : "border-gray-100 text-gray-700 hover:border-purple-300"}`}>{method}</button>
-              ))}
-            </div>
-          </div>
+          {(() => {
+            const phoneValid = isValidPhone(phone);
+            const emailRequired = contactMethod === "Email";
+            const showPhoneError = phoneTouched && phone.length > 0 && !phoneValid;
+            const showEmailError = emailTouched && email.length > 0 && !isValidEmail(email);
+            const showEmailRequiredError = emailRequired && emailTouched && email.trim() === "";
+            return (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Phone number <span className="text-purple-700">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      onBlur={() => setPhoneTouched(true)}
+                      placeholder="07123 456789 or +44…"
+                      className={`w-full border rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 ${showPhoneError ? "border-red-300 focus:ring-red-400" : "border-gray-200 focus:ring-purple-500"}`}
+                    />
+                    {showPhoneError && (
+                      <p className="text-[11px] text-red-600 mt-1.5">Please enter a valid UK or international phone number.</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Email {emailRequired ? <span className="text-purple-700">*</span> : <span className="text-gray-400 font-normal">(optional)</span>}
+                    </label>
+                    <input
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onBlur={() => setEmailTouched(true)}
+                      placeholder="you@example.com"
+                      className={`w-full border rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 ${showEmailError || showEmailRequiredError ? "border-red-300 focus:ring-red-400" : "border-gray-200 focus:ring-purple-500"}`}
+                    />
+                    {showEmailError && <p className="text-[11px] text-red-600 mt-1.5">Please enter a valid email address.</p>}
+                    {showEmailRequiredError && <p className="text-[11px] text-red-600 mt-1.5">Email is required when "Email" is your preferred contact method.</p>}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Preferred contact method</label>
+                  <div className="relative">
+                    <select
+                      value={contactMethod}
+                      onChange={(e) => setContactMethod(e.target.value)}
+                      className="w-full appearance-none border border-gray-200 rounded-xl px-4 py-3 pr-10 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="">Select an option…</option>
+                      {CONTACT_METHODS.map((method) => (
+                        <option key={method} value={method}>{method}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                </div>
+              </>
+            );
+          })()}
           {submitError && (
             <p className="text-red-600 text-sm bg-red-50 border border-red-100 rounded-xl px-4 py-3">{submitError}</p>
           )}
@@ -242,7 +300,11 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
 
           <button
             onClick={async () => {
-              if (!date || !timeWindow || !name || !phone || !contactMethod || !agreedToTerms) return;
+              setPhoneTouched(true);
+              if (contactMethod === "Email" || email) setEmailTouched(true);
+              const phoneOk = isValidPhone(phone);
+              const emailOk = email.trim() === "" ? contactMethod !== "Email" : isValidEmail(email);
+              if (!date || !timeWindow || !name || !phoneOk || !contactMethod || !emailOk || !agreedToTerms) return;
               setSubmitting(true);
               setSubmitError("");
               try {
@@ -268,6 +330,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                   service: "Waste Removal",
                   name,
                   phone,
+                  email,
                   contactMethod,
                   pickup,
                   pickupDetails: accessNotes,
@@ -297,8 +360,8 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                 setSubmitting(false);
               }
             }}
-            disabled={!date || !timeWindow || !name || !phone || !contactMethod || !agreedToTerms || submitting}
-            className="w-full py-2.5 sm:py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            disabled={!date || !timeWindow || !name || !isValidPhone(phone) || !contactMethod || (contactMethod === "Email" ? !isValidEmail(email) : email.trim() !== "" && !isValidEmail(email)) || !agreedToTerms || submitting}
+            className="btn-purple w-full py-2.5 sm:py-3.5 font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
           >
             {submitting ? <><Loader2 className="w-4 h-4 animate-spin" />Submitting…</> : "Submit Enquiry"}
           </button>

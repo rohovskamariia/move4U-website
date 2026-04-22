@@ -1,0 +1,79 @@
+Improve the booking form logic, contact fields, header, and overall color palette to make the website more practical, professional, and premium.
+
+1. Extra stops / extra addresses
+- Allow users to add extra stop addresses dynamically
+- Do not limit to only 2 stops — users should be able to add 3, 4, or more
+- Add a clear button: “Add another stop”
+- Each click creates a new address field
+- Keep it clean, simple, and mobile-friendly
+
+2. Phone number validation
+- Make the phone number field properly validated
+- Accept valid UK and international formats
+- Prevent clearly invalid numbers
+- Show a small inline error message if invalid
+- Make this field required
+
+3. Optional email field
+- Add an email field to the booking form
+- Email should be optional by default
+- Validate format if user enters it
+- Keep it compact and clean
+
+4. Preferred contact method
+- Use a compact dropdown or selector
+- Include options:
+  - Phone
+  - WhatsApp
+  - Email
+  - Text message
+  - Any
+
+5. Contact logic
+- Phone number remains required
+- Email optional by default
+- If Preferred Contact Method = Email → email becomes required
+- Otherwise email stays optional
+
+6. UI / layout
+- Keep the form compact (not too tall)
+- Keep spacing clean and modern
+- Ensure excellent mobile usability
+
+7. Booking form goal
+- Easy to add multiple stops
+- Reliable phone validation
+- Optional email input
+- Smart contact preference logic
+- Clean, professional layout
+
+8. Top bar styling
+- Replace current purple with a subtle ombre gradient (lighter toward edges)
+- Keep text white
+- Make it elegant, soft, and not too bright
+
+9. Logo styling
+- “Move” = dark navy (#0F172A)
+- “4U” = soft purple gradient (#6D5BFF → #5A3BFF)
+- Avoid neon or overly bright purple
+- Keep it modern and premium
+
+10. Buttons
+- Background: #5A3BFF
+- Hover: #4C2EDB
+- Remove strong glow or shiny gradients
+- Use a more matte, refined style
+
+11. Overall colors
+- Reduce brightness of purples across the site
+- Keep consistent, modern brand palette
+- Avoid neon or overly saturated tones
+
+12. Header cleanup
+- Remove the slogan text under the logo:
+  "We move things. You move on."
+- Keep only logo icon + “Move4U” text
+- Fix spacing so it looks balanced and clean
+
+Final goal:
+Create a clean, modern, premium-looking website with a practical booking form, calm color palette, and professional header design that builds trust and looks like a real high-end moving company.

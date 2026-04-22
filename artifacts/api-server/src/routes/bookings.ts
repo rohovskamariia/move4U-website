@@ -11,7 +11,8 @@ bookingsRouter.post("/bookings", async (req, res) => {
       service = "",
       name = "",
       phone = "",
-      contactMethod = "",
+      email = "",
+      contactMethod: rawContactMethod = "",
       pickup = "",
       pickupDetails = "",
       dropoff = "",
@@ -25,9 +26,18 @@ bookingsRouter.post("/bookings", async (req, res) => {
       date = "",
       timeWindow = "",
       wasteAddons = "",
-      uploadedFiles = "", // comma-separated photo serving URLs (e.g. /api/storage/objects/...)
-      notes = "",
+      uploadedFiles = "",
+      notes: rawNotes = "",
     } = req.body as Record<string, string>;
+
+    // Surface the email inside the existing contactMethod label and notes
+    // so it shows up in Sheets and Telegram without a schema change.
+    const contactMethod = email
+      ? `${rawContactMethod || "Any"} — ${email}`
+      : rawContactMethod;
+    const notes = email
+      ? [`Email: ${email}`, rawNotes].filter(Boolean).join(" | ")
+      : rawNotes;
 
     if (!name || !phone) {
       res.status(400).json({ error: "name and phone are required" });

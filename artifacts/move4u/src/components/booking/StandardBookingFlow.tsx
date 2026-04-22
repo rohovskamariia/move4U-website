@@ -7,6 +7,7 @@ import {
 } from "./StairsAccessSection";
 import { submitBooking, uploadPhotos } from "@/lib/api";
 import AddressStep from "./AddressStep";
+import ExtraStopsSection from "./ExtraStopsSection";
 import VanStep from "./VanStep";
 import HelpStep from "./HelpStep";
 import TimeStep from "./TimeStep";
@@ -57,6 +58,9 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
   const [dropoffAddress, setDropoffAddress] = useState("");
   const [dropoffLift, setDropoffLift] = useState("");
   const [dropoffFloor, setDropoffFloor] = useState("none");
+
+  // Extra stops between pickup and drop-off — dynamic, unlimited.
+  const [extraStops, setExtraStops] = useState<string[]>([]);
 
   // Van, help, time
   const [vanSize, setVanSize] = useState("medium");
@@ -113,16 +117,19 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
         );
       case "dropoff":
         return (
-          <AddressStep
-            key="dropoff-step"
-            label="Drop-off address"
-            addressValue={dropoffAddress}
-            onAddressChange={setDropoffAddress}
-            liftValue={dropoffLift}
-            onLiftChange={setDropoffLift}
-            floorValue={dropoffFloor}
-            onFloorChange={setDropoffFloor}
-          />
+          <div className="space-y-5">
+            <AddressStep
+              key="dropoff-step"
+              label="Drop-off address"
+              addressValue={dropoffAddress}
+              onAddressChange={setDropoffAddress}
+              liftValue={dropoffLift}
+              onLiftChange={setDropoffLift}
+              floorValue={dropoffFloor}
+              onFloorChange={setDropoffFloor}
+            />
+            <ExtraStopsSection stops={extraStops} onChange={setExtraStops} />
+          </div>
         );
       case "van":
         return <VanStep selected={vanSize} onSelect={setVanSize} />;
@@ -150,7 +157,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
       case "final":
         return (
           <FinalDetailsStep
-            onSubmit={async ({ date, timeWindow, name, phone, contactMethod }) => {
+            onSubmit={async ({ date, timeWindow, name, phone, email, contactMethod }) => {
               const pricing = HELP_PRICING[vanSize] || HELP_PRICING.medium;
               let hourlyRate = pricing.noHelp;
               if (helpOption === "driver-help") hourlyRate = pricing.driverHelp;
@@ -179,16 +186,18 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
               const estimatedTime = `${wholeHours}${halfHour ? ".5" : ""}h`;
               // Upload photos first, then submit the booking with their serving URLs
               const photoUrls = await uploadPhotos(photos);
+              const cleanStops = extraStops.map((s) => s.trim()).filter(Boolean);
               return await submitBooking({
                 service: serviceLabel,
                 name,
                 phone,
+                email,
                 contactMethod,
                 pickup: pickupAddress,
                 pickupDetails: formatFloorDetail(pickupFloor, pickupCharge),
                 dropoff: dropoffAddress,
                 dropoffDetails: formatFloorDetail(dropoffFloor, dropoffCharge),
-                extraAddress: "",
+                extraAddress: cleanStops.join("; "),
                 vanSize: vanLabel,
                 helpOption: helpLabels[helpOption] ?? helpOption,
                 peopleCount: peopleCounts[helpOption] ?? "",

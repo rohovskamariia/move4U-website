@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { CheckCircle, Loader2, ChevronLeft } from "lucide-react";
+import { CheckCircle, Loader2, ChevronLeft, ChevronDown } from "lucide-react";
 import { submitBooking } from "@/lib/api";
+import { isValidPhone, isValidEmail } from "@/lib/validators";
 import BookingTermsNotice from "./BookingTermsNotice";
 
 interface SomethingElseFlowProps {
   onBack: () => void;
 }
+
+const CONTACT_METHODS = ["Phone", "WhatsApp", "Email", "Text message", "Any"];
 
 export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
   const [form, setForm] = useState({
@@ -15,6 +18,7 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
     date: "",
     name: "",
     phone: "",
+    email: "",
     contactMethod: "",
     notes: "",
   });
@@ -24,11 +28,20 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
 
   const handleChange = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  const canSubmit = form.what && form.name && form.phone && form.contactMethod && agreedToTerms;
+  const phoneValid = isValidPhone(form.phone);
+  const emailRequired = form.contactMethod === "Email";
+  const emailValid = form.email.trim() === "" ? !emailRequired : isValidEmail(form.email);
+  const showPhoneError = phoneTouched && form.phone.length > 0 && !phoneValid;
+  const showEmailError = emailTouched && form.email.length > 0 && !isValidEmail(form.email);
+  const showEmailRequiredError = emailRequired && emailTouched && form.email.trim() === "";
+
+  const canSubmit = form.what && form.name && phoneValid && form.contactMethod && emailValid && agreedToTerms;
 
   // When the confirmation screen replaces the form, jump to the top so the
   // user immediately sees the success card instead of being left at the
@@ -110,17 +123,58 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
         <input type="text" value={form.name} onChange={(e) => handleChange("name", e.target.value)} placeholder="Your full name" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone number</label>
-        <input type="tel" value={form.phone} onChange={(e) => handleChange("phone", e.target.value)} placeholder="Your phone number" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Phone number <span className="text-purple-700">*</span>
+          </label>
+          <input
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            value={form.phone}
+            onChange={(e) => handleChange("phone", e.target.value)}
+            onBlur={() => setPhoneTouched(true)}
+            placeholder="07123 456789 or +44…"
+            className={`w-full border rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 ${showPhoneError ? "border-red-300 focus:ring-red-400" : "border-gray-200 focus:ring-purple-500"}`}
+          />
+          {showPhoneError && (
+            <p className="text-[11px] text-red-600 mt-1.5">Please enter a valid UK or international phone number.</p>
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Email {emailRequired ? <span className="text-purple-700">*</span> : <span className="text-gray-400 font-normal">(optional)</span>}
+          </label>
+          <input
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={form.email}
+            onChange={(e) => handleChange("email", e.target.value)}
+            onBlur={() => setEmailTouched(true)}
+            placeholder="you@example.com"
+            className={`w-full border rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 ${showEmailError || showEmailRequiredError ? "border-red-300 focus:ring-red-400" : "border-gray-200 focus:ring-purple-500"}`}
+          />
+          {showEmailError && <p className="text-[11px] text-red-600 mt-1.5">Please enter a valid email address.</p>}
+          {showEmailRequiredError && <p className="text-[11px] text-red-600 mt-1.5">Email is required when "Email" is your preferred contact method.</p>}
+        </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Preferred contact method</label>
-        <div className="flex flex-col gap-2">
-          {["Phone call", "WhatsApp", "Text message", "Any"].map((method) => (
-            <button key={method} type="button" onClick={() => handleChange("contactMethod", method)} className={`text-left px-4 py-2.5 text-sm rounded-xl border-2 transition-colors ${form.contactMethod === method ? "border-purple-700 bg-purple-50 text-purple-700 font-medium" : "border-gray-100 text-gray-700 hover:border-purple-300"}`}>{method}</button>
-          ))}
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Preferred contact method</label>
+        <div className="relative">
+          <select
+            value={form.contactMethod}
+            onChange={(e) => handleChange("contactMethod", e.target.value)}
+            className="w-full appearance-none border border-gray-200 rounded-xl px-4 py-3 pr-10 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+          >
+            <option value="">Select an option…</option>
+            {CONTACT_METHODS.map((method) => (
+              <option key={method} value={method}>{method}</option>
+            ))}
+          </select>
+          <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
       </div>
 
@@ -157,6 +211,7 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
               service: "Something Else",
               name: form.name,
               phone: form.phone,
+              email: form.email,
               pickup: form.pickup,
               pickupDetails: "",
               dropoff: form.dropoff,
@@ -183,7 +238,7 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
           }
         }}
         disabled={!canSubmit || submitting}
-        className="w-full py-2.5 sm:py-3.5 bg-purple-700 text-white font-semibold rounded-xl hover:bg-purple-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="btn-purple w-full py-2.5 sm:py-3.5 font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
       >
         {submitting ? <><Loader2 className="w-4 h-4 animate-spin" />Submitting…</> : "Submit Enquiry"}
       </button>

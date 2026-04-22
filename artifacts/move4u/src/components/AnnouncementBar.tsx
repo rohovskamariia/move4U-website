@@ -30,9 +30,11 @@ export default function AnnouncementBar() {
     <div
       className="w-full text-white text-center select-none"
       style={{
+        /* Soft horizontal ombre — lighter at the edges, deeper in the
+           middle. Calm, elegant, never neon. */
         backgroundImage:
-          "linear-gradient(135deg, #2a1c5e 0%, #3a267f 55%, #4a319c 100%)",
-        boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.06)",
+          "linear-gradient(90deg, #4A3B9C 0%, #2E2270 50%, #4A3B9C 100%)",
+        boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.05)",
       }}
       role="status"
       aria-live="polite"

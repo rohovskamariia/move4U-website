@@ -89,24 +89,19 @@ export default function Navbar() {
                 src="/m4u-icon.png"
                 alt=""
                 aria-hidden="true"
-                className="w-11 h-11 md:w-[54px] md:h-[54px] rounded-full object-cover shadow-[0_6px_18px_-6px_rgba(74,49,156,0.5)] transition-transform duration-200 group-hover:-translate-y-0.5 select-none"
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-[0_3px_10px_-4px_rgba(74,49,156,0.35)] transition-transform duration-200 group-hover:-translate-y-0.5 select-none"
                 draggable={false}
               />
-              <span className="flex flex-col leading-none">
-                <span className="font-extrabold text-[22px] md:text-[27px] tracking-tight">
-                  <span style={{ color: "#0F172A" }}>Move</span>
-                  <span
-                    className="bg-clip-text text-transparent"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(135deg, #7B5CFF 0%, #6a4ae8 50%, #5A3BFF 100%)",
-                    }}
-                  >
-                    4U
-                  </span>
-                </span>
-                <span className="hidden sm:block mt-1.5 text-[10.5px] md:text-[11.5px] font-medium tracking-wide text-gray-400">
-                  We move things. You move on.
+              <span className="font-extrabold text-[22px] md:text-[27px] tracking-tight leading-none">
+                <span style={{ color: "#0F172A" }}>Move</span>
+                <span
+                  className="bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(135deg, #6D5BFF 0%, #5A3BFF 100%)",
+                  }}
+                >
+                  4U
                 </span>
               </span>
             </Link>
@@ -161,12 +156,10 @@ export default function Navbar() {
               </Link>
               <Link
                 href="/book"
-                className="text-sm font-semibold text-white px-5 py-2 rounded-full transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-10px_rgba(74,49,156,0.7)]"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(135deg, #5b3fb8 0%, #4a319c 60%, #3a267f 100%)",
-                  boxShadow: "0 6px 18px -8px rgba(74,49,156,0.5)",
-                }}
+                className="text-sm font-semibold text-white px-5 py-2 rounded-full transition-colors"
+                style={{ backgroundColor: "#5A3BFF" }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#4C2EDB")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#5A3BFF")}
                 data-testid="nav-book-now"
               >
                 Book Now
