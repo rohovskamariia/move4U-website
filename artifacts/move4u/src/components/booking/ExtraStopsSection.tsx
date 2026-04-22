@@ -1,16 +1,35 @@
 import { Plus, X, MapPin } from "lucide-react";
-import AddressAutocomplete from "@/components/AddressAutocomplete";
+import AddressStep from "./AddressStep";
+
+/**
+ * Additional stop on the route. Mirrors the data model used by Pickup and
+ * Drop-off so we can ask the SAME access questions for every address.
+ */
+export interface ExtraStop {
+  address: string;
+  /** "" | "none" | "yes" | "no" — same encoding as pickup/drop-off lift state. */
+  liftValue: string;
+  /** "" | "none" | "lift" | "0" | "1" | ... — same encoding as pickup/drop-off floor state. */
+  floorValue: string;
+}
+
+export const EMPTY_EXTRA_STOP: ExtraStop = {
+  address: "",
+  liftValue: "",
+  floorValue: "",
+};
 
 interface ExtraStopsSectionProps {
-  stops: string[];
-  onChange: (next: string[]) => void;
+  stops: ExtraStop[];
+  onChange: (next: ExtraStop[]) => void;
 }
 
 export default function ExtraStopsSection({ stops, onChange }: ExtraStopsSectionProps) {
-  const addStop = () => onChange([...stops, ""]);
-  const removeStop = (i: number) => onChange(stops.filter((_, idx) => idx !== i));
-  const updateStop = (i: number, val: string) =>
-    onChange(stops.map((s, idx) => (idx === i ? val : s)));
+  const addStop = () => onChange([...stops, { ...EMPTY_EXTRA_STOP }]);
+  const removeStop = (i: number) =>
+    onChange(stops.filter((_, idx) => idx !== i));
+  const updateStop = (i: number, patch: Partial<ExtraStop>) =>
+    onChange(stops.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
 
   return (
     <div className="border-t border-gray-100 pt-4">
@@ -28,18 +47,24 @@ export default function ExtraStopsSection({ stops, onChange }: ExtraStopsSection
       <p className="text-xs text-gray-500 mb-3 leading-relaxed">
         If you need to collect or deliver items at more than one extra address
         between the pickup and the final destination, add those stops here.
-        We'll visit them in order on the way.
+        We'll ask the same access questions as for pickup and drop-off so the
+        team arrives prepared for stairs, lifts, and floor levels.
       </p>
 
       {stops.length > 0 && (
-        <div className="space-y-2.5 mb-3">
-          {stops.map((s, i) => (
-            <div key={i} className="relative">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold">
+        <div className="space-y-3 mb-3">
+          {stops.map((stop, i) => (
+            <div
+              key={i}
+              className="relative rounded-2xl border border-purple-100 bg-purple-50/30 p-3 sm:p-4"
+              data-testid={`extra-stop-card-${i}`}
+            >
+              {/* Header row with badge + remove button */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-700 text-white text-[11px] font-bold">
                   {i + 1}
                 </span>
-                <span className="text-[11px] font-medium text-gray-600">
+                <span className="text-[12px] font-semibold text-gray-700">
                   Additional stop {i + 1}
                 </span>
                 <button
@@ -53,11 +78,18 @@ export default function ExtraStopsSection({ stops, onChange }: ExtraStopsSection
                   Remove
                 </button>
               </div>
-              <AddressAutocomplete
-                value={s}
-                onChange={(val) => updateStop(i, val)}
-                placeholder="Address or postcode for this stop..."
-                testId={`extra-stop-${i}`}
+
+              {/* Reuse the EXACT same AddressStep used by pickup/drop-off so
+                  the address autocomplete + stairs & access questions are
+                  identical. */}
+              <AddressStep
+                label={`Additional stop ${i + 1} address`}
+                addressValue={stop.address}
+                onAddressChange={(val) => updateStop(i, { address: val })}
+                liftValue={stop.liftValue}
+                onLiftChange={(val) => updateStop(i, { liftValue: val })}
+                floorValue={stop.floorValue}
+                onFloorChange={(val) => updateStop(i, { floorValue: val })}
               />
             </div>
           ))}

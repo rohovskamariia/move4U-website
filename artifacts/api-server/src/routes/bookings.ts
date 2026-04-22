@@ -73,6 +73,23 @@ bookingsRouter.post("/bookings", async (req, res) => {
       estimatedPrice, date, notes,
     });
 
+    // Debug trace — explicitly tie this submission's payload to the new
+    // booking reference so any cross-booking data leakage is impossible to
+    // miss in the logs (photo URLs, agreed price, customer name).
+    logger.info(
+      {
+        bookingReference,
+        name,
+        phone,
+        estimatedPrice,
+        photoCount: uploadedFiles
+          ? uploadedFiles.split(",").filter((u) => u.trim()).length
+          : 0,
+        extraStopsCount: extraStops.length,
+      },
+      "Booking received — data bound to this booking reference only",
+    );
+
     // 2. Respond immediately — don't block on photo storage or Telegram
     res.json({ success: true, bookingReference });
 

@@ -3,6 +3,7 @@ import {
   getFloorChargeFromValue,
   getFloorLabelFromValue,
 } from "./StairsAccessSection";
+import type { ExtraStop } from "./ExtraStopsSection";
 
 interface SummaryStepProps {
   service: string;
@@ -10,8 +11,9 @@ interface SummaryStepProps {
   pickupFloor: string;
   dropoff: string;
   dropoffFloor: string;
-  /** Optional intermediate stops, in route order, between pickup and drop-off. */
-  extraStops?: string[];
+  /** Optional intermediate stops, in route order, between pickup and drop-off.
+   *  Each stop carries the SAME stairs/lift/floor data as pickup and drop-off. */
+  extraStops?: ExtraStop[];
   vanSize: string;
   helpOption: string;
   hours: number;
@@ -52,7 +54,9 @@ export default function SummaryStep({
   notes,
   onContinue,
 }: SummaryStepProps) {
-  const cleanStops = extraStops.map((s) => s.trim()).filter(Boolean);
+  const cleanStops = extraStops.filter((s) => s.address.trim());
+  const stopCharges = cleanStops.map((s) => getFloorChargeFromValue(s.floorValue));
+  const stopChargesTotal = stopCharges.reduce((a, b) => a + b, 0);
   const pricing = HELP_PRICING[vanSize] || HELP_PRICING.medium;
   let hourlyRate = pricing.noHelp;
   if (helpOption === "driver-help") hourlyRate = pricing.driverHelp;
@@ -60,7 +64,7 @@ export default function SummaryStep({
 
   const pickupCharge = getFloorChargeFromValue(pickupFloor);
   const dropoffCharge = getFloorChargeFromValue(dropoffFloor);
-  const totalExtras = pickupCharge + dropoffCharge;
+  const totalExtras = pickupCharge + dropoffCharge + stopChargesTotal;
   const estimatedBase = hourlyRate * hours;
   const estimatedTotal = estimatedBase + totalExtras;
 
@@ -90,10 +94,14 @@ export default function SummaryStep({
     charge: pickupCharge > 0 ? pickupCharge : undefined,
   });
   cleanStops.forEach((stop, i) => {
+    const charge = stopCharges[i];
+    const sub = stop.address ? getFloorLabelFromValue(stop.floorValue) : undefined;
     routeRows.push({
       badge: String(i + 1),
       label: `Additional stop ${i + 1}`,
-      value: stop,
+      value: stop.address,
+      sub: sub === "—" ? undefined : sub,
+      charge: charge > 0 ? charge : undefined,
     });
   });
   routeRows.push({

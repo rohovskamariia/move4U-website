@@ -7,7 +7,7 @@ import {
 } from "./StairsAccessSection";
 import { submitBooking, uploadPhotos } from "@/lib/api";
 import AddressStep from "./AddressStep";
-import ExtraStopsSection from "./ExtraStopsSection";
+import ExtraStopsSection, { type ExtraStop } from "./ExtraStopsSection";
 import VanStep from "./VanStep";
 import HelpStep from "./HelpStep";
 import TimeStep from "./TimeStep";
@@ -60,7 +60,9 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
   const [dropoffFloor, setDropoffFloor] = useState("none");
 
   // Extra stops between pickup and drop-off — dynamic, unlimited.
-  const [extraStops, setExtraStops] = useState<string[]>([]);
+  // Each stop has its OWN address + stairs/lift/floor answers, exactly like
+  // pickup and drop-off. Floor surcharges from extra stops add to the total.
+  const [extraStops, setExtraStops] = useState<ExtraStop[]>([]);
 
   // Van, help, time
   const [vanSize, setVanSize] = useState("medium");
@@ -91,10 +93,22 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
 
   const pickupCharge = getFloorCharge(pickupFloor);
   const dropoffCharge = getFloorCharge(dropoffFloor);
+  // Sum any per-stop stair surcharges so the running total stays accurate.
+  const extraStopsCharge = extraStops.reduce(
+    (sum, s) => sum + (s.address.trim() ? getFloorCharge(s.floorValue) : 0),
+    0,
+  );
 
   const canProceed = () => {
     if (step === "pickup") return !!pickupAddress && !!pickupLift;
-    if (step === "dropoff") return !!dropoffAddress && !!dropoffLift;
+    if (step === "dropoff") {
+      // Drop-off proceeds only when drop-off itself is complete AND every
+      // additional stop the user added has its address + stairs answered.
+      const stopsValid = extraStops.every(
+        (s) => !!s.address.trim() && !!s.liftValue,
+      );
+      return !!dropoffAddress && !!dropoffLift && stopsValid;
+    }
     if (step === "van") return !!vanSize;
     if (step === "help") return !!helpOption;
     return true;
@@ -165,7 +179,13 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
               if (helpOption === "driver-plus-helper") hourlyRate = pricing.driverPlusHelper;
               const pickupCharge = getFloorCharge(pickupFloor);
               const dropoffCharge = getFloorCharge(dropoffFloor);
-              const totalPrice = hourlyRate * hours + pickupCharge + dropoffCharge;
+              const stopsCharge = extraStops.reduce(
+                (sum, s) =>
+                  sum + (s.address.trim() ? getFloorCharge(s.floorValue) : 0),
+                0,
+              );
+              const totalPrice =
+                hourlyRate * hours + pickupCharge + dropoffCharge + stopsCharge;
               const vanLabel = VAN_SIZES.find((v) => v.id === vanSize)?.name ?? vanSize;
               const helpLabels: Record<string, string> = {
                 "no-help": "No help needed",
@@ -187,10 +207,25 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
               const estimatedTime = `${wholeHours}${halfHour ? ".5" : ""}h`;
               // Upload photos first, then submit the booking with their serving URLs
               const photoUrls = await uploadPhotos(photos);
-              const cleanStops = extraStops.map((s) => s.trim()).filter(Boolean);
-              // Numbered, human-readable route fragment for legacy
-              // single-field consumers (e.g. logs).
-              const extraAddressFormatted = cleanStops
+              // Build pre-formatted, fully-described stop strings the API can
+              // pass straight through to Telegram and to the Sheets notes
+              // column without needing any schema change. Each line carries:
+              //   "<address> — <floor label>(+£charge)"
+              const cleanStops = extraStops.filter((s) => s.address.trim());
+              const stopFloorCharges = cleanStops.map((s) =>
+                getFloorCharge(s.floorValue),
+              );
+              const formattedStops = cleanStops.map((s, i) => {
+                const label = getFloorLabelFromValue(s.floorValue);
+                const charge = stopFloorCharges[i];
+                const accessParts: string[] = [];
+                if (label && label !== "—") accessParts.push(label);
+                if (charge > 0) accessParts.push(`+£${charge}`);
+                return accessParts.length
+                  ? `${s.address.trim()} — ${accessParts.join(" ")}`
+                  : s.address.trim();
+              });
+              const extraAddressFormatted = formattedStops
                 .map((s, i) => `${i + 1}. ${s}`)
                 .join(" | ");
               return await submitBooking({
@@ -204,7 +239,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
                 dropoff: dropoffAddress,
                 dropoffDetails: formatFloorDetail(dropoffFloor, dropoffCharge),
                 extraAddress: extraAddressFormatted,
-                extraStops: cleanStops,
+                extraStops: formattedStops,
                 vanSize: vanLabel,
                 helpOption: helpLabels[helpOption] ?? helpOption,
                 peopleCount: peopleCounts[helpOption] ?? "",

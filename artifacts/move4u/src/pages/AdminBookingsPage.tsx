@@ -68,8 +68,10 @@ function calcSuggestedDeposit(quote: string): string {
 }
 
 function statusBadge(status: string) {
+  // Brand-only palette — no blue. Different shades of purple/violet/fuchsia
+  // keep statuses visually distinct while staying on-brand.
   const map: Record<string, string> = {
-    New:        "bg-blue-100 text-blue-700",
+    New:        "bg-purple-50 text-purple-700 ring-1 ring-purple-200",
     Contacted:  "bg-amber-100 text-amber-700",
     Confirmed:  "bg-green-100 text-green-700",
     Denied:     "bg-red-100 text-red-700",
@@ -81,7 +83,7 @@ function statusBadge(status: string) {
 
 function payBadge(status: string) {
   if (status === "Paid" || status === "Deposit paid") return "bg-green-100 text-green-700";
-  if (status === "Payment link ready") return "bg-blue-100 text-blue-700";
+  if (status === "Payment link ready") return "bg-fuchsia-100 text-fuchsia-700";
   return "bg-gray-100 text-gray-500";
 }
 
@@ -264,12 +266,30 @@ export default function AdminBookingsPage() {
   function toggleExpand(ref: string, booking: BookingRecord) {
     if (expandedRef === ref) {
       setExpandedRef(null);
-    } else {
-      setExpandedRef(ref);
-      // Initialise edit form from current data if not already editing
-      if (!editForms[ref]) {
-        setEditForms((prev) => ({ ...prev, [ref]: initEditForm(booking) }));
-      }
+      return;
+    }
+    setExpandedRef(ref);
+    // Always re-seed the edit form from the LATEST booking record for this
+    // exact reference. This guarantees the panel never shows cached values
+    // from a previously-opened booking — every expansion is keyed to its
+    // own booking ID and pulls the freshest server state.
+    setEditForms((prev) => ({ ...prev, [ref]: initEditForm(booking) }));
+    // Reset the manual deposit-override flag too, so a new auto-suggested
+    // deposit is computed from THIS booking's quote, not a previous one.
+    setDepositOverridden((prev) => {
+      if (!(ref in prev)) return prev;
+      const { [ref]: _drop, ...rest } = prev;
+      return rest;
+    });
+    // Debug trace — confirms which booking the form is bound to.
+    if (typeof console !== "undefined") {
+      // eslint-disable-next-line no-console
+      console.debug(
+        "[admin] expanded booking",
+        ref,
+        "quote=", booking.agreedQuote || "(none)",
+        "photos=", booking.photoUrls ? booking.photoUrls.split(",").filter(Boolean).length : 0,
+      );
     }
   }
 
