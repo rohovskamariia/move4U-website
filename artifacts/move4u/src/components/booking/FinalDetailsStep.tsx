@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2, ChevronDown } from "lucide-react";
 import BookingTermsNotice from "./BookingTermsNotice";
 import { isValidPhone, isValidEmail } from "@/lib/validators";
@@ -21,7 +21,30 @@ interface FinalDetailsStepProps {
 }
 
 const CONTACT_METHODS = ["Phone", "WhatsApp", "Email", "Text message", "Any"];
-const TIME_WINDOWS = ["Morning (8am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–12am)"];
+
+// Each window carries its END hour (24h) so we can grey out windows that
+// have already finished when the user picks today as the move date.
+// e.g. at 17:00 today, Morning (ends 12) and Afternoon (ends 17) are out.
+const TIME_WINDOWS: { label: string; endHour: number }[] = [
+  { label: "Morning (8am–12pm)", endHour: 12 },
+  { label: "Afternoon (12pm–5pm)", endHour: 17 },
+  { label: "Evening (5pm–12am)", endHour: 24 },
+];
+
+// Parse a "YYYY-MM-DD" value as a LOCAL calendar date. We never use
+// `new Date(dateStr)` for date-only inputs because the JS spec treats the
+// short ISO form as UTC midnight, which silently shifts the day in any
+// non-UTC zone (a London user on BST who picked "today" would see it
+// classified as "yesterday" or vice versa).
+function isToday(dateStr: string): boolean {
+  if (!dateStr) return false;
+  const parts = dateStr.split("-");
+  if (parts.length !== 3) return false;
+  const [y, m, d] = parts.map((p) => parseInt(p, 10));
+  if (!y || !m || !d) return false;
+  const t = new Date();
+  return y === t.getFullYear() && m === t.getMonth() + 1 && d === t.getDate();
+}
 
 export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetailsStepProps) {
   const [date, setDate] = useState("");
@@ -39,6 +62,33 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
   // twice (slow network, double-tap on mobile, etc.) only one request goes
   // through. Cleared only by remounting the component.
   const submittedOnce = useRef(false);
+
+  // Re-render every minute so slot disabling stays accurate without a
+  // page refresh — the moment a window's end-hour passes, it greys out
+  // and (if selected) clears itself.
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  // For "today" bookings, work out which slots are already in the past.
+  // For any future date, every slot stays enabled.
+  const todaySelected = isToday(date);
+  const nowHour = new Date(nowTick).getHours();
+  const isSlotDisabled = (endHour: number) => todaySelected && nowHour >= endHour;
+
+  // If the selected slot becomes invalid — because the user changed the
+  // date to today, or the clock crossed an hour boundary — clear it so
+  // they can't submit a window that's already in the past.
+  useEffect(() => {
+    if (!timeWindow) return;
+    const slot = TIME_WINDOWS.find((w) => w.label === timeWindow);
+    if (slot && isSlotDisabled(slot.endHour)) {
+      setTimeWindow("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, nowTick]);
 
   const phoneValid = isValidPhone(phone);
   const emailRequired = contactMethod === "Email";
@@ -63,6 +113,15 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
     setPhoneTouched(true);
     if (emailRequired || email) setEmailTouched(true);
     if (!canSubmit) return;
+    // Final guard: re-check the chosen window against the wall clock at
+    // the moment of submit, in case the user lingered past the slot end
+    // since they made the selection.
+    const slot = TIME_WINDOWS.find((w) => w.label === timeWindow);
+    if (slot && isToday(date) && new Date().getHours() >= slot.endHour) {
+      setTimeWindow("");
+      setError("That time slot has just passed. Please choose another.");
+      return;
+    }
     // Reject any second submit attempt outright.
     if (submittedOnce.current || loading) return;
     submittedOnce.current = true;
@@ -120,22 +179,41 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Preferred time</label>
           <div className="flex flex-col gap-2">
-            {TIME_WINDOWS.map((tw) => (
-              <button
-                key={tw}
-                type="button"
-                onClick={() => setTimeWindow(tw)}
-                className={`text-left px-4 py-2.5 text-sm rounded-xl border-2 transition-colors ${
-                  timeWindow === tw
-                    ? "border-purple-700 bg-purple-50 text-purple-700 font-medium"
-                    : "border-gray-100 text-gray-700 hover:border-purple-300"
-                }`}
-                data-testid={`time-window-${tw.toLowerCase().replace(/\s/g, "-")}`}
-              >
-                {tw}
-              </button>
-            ))}
+            {TIME_WINDOWS.map((tw) => {
+              const disabled = isSlotDisabled(tw.endHour);
+              const selected = timeWindow === tw.label;
+              return (
+                <button
+                  key={tw.label}
+                  type="button"
+                  onClick={() => !disabled && setTimeWindow(tw.label)}
+                  disabled={disabled}
+                  aria-disabled={disabled}
+                  title={disabled ? "This time has already passed today" : undefined}
+                  className={`text-left px-4 py-2.5 text-sm rounded-xl border-2 transition-colors flex items-center justify-between gap-3 ${
+                    disabled
+                      ? "border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed line-through decoration-gray-300"
+                      : selected
+                        ? "border-purple-700 bg-purple-50 text-purple-700 font-medium"
+                        : "border-gray-100 text-gray-700 hover:border-purple-300"
+                  }`}
+                  data-testid={`time-window-${tw.label.toLowerCase().replace(/\s/g, "-")}`}
+                >
+                  <span>{tw.label}</span>
+                  {disabled && (
+                    <span className="text-[11px] font-medium text-gray-400 no-underline">
+                      Already passed
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
+          {todaySelected && TIME_WINDOWS.every((w) => isSlotDisabled(w.endHour)) && (
+            <p className="mt-2 text-[12px] text-gray-500">
+              No time slots remain today. Please pick a future date.
+            </p>
+          )}
         </div>
 
         <div>

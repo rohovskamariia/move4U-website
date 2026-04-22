@@ -368,7 +368,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
               // with completely fresh state — no pre-filled fields.
               onBack();
             }}
-            className="w-full py-2.5 sm:py-3 font-semibold rounded-xl text-sm border-2 border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-colors inline-flex items-center justify-center gap-2"
+            className="btn-outline-purple w-full py-2.5 sm:py-3 font-semibold rounded-xl text-sm inline-flex items-center justify-center gap-2"
             data-testid="success-new-booking"
           >
             <Plus className="w-4 h-4" />

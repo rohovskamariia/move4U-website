@@ -85,16 +85,23 @@ export default function Navbar() {
               className="flex items-center gap-1 group"
               aria-label="Move4U — home"
             >
-              {/* Logo PNG already contains the purple circle — no extra ring,
-                  no rounded clipping, transparent background, so no halo. */}
-              <img
-                src="/m4u-icon.png"
-                alt=""
+              {/* The source PNG has a non-transparent white background and a
+                  small margin around the purple disc, so plain rounded-full
+                  would leave a thin white rim on dark/coloured backgrounds.
+                  We wrap in a clipped container and scale the image up
+                  ~12% so the purple disc fills the visible circle edge —
+                  the white margin is pushed entirely outside the clip. */}
+              <span
+                className="block w-11 h-11 md:w-[52px] md:h-[52px] rounded-full overflow-hidden transition-transform duration-200 group-hover:-translate-y-0.5"
                 aria-hidden="true"
-                className="w-11 h-11 md:w-[52px] md:h-[52px] object-contain transition-transform duration-200 group-hover:-translate-y-0.5 select-none block"
-                style={{ backgroundColor: "transparent" }}
-                draggable={false}
-              />
+              >
+                <img
+                  src="/m4u-icon.png"
+                  alt=""
+                  className="w-full h-full object-cover scale-[1.12] select-none block"
+                  draggable={false}
+                />
+              </span>
               <span className="font-extrabold text-[22px] md:text-[27px] tracking-tight leading-none">
                 <span style={{ color: "#0F172A" }}>Move</span>
                 <span style={{ color: "#3D1289" }}>4U</span>

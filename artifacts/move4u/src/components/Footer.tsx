@@ -10,16 +10,21 @@ export default function Footer() {
         {/* Brand block — full width above the link grid on every breakpoint */}
         <div className="mb-6 sm:mb-10">
           <div className="flex items-center gap-1.5 font-bold text-lg sm:text-xl text-white mb-2 sm:mb-3">
-            {/* Footer logo: no ring, no rounded clipping, transparent —
-                so the dark gray-900 footer doesn't show a white halo. */}
-            <img
-              src="/m4u-icon.png"
-              alt=""
+            {/* Footer logo — wrapped + scaled so the purple disc fills the
+                clipped circle edge. Without the scale, the source PNG's
+                small white margin around the disc would show as a thin
+                white rim against the dark gray-900 footer. */}
+            <span
+              className="block w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden"
               aria-hidden="true"
-              className="w-10 h-10 sm:w-11 sm:h-11 object-contain select-none block"
-              style={{ backgroundColor: "transparent" }}
-              draggable={false}
-            />
+            >
+              <img
+                src="/m4u-icon.png"
+                alt=""
+                className="w-full h-full object-cover scale-[1.12] select-none block"
+                draggable={false}
+              />
+            </span>
             Move4U
           </div>
           <p className="text-gray-400 text-[13px] sm:text-sm leading-relaxed max-w-md">
