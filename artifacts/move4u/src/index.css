@@ -520,18 +520,20 @@ body {
 }
 
 /* ----------------------------------------------------------------- */
-/* Hero image: on phones, slightly back the image off so the subject  */
-/* doesn't feel zoomed in. We do this by scaling the <img> down a     */
-/* touch (object-cover already fills, so a small scale-down reveals   */
-/* a wider field of view). Desktop is untouched.                      */
+/* Hero image on mobile — kept full-bleed (no scale, no inset).       */
+/* The image must always fill the hero edge-to-edge; we only adjust   */
+/* its focal point via object-position so the subject sits naturally  */
+/* behind the headline instead of feeling zoomed-in.                  */
 /* ----------------------------------------------------------------- */
 @media (max-width: 639px) {
   .hero-img-mobile {
-    transform: scale(0.92);
-    transform-origin: center center;
-    /* pull background colour from the page so the slight scale-down
-       doesn't show empty edges around the image. */
-    background: #1a1024;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Slight downward shift on phones — frames the subject under the
+       headline without cropping their head. Desktop keeps its own
+       per-slide objectPosition from constants.ts. */
+    object-position: center 35% !important;
   }
 }
 
