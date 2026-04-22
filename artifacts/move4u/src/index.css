@@ -518,3 +518,19 @@ body {
   /* Soft secondary text — pull the colour back so it competes less. */
   .booking-mobile .text-gray-500 { color: rgb(120 124 133); }
 }
+
+/* ----------------------------------------------------------------- */
+/* Hero image: on phones, slightly back the image off so the subject  */
+/* doesn't feel zoomed in. We do this by scaling the <img> down a     */
+/* touch (object-cover already fills, so a small scale-down reveals   */
+/* a wider field of view). Desktop is untouched.                      */
+/* ----------------------------------------------------------------- */
+@media (max-width: 639px) {
+  .hero-img-mobile {
+    transform: scale(0.92);
+    transform-origin: center center;
+    /* pull background colour from the page so the slight scale-down
+       doesn't show empty edges around the image. */
+    background: #1a1024;
+  }
+}
