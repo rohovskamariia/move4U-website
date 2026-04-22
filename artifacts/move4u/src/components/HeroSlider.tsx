@@ -102,10 +102,14 @@ export default function HeroSlider() {
       {/* Mobile: top-aligned, compact padding, left-aligned text.
           Desktop: unchanged — vertically centred with generous padding. */}
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-12 sm:py-32 md:py-36 min-h-[460px] sm:min-h-0 flex flex-col items-start justify-start sm:block">
-        <div className="max-w-2xl w-full text-left">
+        {/* On mobile we stretch the text wrapper to fill the hero so the
+            inner flex column can pin the headline to the top and the
+            buttons to the bottom — that way slides with shorter copy
+            don't pull the buttons upward. Desktop layout is untouched. */}
+        <div className="max-w-2xl w-full text-left flex-1 flex flex-col sm:block">
           {/* Slide content — re-keyed so each change replays the
               staggered rise-in for headline / subtext / buttons. */}
-          <div key={slide.id} className="hero-stagger">
+          <div key={slide.id} className="hero-stagger flex-1 flex flex-col sm:block">
             {/* Eyebrow slot — always rendered so the headline lands at
                 the same vertical position on every slide. When a slide
                 has no subtitle we render an invisible placeholder of
@@ -137,7 +141,11 @@ export default function HeroSlider() {
             >
               {slide.text}
             </p>
-            <div className="flex flex-wrap gap-2.5 sm:gap-3">
+            {/* mt-auto on mobile pushes the CTAs to the bottom of the
+                fixed-height text block, so buttons land at exactly the
+                same Y position on every slide regardless of how many
+                lines the headline / body text take. */}
+            <div className="flex flex-wrap gap-2.5 sm:gap-3 mt-auto sm:mt-0">
               {slide.buttons.map((btn, i) => {
                 const isPrimary = btn.variant === "primary";
                 return (
