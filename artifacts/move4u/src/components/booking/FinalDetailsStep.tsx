@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { CheckCircle, Loader2, ChevronDown } from "lucide-react";
+import { useRef, useState } from "react";
+import { Loader2, ChevronDown } from "lucide-react";
 import BookingTermsNotice from "./BookingTermsNotice";
 import { isValidPhone, isValidEmail } from "@/lib/validators";
 
@@ -12,12 +12,18 @@ interface FinalDetailsStepProps {
     email: string;
     contactMethod: string;
   }) => Promise<{ bookingReference: string }>;
+  /**
+   * Called once the booking has been successfully created. The parent flow
+   * uses this to swap the entire form for a locked success view, so the
+   * user can't navigate back to the form and accidentally resubmit.
+   */
+  onSubmitted: (bookingReference: string) => void;
 }
 
 const CONTACT_METHODS = ["Phone", "WhatsApp", "Email", "Text message", "Any"];
 const TIME_WINDOWS = ["Morning (8am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–12am)"];
 
-export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
+export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetailsStepProps) {
   const [date, setDate] = useState("");
   const [timeWindow, setTimeWindow] = useState("");
   const [name, setName] = useState("");
@@ -27,9 +33,12 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
   const [emailTouched, setEmailTouched] = useState(false);
   const [contactMethod, setContactMethod] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [bookingRef, setBookingRef] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Hard guard against double-submission — even if the click somehow fires
+  // twice (slow network, double-tap on mobile, etc.) only one request goes
+  // through. Cleared only by remounting the component.
+  const submittedOnce = useRef(false);
 
   const phoneValid = isValidPhone(phone);
   const emailRequired = contactMethod === "Email";
@@ -49,53 +58,28 @@ export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
     return selected.getTime() === today.getTime() || selected.getTime() === tomorrow.getTime();
   })();
 
-  useEffect(() => {
-    if (!bookingRef) return;
-    if (typeof window === "undefined") return;
-    requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
-    });
-  }, [bookingRef]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPhoneTouched(true);
     if (emailRequired || email) setEmailTouched(true);
     if (!canSubmit) return;
+    // Reject any second submit attempt outright.
+    if (submittedOnce.current || loading) return;
+    submittedOnce.current = true;
     setLoading(true);
     setError("");
     try {
       const result = await onSubmit({ date, timeWindow, name, phone, email, contactMethod });
-      setBookingRef(result.bookingReference);
+      // Hand control to the parent — it swaps to the locked success view.
+      onSubmitted(result.bookingReference);
     } catch {
+      // Allow the user to retry if the network actually failed.
+      submittedOnce.current = false;
       setError("Something went wrong. Please try again or contact us directly.");
     } finally {
       setLoading(false);
     }
   };
-
-  if (bookingRef) {
-    return (
-      <div className="text-center py-8">
-        <div className="bg-green-100 text-green-700 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-7 h-7" />
-        </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-3">
-          Thank you — we received your request.
-        </h3>
-        <div className="inline-block bg-purple-50 border border-purple-200 rounded-xl px-5 py-3 mb-4">
-          <p className="text-xs text-purple-500 font-medium uppercase tracking-wide mb-0.5">Booking Reference</p>
-          <p className="text-xl font-bold text-purple-700">{bookingRef}</p>
-        </div>
-        <p className="text-gray-600 text-sm leading-relaxed max-w-sm mx-auto mb-3">
-          We will contact you shortly to confirm availability, final price, and booking details.
-        </p>
-        <p className="text-gray-500 text-sm leading-relaxed max-w-sm mx-auto">
-          Please keep your phone available. Our team will contact you shortly.
-        </p>
-      </div>
-    );
-  }
 
   const showPhoneError = phoneTouched && phone.length > 0 && !phoneValid;
   const showEmailError = emailTouched && email.length > 0 && !isValidEmail(email);

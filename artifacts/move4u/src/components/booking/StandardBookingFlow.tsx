@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft } from "lucide-react";
-import { HELP_PRICING, VAN_SIZES } from "@/data/constants";
+import { useLocation } from "wouter";
+import { CheckCircle, ChevronLeft, Home, Plus } from "lucide-react";
+import { CONTACT, HELP_PRICING, VAN_SIZES } from "@/data/constants";
 import {
   getFloorChargeFromValue,
   getFloorLabelFromValue,
@@ -42,12 +43,34 @@ const getFloorCharge = getFloorChargeFromValue;
 // Edit steps and flow logic here
 export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }: StandardBookingFlowProps) {
   const [step, setStep] = useState<Step>("pickup");
+  // Once set, the flow is LOCKED. The form, back arrow, progress bar and
+  // step header are all hidden — only the success view is shown. The user
+  // can't navigate back into the form via the browser back button either
+  // (see the popstate effect below).
+  const [submittedRef, setSubmittedRef] = useState<string | null>(null);
+  const [, setLocation] = useLocation();
 
   // Scroll to top whenever the step changes so each step starts at the top
   // of the page (instead of jumping to the bottom of the previous step).
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
+
+  // Once the booking is submitted, scroll to top and intercept the browser
+  // back button so it sends the user home instead of re-opening the form.
+  useEffect(() => {
+    if (!submittedRef) return;
+    window.scrollTo({ top: 0, behavior: "auto" });
+    // Push a sentinel state — when the user hits "back", popstate fires
+    // and we redirect to "/" instead of letting the browser navigate to a
+    // previous form step.
+    window.history.pushState({ bookingSubmitted: true }, "");
+    const onPopState = () => {
+      setLocation("/");
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [submittedRef, setLocation]);
 
   // Pickup state
   const [pickupAddress, setPickupAddress] = useState("");
@@ -199,6 +222,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
       case "final":
         return (
           <FinalDetailsStep
+            onSubmitted={(ref) => setSubmittedRef(ref)}
             onSubmit={async ({ date, timeWindow, name, phone, email, contactMethod }) => {
               const pricing = HELP_PRICING[vanSize] || HELP_PRICING.medium;
               let hourlyRate = pricing.noHelp;
@@ -283,6 +307,77 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
         );
     }
   };
+
+  // -----------------------------------------------------------------
+  // Locked success view — replaces the entire form once submitted.
+  // No back button, no progress bar, no form fields. Browser back
+  // is intercepted in the popstate effect above.
+  // -----------------------------------------------------------------
+  if (submittedRef) {
+    return (
+      <div className="text-center py-6 sm:py-8" data-testid="booking-success">
+        <div className="bg-green-100 text-green-700 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CheckCircle className="w-7 h-7" />
+        </div>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">
+          Thank you — we received your request.
+        </h3>
+        <div
+          className="inline-block bg-gray-50 border border-gray-200 rounded-xl px-5 py-3 mb-4"
+          data-testid="booking-reference"
+        >
+          <p className="text-[11px] text-gray-500 font-medium uppercase tracking-wide mb-0.5">
+            Booking Reference
+          </p>
+          <p className="text-xl font-bold" style={{ color: "#3D1289" }}>
+            {submittedRef}
+          </p>
+        </div>
+        <p className="text-gray-600 text-sm leading-relaxed max-w-sm mx-auto mb-3">
+          We will contact you shortly to confirm availability, final price,
+          and booking details.
+        </p>
+        <p className="text-gray-500 text-[13px] leading-relaxed max-w-sm mx-auto mb-6">
+          If you need to change your booking, please contact us with your
+          booking reference at{" "}
+          <a
+            href={`tel:${CONTACT.driver.replace(/\s/g, "")}`}
+            className="font-semibold underline underline-offset-2"
+            style={{ color: "#3D1289" }}
+          >
+            {CONTACT.driverDisplay}
+          </a>
+          .
+        </p>
+        <div className="flex flex-col gap-2.5 max-w-xs mx-auto">
+          <button
+            type="button"
+            onClick={() => setLocation("/")}
+            className="btn-purple w-full py-2.5 sm:py-3 font-semibold rounded-xl text-sm inline-flex items-center justify-center gap-2"
+            data-testid="success-back-home"
+          >
+            <Home className="w-4 h-4" />
+            Back to Home
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              // Hand control back to the parent (BookingPage) which clears
+              // the selected service and renders ServiceSelector. When the
+              // user picks a service again, StandardBookingFlow remounts
+              // with completely fresh state — no pre-filled fields.
+              onBack();
+            }}
+            className="w-full py-2.5 sm:py-3 font-semibold rounded-xl text-sm border-2 border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-colors inline-flex items-center justify-center gap-2"
+            data-testid="success-new-booking"
+          >
+            <Plus className="w-4 h-4" />
+            Create new booking
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
