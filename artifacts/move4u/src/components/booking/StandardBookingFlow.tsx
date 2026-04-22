@@ -310,7 +310,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
           <div
             key={s}
             className={`h-1 flex-1 rounded-full transition-colors ${
-              i <= currentIndex ? "bg-purple-700" : "bg-gray-100"
+              i <= currentIndex ? "bg-[#3D1289]/60" : "bg-gray-100"
             }`}
           />
         ))}

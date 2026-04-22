@@ -82,14 +82,16 @@ export default function Navbar() {
             {/* Brand mark — circular van+M icon + wordmark + slogan */}
             <Link
               href="/"
-              className="flex items-center gap-1.5 md:gap-2 group"
+              className="flex items-center gap-1 group"
               aria-label="Move4U — home"
             >
+              {/* Logo PNG already contains the purple circle — no extra ring,
+                  no rounded clipping, transparent background, so no halo. */}
               <img
                 src="/m4u-icon.png"
                 alt=""
                 aria-hidden="true"
-                className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover transition-transform duration-200 group-hover:-translate-y-0.5 select-none block"
+                className="w-11 h-11 md:w-[52px] md:h-[52px] object-contain transition-transform duration-200 group-hover:-translate-y-0.5 select-none block"
                 style={{ backgroundColor: "transparent" }}
                 draggable={false}
               />

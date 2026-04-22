@@ -70,12 +70,13 @@ export default function ExtraStopsSection({ stops, setStops }: ExtraStopsSection
           {stops.map((stop, i) => (
             <div
               key={i}
-              className="relative rounded-2xl border border-purple-100 bg-purple-50/30 p-3 sm:p-4"
+              className="relative rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
               data-testid={`extra-stop-card-${i}`}
             >
-              {/* Header row with badge + remove button */}
+              {/* Header row with neutral badge + remove button. The badge stays
+                  small + grey so primary CTA purple keeps all visual weight. */}
               <div className="flex items-center gap-2 mb-3">
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-700 text-white text-[11px] font-bold">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-600 text-[11px] font-bold">
                   {i + 1}
                 </span>
                 <span className="text-[12px] font-semibold text-gray-700">
@@ -110,10 +111,12 @@ export default function ExtraStopsSection({ stops, setStops }: ExtraStopsSection
         </div>
       )}
 
+      {/* Secondary action — neutral until hover. Keeps the primary Continue
+          button as the only strong-purple element on the screen. */}
       <button
         type="button"
         onClick={addStop}
-        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-purple-700 border-2 border-dashed border-purple-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-colors"
+        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-600 border-2 border-dashed border-gray-200 rounded-xl bg-white hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 transition-colors"
         data-testid="add-extra-stop"
       >
         <Plus className="w-4 h-4" />

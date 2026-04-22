@@ -9,12 +9,15 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Brand block — full width above the link grid on every breakpoint */}
         <div className="mb-6 sm:mb-10">
-          <div className="flex items-center gap-2.5 font-bold text-lg sm:text-xl text-white mb-2 sm:mb-3">
+          <div className="flex items-center gap-1.5 font-bold text-lg sm:text-xl text-white mb-2 sm:mb-3">
+            {/* Footer logo: no ring, no rounded clipping, transparent —
+                so the dark gray-900 footer doesn't show a white halo. */}
             <img
               src="/m4u-icon.png"
               alt=""
               aria-hidden="true"
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover ring-1 ring-white/10 select-none"
+              className="w-10 h-10 sm:w-11 sm:h-11 object-contain select-none block"
+              style={{ backgroundColor: "transparent" }}
               draggable={false}
             />
             Move4U
