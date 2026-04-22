@@ -118,6 +118,13 @@ export default function Navbar() {
                 Home
               </button>
               <button
+                onClick={() => scrollTo("about")}
+                className="hover:text-purple-700 transition-colors"
+                data-testid="nav-about"
+              >
+                About
+              </button>
+              <button
                 onClick={() => scrollTo("services")}
                 className="hover:text-purple-700 transition-colors"
                 data-testid="nav-services"

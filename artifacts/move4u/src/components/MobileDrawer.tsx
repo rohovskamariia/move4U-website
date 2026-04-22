@@ -4,6 +4,7 @@ import {
   X,
   ChevronDown,
   Home,
+  Info,
   FileText,
   Shield,
   CreditCard,
@@ -160,6 +161,12 @@ export default function MobileDrawer({
             label="Home"
             onClick={onHome}
             testId="drawer-home"
+          />
+          <NavRow
+            icon={<Info className="w-[18px] h-[18px] text-gray-500" />}
+            label="About"
+            onClick={() => handleSection("about")}
+            testId="drawer-about"
           />
           <Group
             label="Services"
