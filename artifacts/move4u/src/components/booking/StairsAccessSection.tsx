@@ -157,10 +157,10 @@ export default function StairsAccessSection({
                 type="button"
                 onClick={() => setHasStairs(opt)}
                 aria-pressed={selected}
-                className={`py-2 sm:py-2.5 rounded-xl text-[13.5px] font-semibold transition-all border ${
+                className={`py-2.5 sm:py-3 rounded-xl text-[14px] font-semibold transition-all border-2 cursor-pointer active:scale-[0.98] ${
                   selected
-                    ? "border-purple-700 bg-purple-700 text-white shadow-[0_4px_12px_-6px_rgba(109,40,217,0.45)]"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-purple-300 hover:bg-purple-50/40"
+                    ? "border-[#5B4BD8] bg-[#5B4BD8] text-white shadow-[0_4px_12px_-6px_rgba(91,75,216,0.45)]"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-[#5B4BD8] hover:bg-[#5B4BD8]/5"
                 }`}
                 data-testid={`has-stairs-${opt}${idSuffix}`}
               >
@@ -186,10 +186,10 @@ export default function StairsAccessSection({
                   type="button"
                   onClick={() => setLift(opt)}
                   aria-pressed={selected}
-                  className={`py-2 sm:py-2.5 rounded-xl text-[13.5px] font-semibold transition-all border ${
+                  className={`py-2.5 sm:py-3 rounded-xl text-[14px] font-semibold transition-all border-2 cursor-pointer active:scale-[0.98] ${
                     selected
-                      ? "border-purple-700 bg-purple-700 text-white shadow-[0_4px_12px_-6px_rgba(109,40,217,0.45)]"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-purple-300 hover:bg-purple-50/40"
+                      ? "border-[#5B4BD8] bg-[#5B4BD8] text-white shadow-[0_4px_12px_-6px_rgba(91,75,216,0.45)]"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-[#5B4BD8] hover:bg-[#5B4BD8]/5"
                   }`}
                   data-testid={`lift-${opt}${idSuffix}`}
                 >
@@ -236,7 +236,7 @@ export default function StairsAccessSection({
               type="button"
               onClick={() => setFloor(parsedFloor + 1)}
               aria-label="Increase floor"
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#6D4ED3] text-white flex items-center justify-center hover:bg-[#5B3FC0] active:scale-95 transition-all"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#5B4BD8] text-white flex items-center justify-center hover:bg-[#4736C0] active:scale-95 transition-all"
               data-testid={`floor-plus${idSuffix}`}
             >
               <Plus className="w-[18px] h-[18px] sm:w-5 sm:h-5" strokeWidth={2.5} />

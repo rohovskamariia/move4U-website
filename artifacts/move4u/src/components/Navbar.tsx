@@ -82,19 +82,20 @@ export default function Navbar() {
             {/* Brand mark — circular van+M icon + wordmark + slogan */}
             <Link
               href="/"
-              className="flex items-center gap-3 group"
+              className="flex items-center gap-1.5 md:gap-2 group"
               aria-label="Move4U — home"
             >
               <img
                 src="/m4u-icon.png"
                 alt=""
                 aria-hidden="true"
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-[0_3px_10px_-4px_rgba(74,49,156,0.35)] transition-transform duration-200 group-hover:-translate-y-0.5 select-none"
+                className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover transition-transform duration-200 group-hover:-translate-y-0.5 select-none block"
+                style={{ backgroundColor: "transparent" }}
                 draggable={false}
               />
               <span className="font-extrabold text-[22px] md:text-[27px] tracking-tight leading-none">
                 <span style={{ color: "#0F172A" }}>Move</span>
-                <span style={{ color: "#6D4ED3" }}>4U</span>
+                <span style={{ color: "#5B4BD8" }}>4U</span>
               </span>
             </Link>
 

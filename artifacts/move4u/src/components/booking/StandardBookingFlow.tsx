@@ -114,6 +114,33 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
     return true;
   };
 
+  // Surface exactly what is missing so the user is never silently blocked.
+  const getMissingHint = (): string | null => {
+    if (step === "pickup") {
+      if (!pickupAddress) return "Please enter the pickup address";
+      if (!pickupLift) return "Please select if there are stairs";
+      return null;
+    }
+    if (step === "dropoff") {
+      if (!dropoffAddress) return "Please enter the drop-off address";
+      if (!dropoffLift) return "Please select if there are stairs";
+      const badStop = extraStops.findIndex(
+        (s) => !s.address.trim() || !s.liftValue,
+      );
+      if (badStop !== -1) {
+        const s = extraStops[badStop];
+        if (!s.address.trim())
+          return `Please enter the address for stop ${badStop + 1}`;
+        return `Please select if there are stairs for stop ${badStop + 1}`;
+      }
+      return null;
+    }
+    if (step === "van") return vanSize ? null : "Please choose a van size";
+    if (step === "help")
+      return helpOption ? null : "Please choose how much help you need";
+    return null;
+  };
+
   const renderStep = () => {
     switch (step) {
       case "pickup":
@@ -294,14 +321,35 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
 
       {/* Next button — only show for steps before summary (summary has its own button) */}
       {step !== "summary" && step !== "final" && (
-        <button
-          onClick={goNext}
-          disabled={!canProceed()}
-          className="btn-purple mt-6 w-full py-2.5 sm:py-3.5 font-semibold rounded-xl text-sm"
-          data-testid="booking-next"
-        >
-          Continue
-        </button>
+        <>
+          {!canProceed() && getMissingHint() && (
+            <div
+              className="mt-5 flex items-start gap-2 rounded-xl border border-[#5B4BD8]/20 bg-[#5B4BD8]/5 px-3.5 py-2.5"
+              data-testid="booking-missing-hint"
+              role="status"
+              aria-live="polite"
+            >
+              <span
+                className="mt-[2px] flex h-4 w-4 flex-none items-center justify-center rounded-full text-[11px] font-bold text-white"
+                style={{ backgroundColor: "#5B4BD8" }}
+                aria-hidden="true"
+              >
+                !
+              </span>
+              <p className="text-[13px] font-medium text-[#3A2BA0] leading-snug">
+                {getMissingHint()}
+              </p>
+            </div>
+          )}
+          <button
+            onClick={goNext}
+            disabled={!canProceed()}
+            className="btn-purple mt-4 w-full py-2.5 sm:py-3.5 font-semibold rounded-xl text-sm"
+            data-testid="booking-next"
+          >
+            Continue
+          </button>
+        </>
       )}
     </div>
   );
