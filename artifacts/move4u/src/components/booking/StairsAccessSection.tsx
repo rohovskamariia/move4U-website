@@ -132,23 +132,23 @@ export default function StairsAccessSection({
 
   return (
     <div
-      className="bg-white border rounded-2xl p-4 sm:p-5"
+      className="bg-white border rounded-2xl p-3 sm:p-5"
       style={{ borderColor: "rgb(238 238 242)" }}
       data-testid={`stairs-access${idSuffix}`}
     >
-      <h4 className="text-[15px] font-semibold text-gray-900 tracking-tight">
+      <h4 className="text-[14px] sm:text-[15px] font-semibold text-gray-900 tracking-tight">
         {title}
       </h4>
-      <p className="text-[12.5px] text-gray-500 mt-1 leading-relaxed">
+      <p className="text-[11px] sm:text-[12.5px] text-gray-500 mt-0.5 sm:mt-1 leading-snug sm:leading-relaxed">
         Stairs may affect the final price when there is no lift available.
       </p>
 
       {/* Step 1 — Are there any stairs / flights? */}
-      <div className="mt-4">
-        <p className="text-[13px] font-semibold text-gray-700 mb-2">
+      <div className="mt-3 sm:mt-4">
+        <p className="text-[12.5px] sm:text-[13px] font-semibold text-gray-700 mb-1.5 sm:mb-2">
           Are there any stairs / flights?
         </p>
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
           {(["no", "yes"] as const).map((opt) => {
             const selected = hasStairs === opt;
             return (
@@ -157,7 +157,7 @@ export default function StairsAccessSection({
                 type="button"
                 onClick={() => setHasStairs(opt)}
                 aria-pressed={selected}
-                className={`py-2.5 sm:py-3 rounded-xl text-[14px] font-semibold transition-all border-2 cursor-pointer active:scale-[0.98] ${
+                className={`py-2 sm:py-3 rounded-xl text-[14px] font-semibold transition-all border-2 cursor-pointer active:scale-[0.98] ${
                   selected
                     ? "border-[#3D1289] bg-[#3D1289] text-white shadow-[0_4px_12px_-6px_rgba(61,18,137,0.45)]"
                     : "border-gray-200 bg-white text-gray-700 hover:border-[#3D1289] hover:bg-[#3D1289]/5"
@@ -173,11 +173,11 @@ export default function StairsAccessSection({
 
       {/* Step 2 — Lift toggle (only when stairs = Yes) */}
       {hasStairs === "yes" && (
-        <div className="mt-4">
-          <p className="text-[13px] font-semibold text-gray-700 mb-2">
+        <div className="mt-3 sm:mt-4">
+          <p className="text-[12.5px] sm:text-[13px] font-semibold text-gray-700 mb-1.5 sm:mb-2">
             Is a lift available?
           </p>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
             {(["yes", "no"] as const).map((opt) => {
               const selected = liftValue === opt;
               return (
@@ -186,7 +186,7 @@ export default function StairsAccessSection({
                   type="button"
                   onClick={() => setLift(opt)}
                   aria-pressed={selected}
-                  className={`py-2.5 sm:py-3 rounded-xl text-[14px] font-semibold transition-all border-2 cursor-pointer active:scale-[0.98] ${
+                  className={`py-2 sm:py-3 rounded-xl text-[14px] font-semibold transition-all border-2 cursor-pointer active:scale-[0.98] ${
                     selected
                       ? "border-[#3D1289] bg-[#3D1289] text-white shadow-[0_4px_12px_-6px_rgba(61,18,137,0.45)]"
                       : "border-gray-200 bg-white text-gray-700 hover:border-[#3D1289] hover:bg-[#3D1289]/5"
@@ -203,14 +203,14 @@ export default function StairsAccessSection({
 
       {/* Step 3 — Floor stepper (only when stairs = Yes AND lift = No) */}
       {hasStairs === "yes" && liftValue === "no" && (
-        <div className="mt-4">
-          <p className="text-[13px] font-semibold text-gray-700">Floor level</p>
-          <p className="text-[12px] text-gray-500 mt-1 leading-relaxed">
+        <div className="mt-3 sm:mt-4">
+          <p className="text-[12.5px] sm:text-[13px] font-semibold text-gray-700">Floor level</p>
+          <p className="text-[11px] sm:text-[12px] text-gray-500 mt-0.5 sm:mt-1 leading-snug sm:leading-relaxed">
             Please select the floor. £{FLOOR_PRICE} is added per floor when no
             lift is available.
           </p>
 
-          <div className="mt-3 flex items-center gap-3 bg-purple-50/60 border border-purple-100 rounded-2xl p-2">
+          <div className="mt-2 sm:mt-3 flex items-center gap-3 bg-purple-50/60 border border-purple-100 rounded-2xl p-2">
             <button
               type="button"
               onClick={() => setFloor(parsedFloor - 1)}
@@ -244,12 +244,12 @@ export default function StairsAccessSection({
           </div>
 
           {/* Live cost readout */}
-          <div className="mt-3 flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
-            <span className="text-[13px] font-medium text-gray-700">
+          <div className="mt-2 sm:mt-3 flex items-center justify-between bg-gray-50 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5">
+            <span className="text-[12.5px] sm:text-[13px] font-medium text-gray-700">
               Stairs cost
             </span>
             <span
-              className="text-[15px] font-bold text-purple-700 tabular-nums"
+              className="text-[14px] sm:text-[15px] font-bold text-purple-700 tabular-nums"
               data-testid={`stairs-cost${idSuffix}`}
             >
               +£{stairsCost}
@@ -260,28 +260,28 @@ export default function StairsAccessSection({
 
       {/* Reassuring readout when no surcharge applies */}
       {hasStairs === "no" && (
-        <div className="mt-3 flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2.5">
-          <span className="text-[13px] font-medium text-emerald-800">
+        <div className="mt-2 sm:mt-3 flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5">
+          <span className="text-[12.5px] sm:text-[13px] font-medium text-emerald-800">
             No stairs — no surcharge
           </span>
-          <span className="text-[15px] font-bold text-emerald-700 tabular-nums">
+          <span className="text-[14px] sm:text-[15px] font-bold text-emerald-700 tabular-nums">
             +£0
           </span>
         </div>
       )}
 
       {hasStairs === "yes" && liftValue === "yes" && (
-        <div className="mt-3 flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2.5">
-          <span className="text-[13px] font-medium text-emerald-800">
+        <div className="mt-2 sm:mt-3 flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5">
+          <span className="text-[12.5px] sm:text-[13px] font-medium text-emerald-800">
             Lift available — no stairs surcharge
           </span>
-          <span className="text-[15px] font-bold text-emerald-700 tabular-nums">
+          <span className="text-[14px] sm:text-[15px] font-bold text-emerald-700 tabular-nums">
             +£0
           </span>
         </div>
       )}
 
-      <p className="text-[11.5px] text-gray-500 mt-3 leading-relaxed">
+      <p className="text-[10.5px] sm:text-[11.5px] text-gray-500 mt-2 sm:mt-3 leading-snug sm:leading-relaxed">
         Final price may vary depending on access and loading conditions.
       </p>
     </div>

@@ -192,7 +192,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
         );
       case "dropoff":
         return (
-          <div className="space-y-5">
+          <div className="space-y-3 sm:space-y-5">
             <AddressStep
               key="dropoff-step"
               label="Drop-off address"
@@ -393,7 +393,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
   return (
     <div>
       {/* Back button + service label */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-3 sm:mb-6">
         <button
           onClick={goPrev}
           className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
@@ -404,14 +404,14 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
         </button>
         <div>
           <h2 className="text-base font-bold text-gray-900">{serviceLabel}</h2>
-          <p className="text-xs text-gray-400">
+          <p className="text-[11px] sm:text-xs text-gray-400">
             Step {currentIndex + 1} of {STEPS.length} — {STEP_LABELS[step]}
           </p>
         </div>
       </div>
 
       {/* Step progress bar */}
-      <div className="flex gap-1 mb-6">
+      <div className="flex gap-1 mb-3 sm:mb-6">
         {STEPS.map((s, i) => (
           <div
             key={s}

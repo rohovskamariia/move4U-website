@@ -1,0 +1,64 @@
+Please update the mobile layout of the first booking screen that appears after clicking “Get a Quote” or “Book Now”.
+
+Current issue:
+- On mobile, the service selection cards appear in one long vertical column
+- This makes the page too tall and too heavy
+- Users have to scroll too much
+
+Please change this mobile screen to a compact 2-column layout.
+
+Requirements:
+1. On mobile, show the service options in 2 columns instead of 1 long column
+2. Make each card shorter and more compact
+3. Keep only:
+- icon
+- service title
+4. Remove or greatly shorten long descriptions on mobile
+5. Keep cards easy to tap
+6. Reduce vertical spacing so the whole screen feels smaller and cleaner
+7. Desktop version can stay as it is
+8. Apply this change specifically to the first service-selection step opened from “Get a Quote” / “Book Now”
+
+Goal:
+Make the first booking screen on mobile look more compact, modern, and easier to scan, with service cards shown in 2 columns instead of one long vertical list. Improve the mobile design of the booking form to make it more compact and less vertically stretched.
+
+Current issue:
+- The mobile layout feels too long and heavy
+- Too much vertical spacing between elements
+- Large text blocks and padding make the form slow to scroll
+- Important actions (like Continue) are too far down
+
+Please optimize mobile layout:
+
+1. Reduce vertical spacing
+- Decrease margins between sections
+- Reduce padding inside cards (especially “Stairs & access” block)
+- Make the layout tighter but still readable
+
+2. Reduce text size slightly
+- Make descriptions smaller (not titles)
+- Example: “Stairs may affect the final price…” should be less prominent
+- Keep headings clear, but reduce secondary text size
+
+3. Make sections more compact
+- Reduce height of cards/containers
+- Avoid large empty spaces inside blocks
+
+4. Optimize buttons
+- “Yes / No” buttons can be slightly smaller in height
+- Reduce spacing between them
+
+5. Reduce overall form height
+- The goal is to show more content on screen without scrolling
+- Especially important for the first steps (pickup/drop-off)
+
+6. Keep it clean and modern
+- Do NOT remove content
+- Just compress layout smartly
+
+7. Mobile only
+- Apply these changes only for mobile screens
+- Do not affect desktop layout
+
+Goal:
+Make the booking flow faster, lighter, and easier to use on mobile by reducing unnecessary spacing and oversized elements.
