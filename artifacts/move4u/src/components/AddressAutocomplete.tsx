@@ -323,6 +323,11 @@ export default function AddressAutocomplete({
   const handleQueryChange = (q: string) => {
     setQuery(q);
     setOpen(true);
+    // Propagate the raw typed value to the parent immediately so manual
+    // entry works without the user having to pick a Google suggestion.
+    // We mark `hasStreetNumber: true` so the unit-number prompt isn't
+    // forced on manually-typed addresses — we trust the user.
+    onChange(q, { hasStreetNumber: true });
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     debounceRef.current = window.setTimeout(() => {
       void fetchSuggestions(q);
@@ -391,14 +396,11 @@ export default function AddressAutocomplete({
   };
 
   const handleBlur = () => {
-    // Defer so a click on a suggestion can fire first.
+    // Defer so a click on a suggestion can fire first. We deliberately
+    // do NOT snap the input back to the last picked suggestion any more —
+    // manual entry is allowed, and free-typed text is already propagated
+    // to the parent by handleQueryChange.
     window.setTimeout(() => {
-      // If the user typed something but never picked a real address, snap
-      // back to the last confirmed value so the parent never holds an
-      // unverified free-typed string.
-      if (query !== lastConfirmedRef.current) {
-        setQuery(lastConfirmedRef.current);
-      }
       setOpen(false);
     }, 180);
   };

@@ -61,9 +61,6 @@ export default function PricingGuidePage() {
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
             House &amp; Commercial Moving
           </h2>
-          <p className="text-[13.5px] sm:text-sm text-gray-500 mt-1">
-            Choose the right van and service for your move.
-          </p>
         </div>
 
         <Section title="Choose your van" subtitle="Hourly rate. Minimum 2 hours.">

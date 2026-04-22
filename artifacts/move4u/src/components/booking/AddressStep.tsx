@@ -103,6 +103,9 @@ export default function AddressStep({
           placeholder="Start typing postcode or address..."
           testId={`address-input-${label.toLowerCase().replace(/\s/g, "-")}`}
         />
+        <p className="text-[11.5px] text-gray-500 mt-1.5">
+          Can&rsquo;t find your address? Enter it manually.
+        </p>
 
         {needsNumber && (
           <div className="mt-3">
