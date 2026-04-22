@@ -41,6 +41,8 @@ export interface TelegramBooking {
   dropoff:          string;
   dropoffDetails:   string;
   extraAddress:     string;
+  /** Optional ordered list of intermediate route stops between pickup and drop-off. */
+  extraStops?:      string[];
   vanSize:          string;
   helpOption:       string;
   peopleCount:      string;
@@ -77,11 +79,30 @@ function buildMessage(b: TelegramBooking): string {
     line("Phone",      b.phone),
     line("Contact via",b.contactMethod),
     "",
-    b.pickup        ? `📍 From: ${b.pickup}`                     : null,
+    b.pickup        ? `📍 Pickup: ${b.pickup}`                   : null,
     b.pickupDetails ? `   ↳ ${b.pickupDetails}`                  : null,
-    b.dropoff       ? `📍 To: ${b.dropoff}`                      : null,
+    // Extra stops — render between pickup and final destination so the
+    // Telegram message reads as the actual route order.
+    ...(() => {
+      const stops = (b.extraStops ?? [])
+        .map((s) => (s ?? "").trim())
+        .filter(Boolean);
+      // Backward compat: if the array is empty but the legacy single
+      // field carries content, parse it back into stops.
+      if (stops.length === 0 && b.extraAddress?.trim()) {
+        const parts = b.extraAddress
+          .split(/[;|]|\d+\.\s*/g)
+          .map((s) => s.trim())
+          .filter(Boolean);
+        stops.push(...parts);
+      }
+      if (stops.length === 0) return [];
+      const header = `📍 Extra stops (${stops.length}):`;
+      const rows   = stops.map((s, i) => `   ${i + 1}. ${s}`);
+      return [header, ...rows];
+    })(),
+    b.dropoff       ? `📍 Final destination: ${b.dropoff}`       : null,
     b.dropoffDetails? `   ↳ ${b.dropoffDetails}`                 : null,
-    b.extraAddress  ? `📍 Extra stop: ${b.extraAddress}`         : null,
     "",
     line("Van",            b.vanSize),
     line("Help",           b.helpOption),

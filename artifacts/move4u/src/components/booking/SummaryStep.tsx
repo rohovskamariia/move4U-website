@@ -10,6 +10,8 @@ interface SummaryStepProps {
   pickupFloor: string;
   dropoff: string;
   dropoffFloor: string;
+  /** Optional intermediate stops, in route order, between pickup and drop-off. */
+  extraStops?: string[];
   vanSize: string;
   helpOption: string;
   hours: number;
@@ -43,12 +45,14 @@ export default function SummaryStep({
   pickupFloor,
   dropoff,
   dropoffFloor,
+  extraStops = [],
   vanSize,
   helpOption,
   hours,
   notes,
   onContinue,
 }: SummaryStepProps) {
+  const cleanStops = extraStops.map((s) => s.trim()).filter(Boolean);
   const pricing = HELP_PRICING[vanSize] || HELP_PRICING.medium;
   let hourlyRate = pricing.noHelp;
   if (helpOption === "driver-help") hourlyRate = pricing.driverHelp;
@@ -62,17 +66,43 @@ export default function SummaryStep({
 
   const rows = [
     { label: "Service", value: service },
-    { label: "Pickup", value: pickup || "—" },
-    pickup ? { label: "Pickup floor", value: getFloorLabelFromValue(pickupFloor) } : null,
-    pickupCharge > 0 ? { label: "Pickup stair charge", value: `+£${pickupCharge}` } : null,
-    { label: "Drop-off", value: dropoff || "—" },
-    dropoff ? { label: "Drop-off floor", value: getFloorLabelFromValue(dropoffFloor) } : null,
-    dropoffCharge > 0 ? { label: "Drop-off stair charge", value: `+£${dropoffCharge}` } : null,
     { label: "Van size", value: getVanLabel(vanSize) },
     { label: "Help option", value: getHelpLabel(helpOption) },
     { label: "Hourly rate", value: `£${hourlyRate}/hr` },
     { label: "Estimated time", value: formatTime(hours) },
   ].filter(Boolean) as { label: string; value: string }[];
+
+  // Route shown in order: Pickup → Additional stop 1, 2, ... → Final destination.
+  // We render this as its own card so the customer can clearly see the full
+  // route before submitting.
+  const routeRows: {
+    badge: string;
+    label: string;
+    value: string;
+    sub?: string;
+    charge?: number;
+  }[] = [];
+  routeRows.push({
+    badge: "P",
+    label: "Pickup address",
+    value: pickup || "—",
+    sub: pickup ? getFloorLabelFromValue(pickupFloor) : undefined,
+    charge: pickupCharge > 0 ? pickupCharge : undefined,
+  });
+  cleanStops.forEach((stop, i) => {
+    routeRows.push({
+      badge: String(i + 1),
+      label: `Additional stop ${i + 1}`,
+      value: stop,
+    });
+  });
+  routeRows.push({
+    badge: "D",
+    label: cleanStops.length > 0 ? "Final destination" : "Drop-off address",
+    value: dropoff || "—",
+    sub: dropoff ? getFloorLabelFromValue(dropoffFloor) : undefined,
+    charge: dropoffCharge > 0 ? dropoffCharge : undefined,
+  });
 
   return (
     <div>
@@ -104,6 +134,69 @@ export default function SummaryStep({
             {totalExtras > 0 ? ` + £${totalExtras} access` : ""}
           </span>
         </div>
+      </div>
+
+      {/* Route card — full ordered route with pickup, any extra stops, drop-off. */}
+      <div
+        className="bg-white border border-gray-100 rounded-2xl overflow-hidden mb-4"
+        data-testid="summary-route"
+      >
+        <div className="px-4 pt-3 pb-1.5 flex items-center justify-between">
+          <p className="text-[11px] font-semibold tracking-[0.18em] text-gray-500 uppercase">
+            Route
+          </p>
+          {cleanStops.length > 0 && (
+            <span className="text-[10.5px] font-medium text-purple-700 bg-purple-50 border border-purple-100 rounded-full px-2 py-0.5">
+              {cleanStops.length} extra stop{cleanStops.length === 1 ? "" : "s"}
+            </span>
+          )}
+        </div>
+        <ol className="px-4 pb-3 space-y-2.5">
+          {routeRows.map((r, i) => {
+            const isFirst = i === 0;
+            const isLast = i === routeRows.length - 1;
+            const isStop = !isFirst && !isLast;
+            return (
+              <li key={i} className="relative flex gap-3">
+                {/* connector line */}
+                {!isLast && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-[11px] top-6 bottom-[-12px] w-px bg-gray-200"
+                  />
+                )}
+                <span
+                  className={`relative z-10 mt-0.5 inline-flex items-center justify-center w-[22px] h-[22px] rounded-full text-[10px] font-bold shrink-0 ${
+                    isStop
+                      ? "bg-purple-100 text-purple-700"
+                      : "bg-purple-700 text-white"
+                  }`}
+                >
+                  {r.badge}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
+                    {r.label}
+                  </p>
+                  <p className="text-[13.5px] font-medium text-gray-900 leading-snug break-words">
+                    {r.value}
+                  </p>
+                  {(r.sub || r.charge) && (
+                    <p className="text-[12px] text-gray-500 mt-0.5">
+                      {r.sub}
+                      {r.sub && r.charge ? " · " : ""}
+                      {r.charge ? (
+                        <span className="text-purple-700 font-semibold">
+                          +£{r.charge}
+                        </span>
+                      ) : null}
+                    </p>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
       </div>
 
       {/* Compact line-item list — tighter rows, single subtle background. */}

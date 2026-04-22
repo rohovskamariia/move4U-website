@@ -1,0 +1,93 @@
+Improve the “Extra stops” logic so it is clear to the customer and fully included in the booking summary, Telegram notification, and spreadsheet/admin export.
+
+Current issue:
+Users can add extra stops, but it is not clear what these stops mean in the route, when they happen, or how they affect the booking. They also do not appear properly in the final summary and should be included everywhere in the booking data.
+
+Please update it like this:
+
+1. Clear explanation for users
+Rename or explain “Extra stops” more clearly.
+
+Use wording such as:
+“Additional stops on the route”
+or
+“Extra pickup / drop-off stops”
+
+Add helper text like:
+“If you need to collect or deliver items at more than one extra address between pickup and final destination, add those stops here.”
+
+This should make it obvious that these are intermediate stops added during the route.
+
+2. Route logic
+The booking flow should be logically understood as:
+
+- Main pickup address
+- Extra stop(s) in between
+- Final destination / drop-off address
+
+If the customer adds extra stops, they should be treated as intermediate stops in the route, not random separate addresses.
+
+3. Better labels
+Do not just show:
+“Stop 1”, “Stop 2”
+
+Instead use clearer labels such as:
+- Extra stop 1
+- Extra stop 2
+
+or
+- Additional stop 1
+- Additional stop 2
+
+This will make it easier for customers to understand.
+
+4. Final summary
+All extra stops must appear clearly in the final summary before booking submission.
+
+Show them in route order, for example:
+- Pickup address
+- Extra stop 1
+- Extra stop 2
+- Final destination
+
+This is very important so the customer can review the full route before submitting.
+
+5. Telegram notification
+Include all extra stops in the Telegram booking message.
+
+They should appear clearly in order, for example:
+Pickup:
+[main pickup address]
+
+Extra stops:
+1. [extra stop 1]
+2. [extra stop 2]
+
+Final destination:
+[drop-off address]
+
+6. Spreadsheet / admin export
+Include all extra stops in the spreadsheet / admin table as well.
+
+Make sure they are saved in a clear structure so the team can understand the route.
+
+If possible:
+- one column for pickup
+- one column for final destination
+- separate column(s) for extra stops
+or
+- one combined route field that includes all addresses in order
+
+The key requirement is that extra stops must not be lost.
+
+7. Pricing / booking logic
+If extra stops affect pricing or manual review, make sure they are included in the booking data so the team can calculate correctly.
+
+8. Goal
+Make extra stops:
+- easy to understand
+- logically treated as intermediate route stops
+- visible in summary
+- included in Telegram
+- included in spreadsheet/admin export
+- clear for both customer and team

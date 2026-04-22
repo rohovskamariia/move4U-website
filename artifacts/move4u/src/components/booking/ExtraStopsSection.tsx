@@ -16,7 +16,8 @@ export default function ExtraStopsSection({ stops, onChange }: ExtraStopsSection
     <div className="border-t border-gray-100 pt-4">
       <div className="flex items-baseline justify-between gap-3 mb-1">
         <p className="text-sm font-semibold text-gray-700">
-          Extra stops <span className="text-gray-400 font-normal">(optional)</span>
+          Additional stops on the route{" "}
+          <span className="text-gray-400 font-normal">(optional)</span>
         </p>
         {stops.length > 0 && (
           <span className="text-[11px] text-gray-400">
@@ -25,7 +26,9 @@ export default function ExtraStopsSection({ stops, onChange }: ExtraStopsSection
         )}
       </div>
       <p className="text-xs text-gray-500 mb-3 leading-relaxed">
-        Need to pick something up, or drop something off, on the way? Add as many stops as you need.
+        If you need to collect or deliver items at more than one extra address
+        between the pickup and the final destination, add those stops here.
+        We'll visit them in order on the way.
       </p>
 
       {stops.length > 0 && (
@@ -37,13 +40,13 @@ export default function ExtraStopsSection({ stops, onChange }: ExtraStopsSection
                   {i + 1}
                 </span>
                 <span className="text-[11px] font-medium text-gray-600">
-                  Stop {i + 1}
+                  Additional stop {i + 1}
                 </span>
                 <button
                   type="button"
                   onClick={() => removeStop(i)}
                   className="ml-auto inline-flex items-center gap-1 text-[11px] text-gray-400 hover:text-red-600 transition-colors"
-                  aria-label={`Remove stop ${i + 1}`}
+                  aria-label={`Remove additional stop ${i + 1}`}
                   data-testid={`remove-stop-${i}`}
                 >
                   <X className="w-3.5 h-3.5" />
@@ -68,7 +71,7 @@ export default function ExtraStopsSection({ stops, onChange }: ExtraStopsSection
         data-testid="add-extra-stop"
       >
         <Plus className="w-4 h-4" />
-        Add another stop
+        {stops.length === 0 ? "Add an additional stop" : "Add another stop"}
         {stops.length === 0 && <MapPin className="w-3.5 h-3.5 opacity-50" />}
       </button>
     </div>

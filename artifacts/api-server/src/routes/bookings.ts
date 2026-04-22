@@ -7,37 +7,59 @@ const bookingsRouter = Router();
 
 bookingsRouter.post("/bookings", async (req, res) => {
   try {
-    const {
-      service = "",
-      name = "",
-      phone = "",
-      email = "",
-      contactMethod: rawContactMethod = "",
-      pickup = "",
-      pickupDetails = "",
-      dropoff = "",
-      dropoffDetails = "",
-      extraAddress = "",
-      vanSize = "",
-      helpOption = "",
-      peopleCount = "",
-      estimatedPrice = "",
-      estimatedTime = "",
-      date = "",
-      timeWindow = "",
-      wasteAddons = "",
-      uploadedFiles = "",
-      notes: rawNotes = "",
-    } = req.body as Record<string, string>;
+    const body = req.body as Record<string, unknown>;
+    const str = (k: string): string =>
+      typeof body[k] === "string" ? (body[k] as string) : "";
+    const arr = (k: string): string[] =>
+      Array.isArray(body[k])
+        ? (body[k] as unknown[]).map((v) => String(v ?? "").trim()).filter(Boolean)
+        : [];
+
+    const service          = str("service");
+    const name             = str("name");
+    const phone            = str("phone");
+    const email            = str("email");
+    const rawContactMethod = str("contactMethod");
+    const pickup           = str("pickup");
+    const pickupDetails    = str("pickupDetails");
+    const dropoff          = str("dropoff");
+    const dropoffDetails   = str("dropoffDetails");
+    const rawExtraAddress  = str("extraAddress");
+    const extraStops       = arr("extraStops");
+    const vanSize          = str("vanSize");
+    const helpOption       = str("helpOption");
+    const peopleCount      = str("peopleCount");
+    const estimatedPrice   = str("estimatedPrice");
+    const estimatedTime    = str("estimatedTime");
+    const date             = str("date");
+    const timeWindow       = str("timeWindow");
+    const wasteAddons      = str("wasteAddons");
+    const uploadedFiles    = str("uploadedFiles");
+    const rawNotes         = str("notes");
+
+    // Numbered, human-readable summary of intermediate route stops.
+    // Used both in the Sheets notes column AND as the canonical extraAddress
+    // string so any consumer that only reads one field still sees them.
+    const extraStopsLine = extraStops.length > 0
+      ? extraStops.map((s, i) => `${i + 1}. ${s}`).join(" | ")
+      : rawExtraAddress;
 
     // Surface the email inside the existing contactMethod label and notes
     // so it shows up in Sheets and Telegram without a schema change.
     const contactMethod = email
       ? `${rawContactMethod || "Any"} — ${email}`
       : rawContactMethod;
-    const notes = email
-      ? [`Email: ${email}`, rawNotes].filter(Boolean).join(" | ")
-      : rawNotes;
+
+    // Compose the Sheets `notes` column so it carries everything the team
+    // needs without altering the spreadsheet schema:
+    //   [Email:] [Extra stops: 1. ... | 2. ...] [free-form notes]
+    const notesParts: string[] = [];
+    if (email) notesParts.push(`Email: ${email}`);
+    if (extraStops.length > 0) {
+      notesParts.push(`Extra stops (${extraStops.length}): ${extraStopsLine}`);
+    }
+    if (rawNotes) notesParts.push(rawNotes);
+    const notes = notesParts.join(" | ");
 
     if (!name || !phone) {
       res.status(400).json({ error: "name and phone are required" });
@@ -69,7 +91,8 @@ bookingsRouter.post("/bookings", async (req, res) => {
       service, name, phone, contactMethod,
       pickup, pickupDetails,
       dropoff, dropoffDetails,
-      extraAddress, vanSize, helpOption,
+      extraAddress: extraStopsLine, extraStops,
+      vanSize, helpOption,
       peopleCount, estimatedPrice, estimatedTime,
       preferredDate: date, timeWindow,
       wasteAddons, uploadedFiles, notes,

@@ -147,6 +147,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
             pickupFloor={pickupFloor}
             dropoff={dropoffAddress}
             dropoffFloor={dropoffFloor}
+            extraStops={extraStops}
             vanSize={vanSize}
             helpOption={helpOption}
             hours={hours}
@@ -187,6 +188,11 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
               // Upload photos first, then submit the booking with their serving URLs
               const photoUrls = await uploadPhotos(photos);
               const cleanStops = extraStops.map((s) => s.trim()).filter(Boolean);
+              // Numbered, human-readable route fragment for legacy
+              // single-field consumers (e.g. logs).
+              const extraAddressFormatted = cleanStops
+                .map((s, i) => `${i + 1}. ${s}`)
+                .join(" | ");
               return await submitBooking({
                 service: serviceLabel,
                 name,
@@ -197,7 +203,8 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
                 pickupDetails: formatFloorDetail(pickupFloor, pickupCharge),
                 dropoff: dropoffAddress,
                 dropoffDetails: formatFloorDetail(dropoffFloor, dropoffCharge),
-                extraAddress: cleanStops.join("; "),
+                extraAddress: extraAddressFormatted,
+                extraStops: cleanStops,
                 vanSize: vanLabel,
                 helpOption: helpLabels[helpOption] ?? helpOption,
                 peopleCount: peopleCounts[helpOption] ?? "",

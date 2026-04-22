@@ -9,6 +9,7 @@ export interface BookingPayload {
   dropoff: string;
   dropoffDetails: string;
   extraAddress: string;
+  extraStops?: string[];
   vanSize: string;
   helpOption: string;
   peopleCount: string;
