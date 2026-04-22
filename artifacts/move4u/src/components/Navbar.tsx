@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Menu } from "lucide-react";
 import MobileDrawer from "./MobileDrawer";
+import AnnouncementBar from "./AnnouncementBar";
 import { SCROLL_TARGET_KEY } from "@/lib/sectionNav";
 
 export default function Navbar() {
@@ -55,25 +56,21 @@ export default function Navbar() {
           sticky elements can rubber-band half-offscreen during dynamic
           browser-chrome resizes. A spacer below pushes content down by
           the same height + iOS safe-area-inset-top. */}
+      <div
+        className="fixed top-0 left-0 right-0 z-50"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        <AnnouncementBar />
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 backdrop-blur-xl border-b ${
+        className={`transition-[background-color,box-shadow,border-color] duration-300 backdrop-blur-xl border-b ${
           scrolled
             ? "border-gray-200/80 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.18)]"
             : "border-gray-100/80 shadow-[0_2px_10px_-8px_rgba(15,23,42,0.10)]"
         }`}
         style={{
-          // Near-white with the faintest whisper of lavender — keeps the
-          // header light and clean instead of a heavy purple wash. Stays
-          // mostly opaque so it renders consistently inside Telegram /
-          // Instagram in-app browsers where backdrop-filter is flaky.
           backgroundColor: scrolled
             ? "rgba(255,255,255,0.94)"
             : "rgba(252,251,254,0.92)",
-          // Respect iPhone notch / status bar in standalone (PWA) mode so
-          // the logo never sits under the system UI.
-          paddingTop: "env(safe-area-inset-top)",
-          // Promote the header to its own GPU layer so iOS Safari and
-          // in-app browsers don't repaint/jitter on scroll.
           transform: "translateZ(0)",
           WebkitBackdropFilter: "blur(20px)",
           willChange: "background-color",
@@ -82,34 +79,29 @@ export default function Navbar() {
         <nav className="max-w-6xl mx-auto px-4 sm:px-6">
           {/* Slim refined silhouette — slightly taller on desktop for breathing room */}
           <div className="flex items-center justify-between h-[56px] md:h-[68px]">
-            {/* Brand mark — circular van+M icon paired with stacked wordmark */}
+            {/* Brand mark — circular van+M icon + clean wordmark, no slogan */}
             <Link
               href="/"
-              className="flex items-center gap-2.5 group"
+              className="flex items-center gap-3 group"
               aria-label="Move4U — home"
             >
               <img
                 src="/m4u-icon.png"
                 alt=""
                 aria-hidden="true"
-                className="w-9 h-9 md:w-11 md:h-11 rounded-full object-cover shadow-[0_4px_14px_-6px_rgba(74,49,156,0.45)] transition-transform duration-200 group-hover:-translate-y-0.5 select-none"
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-[0_6px_18px_-6px_rgba(74,49,156,0.5)] transition-transform duration-200 group-hover:-translate-y-0.5 select-none"
                 draggable={false}
               />
-              <span className="flex flex-col leading-none">
-                <span className="font-bold text-[18px] md:text-[22px] tracking-tight">
-                  <span style={{ color: "#0f172a" }}>Move</span>
-                  <span
-                    className="bg-clip-text text-transparent"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(135deg, #6d4ed3 0%, #5b3fb8 45%, #3a267f 100%)",
-                    }}
-                  >
-                    4U
-                  </span>
-                </span>
-                <span className="hidden sm:block mt-1 text-[10px] md:text-[11px] font-medium tracking-wide text-gray-500">
-                  We move things. You move on.
+              <span className="font-bold text-[20px] md:text-[24px] tracking-tight leading-none">
+                <span style={{ color: "#0f172a" }}>Move</span>
+                <span
+                  className="bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(135deg, #6d4ed3 0%, #5b3fb8 45%, #3a267f 100%)",
+                  }}
+                >
+                  4U
                 </span>
               </span>
             </Link>
@@ -188,13 +180,12 @@ export default function Navbar() {
           </div>
         </nav>
       </header>
+      </div>
 
-      {/* Spacer that occupies the same vertical space the fixed header would
-          have taken in normal flow. Includes the iOS safe-area inset so
-          content never sits under the notch / status bar. */}
+      {/* Spacer matches: announcement bar (28/32) + header (56/68) + safe-area inset. */}
       <div
         aria-hidden="true"
-        className="h-[56px] md:h-[68px]"
+        className="h-[84px] md:h-[100px]"
         style={{ marginTop: "env(safe-area-inset-top)" }}
       />
 

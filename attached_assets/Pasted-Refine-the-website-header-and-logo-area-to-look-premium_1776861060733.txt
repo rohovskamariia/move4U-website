@@ -1,0 +1,113 @@
+Refine the website header and logo area to look premium, modern, and brand-consistent.
+
+Goal:
+Make the header feel like a top professional service brand, not a template.
+
+1. Header layout
+
+Create a clean premium header.
+
+Desktop:
+- left side: logo icon + brand text
+- center: navigation
+- right side: CTA buttons
+
+Mobile:
+- left side: logo icon + brand text
+- right side: menu icon
+- keep it compact and clean
+
+2. Logo treatment
+
+Current issue:
+The logo area does not feel premium enough.
+
+Please update it like this:
+
+- use the circular M4U icon on the left
+- place the brand text “Move4U” to the right of the icon
+- do NOT place the slogan inside the main header logo block
+- align icon and text vertically
+- give the logo area a stronger brand presence
+
+Brand text styling:
+- “Move” in dark navy / near-black
+- “4U” in brand purple matching the main site buttons
+- make the text weight strong and clean
+- spacing between icon and text should feel elegant
+
+Logo icon:
+- slightly increase size so it feels more intentional and premium
+- keep it sharp, not blurry
+- do not let it feel tiny or lost in the header
+
+3. Remove slogan from header block
+
+- remove “We move things. You move on.” from directly under the logo in the header
+- the header should stay minimal and elegant
+
+4. Add premium top announcement bar
+
+Add a slim announcement bar ABOVE the header.
+
+Style:
+- darker premium purple background
+- white text
+- compact height
+- smooth rotation/fade between messages
+
+Rotate these messages:
+- We move things. You move on.
+- Same-day service available
+- From £35/hour in London
+- Fast. Reliable. Professional.
+
+Requirements:
+- smooth transition
+- elegant, not distracting
+- keep it readable on mobile too
+
+5. Header styling
+
+Make header feel more premium:
+- white or very soft off-white background
+- subtle bottom border or soft shadow
+- more balanced spacing
+- better vertical alignment
+- modern clean typography
+
+Optional premium touches:
+- sticky header on scroll
+- slight backdrop blur or polished shadow
+- subtle hover effect on nav links
+
+6. Desktop polish
+
+Desktop header should feel similar to a premium SaaS / modern service brand:
+- clean
+- spacious
+- well aligned
+- strong but minimal branding
+
+7. Mobile polish
+
+Mobile header should:
+- remain compact
+- keep icon + Move4U readable
+- not feel crowded
+- keep enough spacing around the menu icon
+
+8. Final result
+
+The final header should look like:
+- premium service brand
+- stronger logo presence
+- cleaner composition
+- no clutter
+- more trust and polish
+
+Important:
+- keep the current overall structure if possible
+- improve the branding, spacing, and hierarchy
+- do not make it flashy
+- make it clean, premium, and modern
