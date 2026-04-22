@@ -82,18 +82,36 @@ export default function Navbar() {
         <nav className="max-w-6xl mx-auto px-4 sm:px-6">
           {/* Slim refined silhouette — slightly taller on desktop for breathing room */}
           <div className="flex items-center justify-between h-[56px] md:h-[68px]">
-            {/* Brand logo — full Move4U logo (van + wordmark) */}
+            {/* Brand mark — circular van+M icon paired with stacked wordmark */}
             <Link
               href="/"
-              className="flex items-center group transition-transform duration-200 group-hover:-translate-y-0.5"
+              className="flex items-center gap-2.5 group"
               aria-label="Move4U — home"
             >
               <img
-                src="/move4u-logo.png"
-                alt="Move4U"
-                className="h-11 md:h-14 w-auto object-contain select-none"
+                src="/m4u-icon.png"
+                alt=""
+                aria-hidden="true"
+                className="w-9 h-9 md:w-11 md:h-11 rounded-full object-cover shadow-[0_4px_14px_-6px_rgba(74,49,156,0.45)] transition-transform duration-200 group-hover:-translate-y-0.5 select-none"
                 draggable={false}
               />
+              <span className="flex flex-col leading-none">
+                <span className="font-bold text-[18px] md:text-[22px] tracking-tight">
+                  <span style={{ color: "#0f172a" }}>Move</span>
+                  <span
+                    className="bg-clip-text text-transparent"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(135deg, #6d4ed3 0%, #5b3fb8 45%, #3a267f 100%)",
+                    }}
+                  >
+                    4U
+                  </span>
+                </span>
+                <span className="hidden sm:block mt-1 text-[10px] md:text-[11px] font-medium tracking-wide text-gray-500">
+                  We move things. You move on.
+                </span>
+              </span>
             </Link>
 
             {/* Desktop nav */}
