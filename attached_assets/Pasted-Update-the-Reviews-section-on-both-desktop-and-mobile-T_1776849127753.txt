@@ -1,0 +1,86 @@
+Update the Reviews section on both desktop and mobile.
+
+The current version is not quite right yet.
+I want the section to feel more premium, layered, and modern.
+
+1. Desktop version
+
+Use a split layout:
+
+- LEFT side:
+  - keep one separate image
+  - the image should stay clean and independent
+
+- RIGHT side:
+  - create a rotating carousel with 3 visible review cards
+  - one main active card in the center/front
+  - one smaller card on the left behind it
+  - one smaller card on the right behind it
+
+Desktop card behavior:
+- center card should be the largest and most visible
+- side cards should be smaller, slightly faded, and slightly rotated
+- side cards should sit behind the center card
+- cards should overlap slightly
+- use depth with z-index and scale
+- the whole carousel should feel like a real rotating card carousel, not a flat slider
+
+Desktop animation:
+- cards should rotate automatically
+- movement should be smooth and slow
+- center card moves slightly back and sideways
+- one of the side cards comes forward into the center
+- animation should follow a curved / carousel feeling, not basic horizontal sliding
+
+Desktop layout adjustments:
+- move the carousel slightly higher
+- make the active card slightly larger than now
+- reduce empty space around the carousel
+- visually balance it better with the image on the left
+
+2. Mobile version
+
+The mobile version should be different from desktop.
+
+I do NOT want:
+- a large image first
+- then a separate large review card below it
+
+Instead:
+
+- use the image as the main base
+- place a much smaller review card on top of the image
+- the card should float over the lower part of the image
+- keep it compact and elegant
+
+Mobile card size:
+- make the review card much smaller
+- reduce padding
+- reduce font size slightly
+- keep it readable, but compact
+- make it feel like a floating mini-card, not a full block
+
+Mobile carousel behavior:
+- show one small active card over the image
+- optionally show a slight hint of another card behind it
+- allow swipe left/right
+- auto movement is optional, but if used, keep it slow and smooth
+
+Mobile design goal:
+- image remains the main visual
+- review card is a small overlay
+- whole section should take less vertical space
+- keep it modern, clean, and premium
+
+3. Final goal
+
+Desktop:
+- photo on the left
+- premium rotating layered carousel on the right
+
+Mobile:
+- photo as the main element
+- smaller review card over the photo
+- compact, elegant testimonial composition
+
+This should feel like a premium testimonial section, not a basic slider or a big stacked block.
