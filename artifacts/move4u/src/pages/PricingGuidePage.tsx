@@ -37,11 +37,6 @@ const HELP_OPTIONS = [
   { label: "Driver + helper", price: "+£30/hour", note: "Two professional movers handle everything for you." },
 ];
 
-const STAIRS = [
-  { label: "Ground floor / lift access", price: "Free" },
-  { label: "No lift", price: "£10 per floor" },
-];
-
 export default function PricingGuidePage() {
   const whatsappHref = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(CONTACT.whatsappDefaultMessage)}`;
 
@@ -123,21 +118,7 @@ export default function PricingGuidePage() {
           </p>
         </Section>
 
-        {/* SECTION 3 — Stairs & access */}
-        <Section title="Stairs & access">
-          <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden divide-y divide-gray-50 shadow-[0_4px_18px_-10px_rgba(76,29,149,0.15)]">
-            {STAIRS.map((s) => (
-              <div key={s.label} className="flex items-center justify-between gap-3 px-5 py-3.5">
-                <p className="font-medium text-gray-800 text-[14px]">{s.label}</p>
-                <span className="text-purple-700 font-semibold text-sm tabular-nums">
-                  {s.price}
-                </span>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        {/* SECTION 3.5 — Additional charges (may apply) */}
+        {/* SECTION 3 — Additional charges */}
         <Section
           title="Additional charges"
           subtitle="Optional or route-dependent fees added to your booking when relevant."

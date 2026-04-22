@@ -1,0 +1,124 @@
+Please fix and improve the Congestion Charge (CCZ) detection and clean up the Pricing page.
+
+🔹 1. Congestion Charge detection (very important)
+
+The CCZ detection must correctly identify Central London addresses.
+
+Use these postcode prefixes as valid CCZ areas:
+
+- W1
+- WC1, WC2
+- EC1, EC2, EC3, EC4
+- SW1
+- SE1
+- N1 (partial, but include it as “likely”)
+
+These are standard Central London areas inside or near the Congestion Charge Zone.
+
+---
+
+🔹 2. Improve postcode detection logic
+
+Make the detection more flexible:
+
+- Extract postcode from full address string (Google autocomplete format)
+  Example:
+  "Oxford Circus, London W1B 3AG, UK"
+
+- Extract outward code:
+  "W1B 3AG" → "W1B"
+
+- Reduce to area prefix:
+  "W1B" → "W1"
+  "WC2N" → "WC2"
+  "EC1A" → "EC1"
+
+- Then check if it matches any CCZ prefix above
+
+---
+
+🔹 3. Add keyword fallback (important)
+
+If postcode is not detected properly, also check address text for keywords:
+
+- Soho
+- Mayfair
+- Westminster
+- Covent Garden
+- City of London
+- Bloomsbury
+- Waterloo
+
+If ANY of these appear → treat as CCZ
+
+---
+
+🔹 4. Use OR logic
+
+If:
+- postcode matches
+OR
+- keyword matches
+
+→ return TRUE (CCZ applies)
+
+Do NOT require both.
+
+---
+
+🔹 5. Apply detection everywhere
+
+Run this logic for:
+- pickup address
+- drop-off address
+- all additional stops
+
+---
+
+🔹 6. Show correct message
+
+When CCZ is detected:
+
+👉 Show:
+"Congestion Charge may apply (£18)"
+
+- show it in estimate
+- show it in summary
+- include it in total (but clearly as conditional)
+
+---
+
+🔹 7. Add debug logs (temporary)
+
+Add console logs to verify:
+
+- full address
+- extracted postcode
+- extracted prefix
+- detection result (true/false)
+
+---
+
+🔹 8. Fix Pricing page (important UI cleanup)
+
+Remove duplicate stairs section at the top.
+
+DELETE this entire block:
+
+- “Stairs & access”
+- “Ground floor / lift access”
+- “No lift”
+
+Keep stairs pricing ONLY inside:
+
+👉 “Additional charges” section:
+"Stairs (no lift): £10 per floor"
+
+---
+
+🔹 Goal
+
+- CCZ must reliably trigger for all Central London addresses
+- Pricing page must be clean (no duplicated sections)
+- System must be accurate and user-friendly
+- No confusion for customers
