@@ -61,10 +61,13 @@ export const SLIDES: Slide[] = [
     title: "Professional Team You Can Trust",
     text: "Careful handling, fast service and flexible booking times. We treat your belongings like our own.",
     image: slide3Image, // movers carrying furniture up stairs (high-res)
-    // Lifted upward so the worker's head is never cropped on desktop
-    imagePosition: "60% 18%",
+    // Slight upward shift keeps the worker's head fully in frame on
+    // both mobile and desktop while leaving the right side of the
+    // photo (the action) visible behind the headline.
+    imagePosition: "55% 22%",
     buttons: [
       { text: "Get a Quote", action: "quote", variant: "primary" },
+      { text: "Book Now", action: "book", variant: "secondary" },
     ],
   },
   {
@@ -72,8 +75,10 @@ export const SLIDES: Slide[] = [
     title: "Ready to Book Your Move?",
     text: "Get a quick quote online or call us for instant help.",
     image: slide2Image, // couple packing boxes on couch (high-res)
-    // Lifted upward so both heads are fully visible — no crop at the top.
-    imagePosition: "65% 12%",
+    // Pulled left + lifted just enough so both heads stay fully in
+    // frame and the couple sits centred behind the overlay rather
+    // than disappearing off the right edge on mobile.
+    imagePosition: "45% 18%",
     buttons: [
       { text: "Get a Quote", action: "quote", variant: "primary" },
       { text: "Call Us", action: "call", variant: "secondary" },

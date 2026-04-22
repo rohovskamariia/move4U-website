@@ -106,12 +106,23 @@ export default function HeroSlider() {
           {/* Slide content — re-keyed so each change replays the
               staggered rise-in for headline / subtext / buttons. */}
           <div key={slide.id} className="hero-stagger">
-            {slide.subtitle && (
+            {/* Eyebrow slot — always rendered so the headline lands at
+                the same vertical position on every slide. When a slide
+                has no subtitle we render an invisible placeholder of
+                the same height to keep the layout perfectly stable. */}
+            {slide.subtitle ? (
               <p
                 className="text-white/90 font-semibold text-[11px] sm:text-sm uppercase tracking-[0.18em] mb-2 sm:mb-4"
                 style={{ textShadow: "0 1px 6px rgba(0,0,0,0.45)" }}
               >
                 {slide.subtitle}
+              </p>
+            ) : (
+              <p
+                aria-hidden="true"
+                className="invisible select-none font-semibold text-[11px] sm:text-sm uppercase tracking-[0.18em] mb-2 sm:mb-4"
+              >
+                &nbsp;
               </p>
             )}
             <h1
