@@ -1,0 +1,107 @@
+Please improve the mobile design across ALL booking forms (House Moving, Waste Removal, Commercial, etc.).
+
+Current problem:
+- The UI looks oversized and stretched on mobile
+- Cards, buttons, and inputs are too large
+- Too much vertical spacing
+- The screen feels heavy and hard to scan
+- Poor visual hierarchy
+
+Important:
+Do NOT remove content or logic.
+Focus only on improving the mobile layout and spacing.
+
+⸻
+
+🔹 1. Reduce overall “box size” feeling
+
+- Make cards more compact
+- Reduce padding inside cards
+- Reduce border radius slightly (less “puffy” look)
+- Avoid oversized containers
+
+Goal:
+Cleaner, tighter UI — less “bulky”
+
+⸻
+
+🔹 2. Fix buttons (very important)
+
+Current issue:
+“Yes / No” buttons and similar options are too big
+
+Improve:
+- Reduce button height
+- Reduce padding
+- Make them look more like compact selection buttons
+- Keep them easy to tap, but not oversized
+
+⸻
+
+🔹 3. Reduce vertical spacing
+
+- Decrease gaps between sections
+- Decrease spacing between elements inside cards
+- Avoid long scrolling screens
+
+Goal:
+More content visible without scrolling too much
+
+⸻
+
+🔹 4. Improve typography hierarchy
+
+- Headings: slightly smaller
+- Descriptions: smaller and lighter color
+- Secondary text should NOT compete with main actions
+
+Make it visually clear:
+- what is important
+- what is optional
+
+⸻
+
+🔹 5. Compact info boxes (purple blocks)
+
+- Reduce padding
+- Reduce font size slightly
+- Make them less dominant visually
+
+They should inform — not overpower the screen
+
+⸻
+
+🔹 6. Make all form elements consistent
+
+Apply same style improvements to:
+- House Moving
+- Waste Removal
+- Commercial Moving
+- Any booking flow
+
+Everything should feel like one system:
+clean, tight, modern
+
+⸻
+
+🔹 7. Mobile-first optimization
+
+- Optimize specifically for phone screens
+- Desktop version can stay as is
+- Focus on:
+  - readability
+  - speed
+  - minimal scrolling
+
+⸻
+
+🔹 Goal:
+
+Create a clean, modern, compact mobile experience:
+- less bulky
+- easier to scan
+- faster to complete
+- more professional
+
+Think:
+Uber / Bolt / modern booking apps — not stretched forms.

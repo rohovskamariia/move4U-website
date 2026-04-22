@@ -84,7 +84,7 @@ export default function BookingPage() {
         )}
 
         {/* Booking form card */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-7">
+        <div className="booking-mobile bg-white rounded-2xl border border-gray-100 shadow-sm p-3 sm:p-7">
           {renderFlow()}
         </div>
 
