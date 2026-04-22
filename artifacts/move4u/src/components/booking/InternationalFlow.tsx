@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { CheckCircle, Loader2, ChevronLeft, ChevronDown } from "lucide-react";
 import { submitBooking } from "@/lib/api";
 import { isValidPhone, isValidEmail } from "@/lib/validators";
-import BookingTermsNotice from "./BookingTermsNotice";
 
 interface InternationalFlowProps {
   onBack: () => void;
@@ -27,7 +26,6 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
   const [bookingRef, setBookingRef] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
 
@@ -44,7 +42,7 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
   const showEmailRequiredError = emailRequired && emailTouched && form.email.trim() === "";
 
   const canSubmit =
-    form.pickupLocation && form.deliveryLocation && form.name && phoneValid && form.contactMethod && emailValid && agreedToTerms;
+    form.pickupLocation && form.deliveryLocation && form.name && phoneValid && form.contactMethod && emailValid;
 
   // When the confirmation screen replaces the form, jump to the top so the
   // user immediately sees the success card instead of being left at the
@@ -200,11 +198,6 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
       {submitError && (
         <p className="text-red-600 text-sm bg-red-50 border border-red-100 rounded-xl px-4 py-3">{submitError}</p>
       )}
-
-      <BookingTermsNotice
-        agreed={agreedToTerms}
-        onAgreedChange={setAgreedToTerms}
-      />
 
       <button
         onClick={async () => {

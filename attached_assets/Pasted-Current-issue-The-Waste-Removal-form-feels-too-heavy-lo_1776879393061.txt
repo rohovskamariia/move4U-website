@@ -1,0 +1,160 @@
+Current issue:
+
+The Waste Removal form feels too heavy, long, and visually overwhelming on mobile.
+
+There are too many large sections stacked, too much spacing, and everything feels одинаково важным.
+
+⸻
+
+What needs to be improved:
+
+1. Make the form feel lighter
+
+– Reduce padding inside sections (cards)
+– Use softer borders (less visible)
+– Reduce shadow intensity
+
+Goal:
+Sections should feel light and clean, not bulky
+
+⸻
+
+2. Reduce vertical spacing
+
+– Too much space between elements
+– Too much space inside sections
+
+Fix:
+– Make layout more compact
+– Keep it readable but tighter
+
+⸻
+
+3. Improve the “Stairs & access” section
+
+Problem:
+This block is too big and dominant
+
+Fix:
+– Reduce spacing inside
+– Make description text smaller and lighter
+– Make “Yes / No” buttons slightly smaller (less tall)
+
+⸻
+
+4. Improve “Restricted access”
+
+Problem:
+Feels like a large heavy card
+
+Fix:
+– Reduce padding
+– Make text slightly smaller
+– Align checkbox more neatly
+– Reduce overall height of the block
+
+⸻
+
+5. Improve “Items only bookings” info box
+
+Problem:
+Too large and takes too much attention
+
+Fix:
+– Reduce padding
+– Reduce font size slightly
+– Keep highlight but make it less dominant
+
+⸻
+
+6. Improve “Select load size”
+
+Problem:
+Boxes are too big and spaced out
+
+Fix:
+– Make buttons/cards smaller
+– Reduce vertical spacing between them
+– Keep 2 columns but more compact
+
+⸻
+
+7. Improve item selector list (Mattress, Fridge, etc.)
+
+Problem:
+Each item row is слишком высокий
+
+Fix:
+– Reduce row height
+– Make + / – buttons slightly smaller
+– Keep them easy to tap but less bulky
+– Reduce spacing between rows
+
+⸻
+
+8. General goal
+
+The whole form should feel:
+
+– More compact
+– Easier to scroll
+– Less tiring
+– More like a smooth app flow
+
+⸻
+
+Important:
+
+– Do NOT remove any fields
+– Do NOT change pricing logic
+– Do NOT change structure
+
+Only improve mobile spacing, sizing, and visual weight.
+
+⸻
+
+Final goal:
+
+Make the Waste Removal form feel clean, light, and easy to complete on mobile.
+
+Please update ONLY the following forms:
+
+– Custom Request  
+– International Moving  
+
+---
+
+Problem:
+
+These forms are enquiry-only (not direct bookings), but they currently show:
+
+“A 30% deposit is required to secure your booking…”
+
+This is incorrect and confusing for users.
+
+---
+
+Fix:
+
+– Remove the entire deposit section completely  
+This includes:
+• the deposit text  
+• the payment explanation  
+• the checkbox (“I agree to the booking terms” if it is part of that block)
+
+---
+
+Important:
+
+– Do NOT remove contact fields  
+– Do NOT remove submit button  
+– Do NOT change layout or structure  
+– Do NOT affect House Moving or Waste Removal forms  
+
+Only remove deposit-related UI from these two forms.
+
+---
+
+Goal:
+
+These forms should feel like simple contact/enquiry forms, not booking/payment forms.
