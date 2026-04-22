@@ -1,0 +1,106 @@
+The Reviews section is still incorrect. It does NOT match the requested stacked carousel design.
+
+Current issues:
+- only one review card is visible
+- there are no background cards
+- no depth or layered effect
+- layout looks empty and unbalanced
+- animation feels like a basic slider
+
+Please fix it EXACTLY like this:
+
+---
+
+1. Card layout (CRITICAL)
+
+- show 3 review cards at the same time:
+  - 1 main active card (front)
+  - 1 card behind (slightly smaller)
+  - 1 more card further behind (optional but preferred)
+
+- cards must overlap slightly
+- cards must NOT be in a straight line
+- they must look stacked (layered)
+
+Example structure:
+
+   [back card]
+     [middle card]
+        [front active card]
+
+---
+
+2. Card size and positioning
+
+- reduce the size of the main card slightly (about 15–20%)
+- center the active card visually
+- place background cards slightly:
+  - shifted left/right
+  - slightly higher or lower
+- background cards must be visible behind the main one
+
+---
+
+3. Depth effect
+
+Use:
+
+- scale:
+  - front card = 100%
+  - back cards = 90–95%
+
+- opacity:
+  - front = 100%
+  - back = slightly faded
+
+- z-index:
+  - front card clearly above others
+
+---
+
+4. Animation (IMPORTANT)
+
+Do NOT slide cards left/right like a normal slider.
+
+Instead:
+
+- simulate card rotation:
+  - front card moves backward and slightly sideways
+  - next card comes forward
+  - back cards shift position
+
+- animation must feel like:
+  "cards rotating in a stack"
+
+- smooth easing
+- no sudden jumps
+
+---
+
+5. Auto movement
+
+- rotate automatically every 4–6 seconds
+- smooth transitions
+- pause on hover (desktop)
+
+---
+
+6. Layout balance
+
+- fix empty space on the right side
+- keep carousel centered in its area
+- align it properly with the image on the left
+
+---
+
+7. Goal
+
+Create a premium stacked testimonial carousel:
+
+- multiple visible cards
+- layered depth effect
+- smooth rotation
+- visually rich, not empty
+- not a basic slider
+
+It should feel like a modern SaaS or premium service website, not a simple template.
