@@ -79,7 +79,7 @@ export default function Navbar() {
         <nav className="max-w-6xl mx-auto px-4 sm:px-6">
           {/* Slim refined silhouette — slightly taller on desktop for breathing room */}
           <div className="flex items-center justify-between h-[56px] md:h-[68px]">
-            {/* Brand mark — circular van+M icon + clean wordmark, no slogan */}
+            {/* Brand mark — circular van+M icon + wordmark + slogan */}
             <Link
               href="/"
               className="flex items-center gap-3 group"
@@ -89,17 +89,25 @@ export default function Navbar() {
                 src="/m4u-icon.png"
                 alt=""
                 aria-hidden="true"
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-[0_6px_18px_-6px_rgba(74,49,156,0.5)] transition-transform duration-200 group-hover:-translate-y-0.5 select-none"
+                className="w-11 h-11 md:w-[54px] md:h-[54px] rounded-full object-cover shadow-[0_6px_18px_-6px_rgba(74,49,156,0.5)] transition-transform duration-200 group-hover:-translate-y-0.5 select-none"
                 draggable={false}
               />
-              <span
-                className="font-bold text-[20px] md:text-[24px] tracking-tight leading-none bg-clip-text text-transparent"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(135deg, #8a6dff 0%, #7B5CFF 30%, #6a4ae8 60%, #5A3BFF 100%)",
-                }}
-              >
-                Move4U
+              <span className="flex flex-col leading-none">
+                <span className="font-extrabold text-[22px] md:text-[27px] tracking-tight">
+                  <span style={{ color: "#0F172A" }}>Move</span>
+                  <span
+                    className="bg-clip-text text-transparent"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(135deg, #7B5CFF 0%, #6a4ae8 50%, #5A3BFF 100%)",
+                    }}
+                  >
+                    4U
+                  </span>
+                </span>
+                <span className="hidden sm:block mt-1.5 text-[10.5px] md:text-[11.5px] font-medium tracking-wide text-gray-400">
+                  We move things. You move on.
+                </span>
               </span>
             </Link>
 
