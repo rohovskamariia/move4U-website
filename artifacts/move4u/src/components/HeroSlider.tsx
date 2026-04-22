@@ -143,7 +143,7 @@ export default function HeroSlider() {
             >
               {slide.text}
             </p>
-            <div className="absolute bottom-20 left-4 right-4 sm:static sm:left-auto sm:right-auto sm:bottom-auto flex flex-wrap gap-2.5 sm:gap-3">
+            <div className="absolute bottom-[92px] left-4 right-4 sm:static sm:left-auto sm:right-auto sm:bottom-auto flex flex-wrap gap-2.5 sm:gap-3">
               {slide.buttons.map((btn, i) => {
                 const isPrimary = btn.variant === "primary";
                 return (
@@ -156,7 +156,7 @@ export default function HeroSlider() {
                         : /* Secondary CTA: solid white-on-mobile so it
                              never looks weak against the photograph;
                              reverts to translucent glass on desktop. */
-                          "inline-flex items-center justify-center bg-white text-purple-800 sm:bg-white/10 sm:backdrop-blur-sm sm:text-white font-semibold px-6 sm:px-7 py-2.5 sm:py-3 rounded-full border border-white sm:border-white/60 hover:bg-purple-50 sm:hover:bg-white/20 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 text-[13.5px] sm:text-base shadow-[0_8px_22px_-12px_rgba(0,0,0,0.5)] sm:shadow-none"
+                          "inline-flex items-center justify-center bg-white text-purple-800 font-semibold px-6 sm:px-7 py-2.5 sm:py-3 rounded-full border border-white hover:bg-purple-50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 text-[13.5px] sm:text-base shadow-[0_8px_22px_-12px_rgba(0,0,0,0.5)]"
                     }
                     data-testid={`slide-${slide.id}-cta-${i}`}
                   >
