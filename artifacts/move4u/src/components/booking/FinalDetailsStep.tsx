@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, ChevronDown } from "lucide-react";
 import BookingTermsNotice from "./BookingTermsNotice";
-import { isValidPhone, isValidEmail } from "@/lib/validators";
+import { isValidPhone, isValidEmail, toE164 } from "@/lib/validators";
 
 interface FinalDetailsStepProps {
   onSubmit: (data: {
@@ -128,7 +128,12 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
     setLoading(true);
     setError("");
     try {
-      const result = await onSubmit({ date, timeWindow, name, phone, email, contactMethod });
+      // Always submit the canonical E.164 form so wa.me / tel: / sms:
+      // links built downstream (admin panel, Telegram message, customer
+      // confirmations) work reliably regardless of how the customer typed
+      // their number ("07…", "+44…", "0044…", spaces / dashes / brackets).
+      const phoneE164 = toE164(phone);
+      const result = await onSubmit({ date, timeWindow, name, phone: phoneE164 || phone, email, contactMethod });
       // Hand control to the parent — it swaps to the locked success view.
       onSubmitted(result.bookingReference);
     } catch {
@@ -245,7 +250,7 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               onBlur={() => setPhoneTouched(true)}
-              placeholder="07123 456789 or +44…"
+              placeholder="+44 7123 456789"
               required
               className={`w-full border rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 ${
                 showPhoneError
@@ -254,9 +259,13 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
               }`}
               data-testid="final-phone"
             />
-            {showPhoneError && (
+            {showPhoneError ? (
               <p className="text-[11px] text-red-600 mt-1.5" data-testid="phone-error">
-                Please enter a valid UK or international phone number.
+                Please enter a valid full phone number including country code (e.g. +44…).
+              </p>
+            ) : (
+              <p className="text-[11px] text-gray-500 mt-1.5">
+                Please enter your full phone number including country code (e.g. +44…).
               </p>
             )}
           </div>

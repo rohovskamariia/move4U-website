@@ -5,6 +5,7 @@ import {
   LogOut, Phone, MapPin, ExternalLink, AlertCircle, Loader2,
   MessageCircle, MessageSquare, Mail, PhoneCall,
 } from "lucide-react";
+import { toE164, toWhatsAppDigits } from "@/lib/validators";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -96,15 +97,17 @@ const CHANNEL_LABELS: Record<ContactChannel, string> = {
   call: "Call",
 };
 
-// Convert a free-form UK phone number into the digits-only form that
-// wa.me requires: drop spaces/dashes/plus, then turn a leading 0 into
-// the UK country code 44 (so 07123… → 447123…).
+// Build the digits-only form wa.me requires. New bookings are stored in
+// E.164 already, but legacy rows in the sheet may still be in raw form
+// ("07123 456789", "0044…", etc) — toWhatsAppDigits handles both.
 function normalizeUKPhone(phone: string): string {
-  if (!phone) return "";
-  let digits = phone.replace(/[^\d]/g, "");
-  if (digits.startsWith("00")) digits = digits.slice(2);
-  if (digits.startsWith("0")) digits = "44" + digits.slice(1);
-  return digits;
+  return toWhatsAppDigits(phone);
+}
+
+// Best-effort E.164 for tel: / sms: links. Falls back to whatever the
+// admin saved if normalisation fails, so the link still tries to dial.
+function dialablePhone(phone: string): string {
+  return toE164(phone) || phone;
 }
 
 // Pre-filled greeting used when the booking is still NEW. The driver
@@ -130,14 +133,14 @@ function buildContactHref(channel: ContactChannel, b: BookingRecord, message: st
       // `sms:NUMBER?body=...` works on iOS, Android, and most desktop
       // handlers. Some older Android builds prefer `&body=` — modern
       // browsers normalise both.
-      return `sms:${b.phone}?body=${encoded}`;
+      return `sms:${dialablePhone(b.phone)}?body=${encoded}`;
     case "email": {
       const addr = email || ""; // mailto: still opens the client even with no address
       const subject = `Move4U — Booking ${b.bookingReference}`;
       return `mailto:${addr}?subject=${encodeURIComponent(subject)}&body=${encoded}`;
     }
     case "call":
-      return `tel:${b.phone}`;
+      return `tel:${dialablePhone(b.phone)}`;
   }
 }
 
@@ -694,7 +697,7 @@ export default function AdminBookingsPage() {
                       <span>{booking.service}</span>
                       {booking.phone && (
                         <a
-                          href={`tel:${booking.phone}`}
+                          href={`tel:${dialablePhone(booking.phone)}`}
                           onClick={(e) => e.stopPropagation()}
                           className="flex items-center gap-1 text-purple-600 hover:underline"
                         >

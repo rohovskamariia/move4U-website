@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { CheckCircle, Loader2, ChevronLeft, ChevronDown } from "lucide-react";
 import { submitBooking } from "@/lib/api";
-import { isValidPhone, isValidEmail } from "@/lib/validators";
+import { isValidPhone, isValidEmail, toE164 } from "@/lib/validators";
 
 interface SomethingElseFlowProps {
   onBack: () => void;
@@ -133,11 +133,14 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
             value={form.phone}
             onChange={(e) => handleChange("phone", e.target.value)}
             onBlur={() => setPhoneTouched(true)}
-            placeholder="07123 456789 or +44…"
+            placeholder="+44 7123 456789"
+            required
             className={`w-full border rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 ${showPhoneError ? "border-red-300 focus:ring-red-400" : "border-gray-200 focus:ring-purple-500"}`}
           />
-          {showPhoneError && (
-            <p className="text-[11px] text-red-600 mt-1.5">Please enter a valid UK or international phone number.</p>
+          {showPhoneError ? (
+            <p className="text-[11px] text-red-600 mt-1.5">Please enter a valid full phone number including country code (e.g. +44…).</p>
+          ) : (
+            <p className="text-[11px] text-gray-500 mt-1.5">Please enter your full phone number including country code (e.g. +44…).</p>
           )}
         </div>
         <div>
@@ -200,10 +203,12 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
           setSubmitting(true);
           setSubmitError("");
           try {
+            // Canonicalise phone to E.164 so contact links work reliably.
+            const phoneE164 = toE164(form.phone) || form.phone;
             const result = await submitBooking({
               service: "Something Else",
               name: form.name,
-              phone: form.phone,
+              phone: phoneE164,
               email: form.email,
               pickup: form.pickup,
               pickupDetails: "",
