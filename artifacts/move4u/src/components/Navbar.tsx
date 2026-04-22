@@ -92,17 +92,14 @@ export default function Navbar() {
                 className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-[0_6px_18px_-6px_rgba(74,49,156,0.5)] transition-transform duration-200 group-hover:-translate-y-0.5 select-none"
                 draggable={false}
               />
-              <span className="font-bold text-[20px] md:text-[24px] tracking-tight leading-none">
-                <span style={{ color: "#0B0F1A" }}>Move</span>
-                <span
-                  className="bg-clip-text text-transparent"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, #5b3fb8 0%, #4a319c 60%, #3a267f 100%)",
-                  }}
-                >
-                  4U
-                </span>
+              <span
+                className="font-bold text-[20px] md:text-[24px] tracking-tight leading-none bg-clip-text text-transparent"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(135deg, #8a6dff 0%, #7B5CFF 30%, #6a4ae8 60%, #5A3BFF 100%)",
+                }}
+              >
+                Move4U
               </span>
             </Link>
 

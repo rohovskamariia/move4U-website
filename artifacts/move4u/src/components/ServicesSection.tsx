@@ -26,7 +26,14 @@ export default function ServicesSection() {
   const [, setLocation] = useLocation();
 
   return (
-    <section id="services" className="py-9 sm:py-16 bg-white">
+    <section
+      id="services"
+      className="py-9 sm:py-16"
+      style={{
+        background:
+          "linear-gradient(180deg, #faf8ff 0%, #f5f1fb 60%, #f3eff9 100%)",
+      }}
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-6 sm:mb-14">
           <p className="text-[10.5px] sm:text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2">
@@ -49,11 +56,17 @@ export default function ServicesSection() {
                 key={service.id}
                 type="button"
                 onClick={() => setLocation(`/book/${service.id}`)}
-                className="bg-white rounded-2xl ring-1 ring-gray-100 p-3.5 flex flex-col items-center justify-center text-center min-h-[108px] active:bg-purple-50/40 active:scale-[0.98] transition-all"
+                className="bg-white rounded-2xl ring-1 ring-purple-100/60 p-3.5 flex flex-col items-center justify-center text-center min-h-[108px] shadow-[0_2px_6px_-2px_rgba(74,49,156,0.08),_0_10px_22px_-12px_rgba(74,49,156,0.18)] active:bg-purple-50/40 active:scale-[0.98] transition-all duration-300"
                 data-testid={`service-card-${service.id}`}
               >
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100/70 text-purple-700 w-10 h-10 rounded-xl flex items-center justify-center ring-1 ring-purple-100 mb-2">
-                  <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
+                <div
+                  className="text-white w-10 h-10 rounded-xl flex items-center justify-center mb-2 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.5)]"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(135deg, #6d4ed3 0%, #5b3fb8 55%, #4a319c 100%)",
+                  }}
+                >
+                  <Icon className="w-[18px] h-[18px]" strokeWidth={2.25} />
                 </div>
                 <h3 className="font-semibold text-gray-900 text-[12.5px] tracking-tight leading-tight">
                   {service.title}
@@ -71,12 +84,18 @@ export default function ServicesSection() {
             return (
               <div
                 key={service.id}
-                className="group relative bg-white rounded-3xl p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.04),_0_10px_30px_-12px_rgba(17,12,46,0.06)] transition-all duration-300 hover:ring-purple-200/70 hover:shadow-[0_4px_10px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-18px_rgba(74,49,156,0.28)] hover:-translate-y-1 flex flex-col"
+                className="group relative bg-white rounded-3xl p-6 ring-1 ring-purple-100/70 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.10),_0_18px_40px_-16px_rgba(74,49,156,0.18)] transition-all duration-300 ease-out hover:ring-purple-200 hover:shadow-[0_8px_18px_-6px_rgba(74,49,156,0.18),_0_30px_60px_-20px_rgba(74,49,156,0.40)] hover:-translate-y-1.5 flex flex-col"
                 data-testid={`service-card-desktop-${service.id}`}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100/70 text-purple-700 w-10 h-10 rounded-xl flex items-center justify-center ring-1 ring-purple-100 group-hover:from-purple-700 group-hover:to-purple-800 group-hover:text-white group-hover:ring-purple-700 transition-all duration-300">
-                    <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
+                  <div
+                    className="text-white w-11 h-11 rounded-xl flex items-center justify-center shadow-[0_6px_16px_-6px_rgba(74,49,156,0.55)] transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_10px_22px_-6px_rgba(74,49,156,0.65)]"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(135deg, #6d4ed3 0%, #5b3fb8 55%, #4a319c 100%)",
+                    }}
+                  >
+                    <Icon className="w-[19px] h-[19px]" strokeWidth={2.25} />
                   </div>
                   <span className="text-[10.5px] font-semibold text-purple-700 bg-purple-50/80 px-2.5 py-1 rounded-full tracking-wide">
                     {service.price}
