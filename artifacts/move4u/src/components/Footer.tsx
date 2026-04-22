@@ -54,6 +54,16 @@ export default function Footer() {
               <li><a href={`tel:${CONTACT.driver}`} className="hover:text-purple-400 transition-colors">Driver: {CONTACT.driverDisplay}</a></li>
               <li><a href={`tel:${CONTACT.support}`} className="hover:text-purple-400 transition-colors">Support: {CONTACT.supportDisplay}</a></li>
               <li><a href={`mailto:${CONTACT.email}`} className="hover:text-purple-400 transition-colors break-all">{CONTACT.email}</a></li>
+              <li>
+                <a
+                  href={CONTACT.telegram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-purple-400 transition-colors"
+                >
+                  Telegram: {CONTACT.telegramHandle}
+                </a>
+              </li>
             </ul>
           </div>
 

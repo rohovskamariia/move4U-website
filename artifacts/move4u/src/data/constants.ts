@@ -8,10 +8,15 @@ export const CONTACT = {
   driverDisplay: "+44 7888 355523",
   support: "+447946259714",
   supportDisplay: "+44 7946 259714",
-  email: "move4foru@gmail.com",
+  email: "move4u.uk@gmail.com",
   whatsapp: "447888355523",
   whatsappDefaultMessage: "Hi Move4U, I need help with my move.",
   viber: "+447888355523", // Viber uses the same phone as the driver line
+  // Telegram is offered as a SECONDARY contact channel — exposed in the
+  // Contact section and footer only, never in the booking form's
+  // "preferred contact method" list.
+  telegram: "https://t.me/move4u_uk",
+  telegramHandle: "@move4u_uk",
 };
 
 // HOMEPAGE SLIDER CONTENT — Edit slide text here

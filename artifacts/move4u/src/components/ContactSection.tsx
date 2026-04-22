@@ -1,4 +1,4 @@
-import { Phone, Mail, MessageCircle, ArrowUpRight } from "lucide-react";
+import { Phone, Mail, MessageCircle, Send, ArrowUpRight } from "lucide-react";
 import { CONTACT } from "@/data/constants";
 
 // Premium contact strip — three intentional, refined cards.
@@ -22,8 +22,9 @@ export default function ContactSection() {
           </p>
         </div>
 
-        {/* MOBILE: compact 3-button row — consistent neutral styling */}
-        <div className="grid grid-cols-3 gap-2 sm:hidden max-w-md mx-auto">
+        {/* MOBILE: compact 4-button row — WhatsApp, Call, Email, Telegram.
+            Telegram sits last as the secondary channel. */}
+        <div className="grid grid-cols-4 gap-2 sm:hidden max-w-md mx-auto">
           <a
             href={waHref}
             target="_blank"
@@ -56,10 +57,28 @@ export default function ContactSection() {
             </span>
             <span className="text-[12px] font-semibold text-gray-800">Email</span>
           </a>
+          {/* Telegram — secondary contact. Same shape as the others, but
+              the icon chip uses a softer gray-tinted purple to read as
+              "less prominent" than WhatsApp/Call/Email. */}
+          <a
+            href={CONTACT.telegram}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center justify-center gap-1.5 bg-white border border-[#eee] rounded-xl py-3.5 px-2 hover:-translate-y-[3px] hover:shadow-[0_10px_24px_-12px_rgba(17,12,46,0.18)] active:scale-[0.97] transition-all duration-300"
+            data-testid="contact-mobile-telegram"
+            aria-label="Message us on Telegram"
+          >
+            <span className="w-9 h-9 rounded-full bg-purple-50/60 text-purple-600 flex items-center justify-center">
+              <Send className="w-[17px] h-[17px]" strokeWidth={2.25} />
+            </span>
+            <span className="text-[12px] font-semibold text-gray-800">Telegram</span>
+          </a>
         </div>
 
-        {/* DESKTOP: three consistent neutral contact cards */}
-        <div className="hidden sm:grid sm:grid-cols-3 gap-5 max-w-4xl mx-auto">
+        {/* DESKTOP: four consistent neutral contact cards. Telegram is
+            placed last and styled slightly more muted to signal it's a
+            secondary channel. */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
           {/* WhatsApp */}
           <a
             href={waHref}
@@ -123,6 +142,32 @@ export default function ContactSection() {
               Email
             </h3>
             <p className="text-gray-500 text-[13px]">Quotes &amp; enquiries</p>
+          </a>
+
+          {/* Telegram — same card shape as WhatsApp/Call/Email, but the
+              icon chip + label are visibly softer so it reads as the
+              secondary channel without breaking the symmetric grid. */}
+          <a
+            href={CONTACT.telegram}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group bg-white border border-[#eee] rounded-xl p-6 hover:-translate-y-[3px] hover:shadow-[0_18px_40px_-18px_rgba(17,12,46,0.18)] transition-all duration-300"
+            data-testid="contact-telegram"
+            aria-label="Message us on Telegram"
+          >
+            <div className="flex items-start justify-between mb-5">
+              <div className="bg-purple-50/60 text-purple-600 w-10 h-10 rounded-xl flex items-center justify-center group-hover:bg-purple-700 group-hover:text-white transition-colors">
+                <Send className="w-[18px] h-[18px]" strokeWidth={2} />
+              </div>
+              <ArrowUpRight
+                className="w-4 h-4 text-gray-300 group-hover:text-purple-700 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"
+                strokeWidth={2.25}
+              />
+            </div>
+            <h3 className="font-semibold text-gray-900 text-[17px] tracking-tight mb-1">
+              Telegram
+            </h3>
+            <p className="text-gray-500 text-[13px]">{CONTACT.telegramHandle}</p>
           </a>
         </div>
       </div>
