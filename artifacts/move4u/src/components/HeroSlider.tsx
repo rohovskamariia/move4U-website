@@ -101,12 +101,14 @@ export default function HeroSlider() {
 
       {/* Mobile: top-aligned, compact padding, left-aligned text.
           Desktop: unchanged — vertically centred with generous padding. */}
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-12 sm:py-32 md:py-36 min-h-[460px] sm:min-h-0 flex flex-col items-start justify-center sm:block">
-        {/* Mobile: content sits in the lower-middle of the hero — the
-            wrapper centres vertically inside the min-h container and we
-            then nudge it ~6% upward so the composition feels balanced
-            rather than pinned to the bottom. Desktop layout untouched. */}
-        <div className="max-w-2xl w-full text-left -translate-y-[6%] sm:translate-y-0 sm:block">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-12 sm:py-32 md:py-36 min-h-[460px] sm:min-h-0 flex flex-col items-start justify-start sm:block">
+        {/* Mobile: text sits in the upper-middle area (pt-16 above + the
+            min-h on the container keeps total height stable). Buttons
+            are absolutely positioned at a fixed bottom offset further
+            down, so they stay at the SAME vertical position on every
+            slide regardless of how many lines the headline / body
+            text take. Desktop layout untouched. */}
+        <div className="max-w-2xl w-full text-left sm:block">
           {/* Slide content — re-keyed so each change replays the
               staggered rise-in for headline / subtext / buttons. */}
           <div key={slide.id} className="hero-stagger">
@@ -141,7 +143,7 @@ export default function HeroSlider() {
             >
               {slide.text}
             </p>
-            <div className="flex flex-wrap gap-2.5 sm:gap-3">
+            <div className="absolute bottom-20 left-4 right-4 sm:static sm:left-auto sm:right-auto sm:bottom-auto flex flex-wrap gap-2.5 sm:gap-3">
               {slide.buttons.map((btn, i) => {
                 const isPrimary = btn.variant === "primary";
                 return (
