@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import {
   RefreshCw, Copy, Check, ChevronDown, ChevronUp,
   LogOut, Phone, MapPin, ExternalLink, AlertCircle, Loader2,
+  MessageCircle, MessageSquare, Mail, PhoneCall,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -59,6 +60,90 @@ function initEditForm(b: BookingRecord): EditForm {
     confirmedTime: b.confirmedTime  || "",
     driverNotes:   b.driverNotes    || "",
   };
+}
+
+// ── Quick-contact helpers ─────────────────────────────────────
+//
+// The booking system stores the customer's preferred contact method as a
+// free-form string like "WhatsApp", "Phone", "Email — alice@x.com" or
+// "Any — alice@x.com". These helpers normalise that into a single
+// channel id and pull out the email when present.
+
+type ContactChannel = "whatsapp" | "sms" | "email" | "call";
+
+function parseEmailFromContactMethod(s: string): string {
+  if (!s) return "";
+  const m = s.match(/[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}/);
+  return m ? m[0] : "";
+}
+
+function normalizeChannel(contactMethod: string): ContactChannel | null {
+  const s = (contactMethod || "").toLowerCase();
+  if (!s) return null;
+  if (s.includes("whatsapp")) return "whatsapp";
+  if (s.includes("text") || s.includes("sms")) return "sms";
+  if (s.includes("email")) return "email";
+  if (s.includes("phone") || s.includes("call")) return "call";
+  // "Any" or unknown — no strong preference
+  return null;
+}
+
+const CHANNEL_LABELS: Record<ContactChannel, string> = {
+  whatsapp: "WhatsApp",
+  sms: "SMS",
+  email: "Email",
+  call: "Call",
+};
+
+// Convert a free-form UK phone number into the digits-only form that
+// wa.me requires: drop spaces/dashes/plus, then turn a leading 0 into
+// the UK country code 44 (so 07123… → 447123…).
+function normalizeUKPhone(phone: string): string {
+  if (!phone) return "";
+  let digits = phone.replace(/[^\d]/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("0")) digits = "44" + digits.slice(1);
+  return digits;
+}
+
+// Pre-filled greeting used when the booking is still NEW. The driver
+// can keep typing after this as a normal conversation opener.
+function buildIntroMessage(b: BookingRecord): string {
+  const name = b.name?.trim() || "there";
+  return (
+    `Hi ${name},\n` +
+    `this is Move4U regarding your booking (Reference: ${b.bookingReference}).\n` +
+    `We're contacting you to confirm your booking details.`
+  );
+}
+
+function buildContactHref(channel: ContactChannel, b: BookingRecord, message: string): string {
+  const encoded = encodeURIComponent(message);
+  const email = parseEmailFromContactMethod(b.contactMethod);
+  switch (channel) {
+    case "whatsapp": {
+      const wa = normalizeUKPhone(b.phone);
+      return `https://wa.me/${wa}?text=${encoded}`;
+    }
+    case "sms":
+      // `sms:NUMBER?body=...` works on iOS, Android, and most desktop
+      // handlers. Some older Android builds prefer `&body=` — modern
+      // browsers normalise both.
+      return `sms:${b.phone}?body=${encoded}`;
+    case "email": {
+      const addr = email || ""; // mailto: still opens the client even with no address
+      const subject = `Move4U — Booking ${b.bookingReference}`;
+      return `mailto:${addr}?subject=${encodeURIComponent(subject)}&body=${encoded}`;
+    }
+    case "call":
+      return `tel:${b.phone}`;
+  }
+}
+
+function isChannelAvailable(channel: ContactChannel, b: BookingRecord): boolean {
+  if (channel === "email") return Boolean(parseEmailFromContactMethod(b.contactMethod));
+  // whatsapp / sms / call all need a phone number
+  return Boolean(b.phone);
 }
 
 function calcSuggestedDeposit(quote: string): string {
@@ -691,6 +776,23 @@ export default function AdminBookingsPage() {
                       })()}
                     </section>
 
+                    {/* Quick contact — shown for NEW bookings so the
+                        driver can reach the customer in one tap with a
+                        ready-made greeting. Hidden once the booking
+                        moves on to other statuses. */}
+                    {(form.bookingStatus === "New" || !form.bookingStatus) && (
+                      <section>
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                          Quick contact
+                        </h3>
+                        <QuickContactSection
+                          booking={booking}
+                          message={buildIntroMessage(booking)}
+                          intent="intro"
+                        />
+                      </section>
+                    )}
+
                     {/* Status editors */}
                     <section>
                       <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Status</h3>
@@ -828,7 +930,16 @@ export default function AdminBookingsPage() {
                               </a>
                             </div>
 
-                            {/* Action buttons */}
+                            {/* Smart suggestion — send the payment-link
+                                message via the customer's preferred
+                                channel in one click. */}
+                            <QuickContactSection
+                              booking={booking}
+                              message={whatsappMsg}
+                              intent="payment"
+                            />
+
+                            {/* Manual fallback actions */}
                             <div className="flex flex-wrap gap-2">
                               <button
                                 onClick={() => void copyMessage(whatsappMsg, ref)}
@@ -922,6 +1033,97 @@ function Field({
         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
       />
       {helper && <p className="mt-0.5 text-xs text-gray-400">{helper}</p>}
+    </div>
+  );
+}
+
+// ── Quick Contact section ─────────────────────────────────────
+//
+// Renders a compact "preferred channel + alternatives" toolbar so the
+// driver can reach the customer in a single tap. The button matching
+// `preferred` is the strong purple primary; the rest are outlined
+// secondaries. Each link opens the native handler with the message
+// pre-filled (whatsapp/sms/mailto) or starts a phone call.
+//
+// `intent` only affects copy ("Contact" vs "Send payment link"); the
+// mechanics are identical.
+function QuickContactSection({
+  booking,
+  message,
+  intent,
+}: {
+  booking: BookingRecord;
+  message: string;
+  intent: "intro" | "payment";
+}) {
+  const preferred = normalizeChannel(booking.contactMethod);
+  const channels: ContactChannel[] = ["whatsapp", "sms", "email", "call"];
+  const preferredLabel = preferred ? CHANNEL_LABELS[preferred] : "any method";
+
+  const heading =
+    intent === "payment"
+      ? `Customer prefers ${preferredLabel}. Send the payment link via ${preferredLabel}?`
+      : `Customer prefers: ${preferredLabel}`;
+
+  return (
+    <div className="rounded-xl border border-purple-100 bg-purple-50/40 px-3 py-3">
+      <p className="text-xs font-medium text-purple-800 mb-2">{heading}</p>
+      {/* Show the pre-filled message so the driver knows what's about to
+          be sent. Wrapped in a muted box, monospaced for clarity. */}
+      <details className="mb-2.5">
+        <summary className="text-[11px] text-gray-500 cursor-pointer select-none hover:text-gray-700">
+          Preview message
+        </summary>
+        <pre className="mt-1.5 text-[12px] text-gray-700 whitespace-pre-wrap font-sans bg-white border border-gray-100 rounded-lg px-2.5 py-2 leading-relaxed">
+          {message}
+        </pre>
+      </details>
+      <div className="flex flex-wrap gap-1.5">
+        {channels.map((c) => {
+          const isPreferred = preferred === c;
+          const available = isChannelAvailable(c, booking);
+          const href = available ? buildContactHref(c, booking, message) : undefined;
+          const Icon =
+            c === "whatsapp" ? MessageCircle : c === "sms" ? MessageSquare : c === "email" ? Mail : PhoneCall;
+          const base =
+            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors";
+          const styles = !available
+            ? "bg-gray-50 text-gray-300 border border-gray-100 cursor-not-allowed"
+            : isPreferred
+              ? "bg-purple-700 text-white hover:bg-purple-800 shadow-sm"
+              : "bg-white text-purple-700 border border-purple-200 hover:bg-purple-50";
+          if (!available) {
+            return (
+              <span
+                key={c}
+                className={`${base} ${styles}`}
+                title={c === "email" ? "No email address on file" : "No phone number on file"}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {CHANNEL_LABELS[c]}
+              </span>
+            );
+          }
+          return (
+            <a
+              key={c}
+              href={href}
+              target={c === "whatsapp" || c === "email" ? "_blank" : undefined}
+              rel={c === "whatsapp" || c === "email" ? "noopener noreferrer" : undefined}
+              className={`${base} ${styles}`}
+              data-testid={`quick-contact-${c}`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {CHANNEL_LABELS[c]}
+              {isPreferred && (
+                <span className="text-[10px] uppercase tracking-wide opacity-90 ml-0.5">
+                  preferred
+                </span>
+              )}
+            </a>
+          );
+        })}
+      </div>
     </div>
   );
 }
