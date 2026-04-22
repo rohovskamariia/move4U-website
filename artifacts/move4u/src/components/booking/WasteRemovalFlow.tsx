@@ -190,7 +190,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   }
 
   if (step === "final") {
-    const timeWindows = ["Morning (8am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–8pm)", "Late evening (8pm–12am)"];
+    const timeWindows = ["Morning (8am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–12am)"];
     return (
       <div>
         <Header />

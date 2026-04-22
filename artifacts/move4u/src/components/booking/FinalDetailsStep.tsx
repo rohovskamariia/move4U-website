@@ -13,7 +13,7 @@ interface FinalDetailsStepProps {
 }
 
 const CONTACT_METHODS = ["Phone call", "WhatsApp", "Text message", "Any"];
-const TIME_WINDOWS = ["Morning (8am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–8pm)"];
+const TIME_WINDOWS = ["Morning (8am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–12am)"];
 
 export default function FinalDetailsStep({ onSubmit }: FinalDetailsStepProps) {
   const [date, setDate] = useState("");
