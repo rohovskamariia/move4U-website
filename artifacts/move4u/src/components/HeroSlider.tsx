@@ -30,7 +30,10 @@ export default function HeroSlider() {
   const slide = SLIDES[current];
 
   return (
-    <div className="relative bg-gray-900 text-white overflow-hidden">
+    // min-h on mobile pins the hero to a stable height so swapping
+    // slides (whose title/text lengths differ) never reflows the page.
+    // Desktop keeps content-driven sizing.
+    <div className="relative bg-gray-900 text-white overflow-hidden min-h-[620px] sm:min-h-0">
       {/* Stacked background images — crossfade between slides. No blur, sharp originals. */}
       <div className="absolute inset-0">
         {SLIDES.map((s, i) => (
@@ -81,8 +84,8 @@ export default function HeroSlider() {
         }}
       />
 
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-24 sm:py-32 md:py-36">
-        <div className="max-w-2xl">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-24 sm:py-32 md:py-36 min-h-[620px] sm:min-h-0 flex items-center sm:block">
+        <div className="max-w-2xl w-full">
           {/* Slide content — re-keyed so each change replays the
               staggered rise-in for headline / subtext / buttons. */}
           <div key={slide.id} className="hero-stagger">
