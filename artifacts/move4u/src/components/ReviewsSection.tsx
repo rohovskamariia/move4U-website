@@ -7,27 +7,34 @@ const AUTO_ROTATE_MS = 5000;
 const RESUME_AFTER_MS = 8000;
 const SWIPE_THRESHOLD_PX = 40;
 
-// Visible stack — three cards always rendered: 0 = front, 1 = back-left,
-// 2 = back-right. Offsets are large enough that back cards clearly peek
-// out from behind the front card (no "single card" look).
-const STACK_STYLES: Record<number, React.CSSProperties> = {
-  0: {
-    transform: "translate3d(0, 0, 0) rotate(0deg) scale(1)",
+// Rotating 3D carousel — three cards always rendered:
+//   "prev"   = left side card, angled inward (rotateY +)
+//   "active" = center front card, full size
+//   "next"   = right side card, angled inward (rotateY -)
+// Side cards are smaller, faded, and pushed back in z so they sit
+// visibly behind the center card on the left and right.
+type SlotKey = "prev" | "active" | "next";
+
+const STACK_STYLES: Record<SlotKey, React.CSSProperties> = {
+  prev: {
+    transform:
+      "translate3d(-52%, 0, -140px) rotateY(28deg) scale(0.85)",
+    opacity: 0.55,
+    zIndex: 10,
+    filter: "blur(0.5px)",
+  },
+  active: {
+    transform: "translate3d(0, 0, 0) rotateY(0deg) scale(1)",
     opacity: 1,
     zIndex: 30,
     filter: "none",
   },
-  1: {
-    transform: "translate3d(-44px, -28px, 0) rotate(-4deg) scale(0.92)",
-    opacity: 0.62,
-    zIndex: 20,
-    filter: "blur(0.3px)",
-  },
-  2: {
-    transform: "translate3d(44px, -28px, 0) rotate(4deg) scale(0.86)",
-    opacity: 0.42,
+  next: {
+    transform:
+      "translate3d(52%, 0, -140px) rotateY(-28deg) scale(0.85)",
+    opacity: 0.55,
     zIndex: 10,
-    filter: "blur(0.6px)",
+    filter: "blur(0.5px)",
   },
 };
 
@@ -75,10 +82,13 @@ export default function ReviewsSection() {
     touchStartX.current = null;
   };
 
-  // Relative position of card `idx` to the active one (0 / 1 / 2 / -1)
-  const relativePos = (idx: number): number => {
-    const diff = (idx - active + total) % total;
-    return diff <= 2 ? diff : -1;
+  // Slot for card `idx`: previous (left), active (center), next (right),
+  // or null if it shouldn't render in the visible 3-card window.
+  const slotFor = (idx: number): SlotKey | null => {
+    if (idx === active) return "active";
+    if (idx === (active - 1 + total) % total) return "prev";
+    if (idx === (active + 1) % total) return "next";
+    return null;
   };
 
   return (
@@ -176,13 +186,13 @@ export default function ReviewsSection() {
               </div>
 
               {REVIEWS.map((review, idx) => {
-                const pos = relativePos(idx);
-                if (pos < 0) return null;
-                const cardStyle = STACK_STYLES[pos];
+                const slot = slotFor(idx);
+                if (slot === null) return null;
+                const cardStyle = STACK_STYLES[slot];
                 return (
                   <article
                     key={review.id}
-                    aria-hidden={pos !== 0}
+                    aria-hidden={slot !== "active"}
                     className="absolute top-1/2 left-1/2 w-[86%] max-w-[400px] bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 ring-1 ring-gray-100/80 shadow-[0_2px_6px_-2px_rgba(17,12,46,0.06),_0_24px_50px_-20px_rgba(74,49,156,0.35)] flex flex-col transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] [will-change:transform,opacity]"
                     style={{
                       ...cardStyle,
