@@ -159,8 +159,8 @@ export default function StairsAccessSection({
                 aria-pressed={selected}
                 className={`py-2.5 sm:py-3 rounded-xl text-[14px] font-semibold transition-all border-2 cursor-pointer active:scale-[0.98] ${
                   selected
-                    ? "border-[#5B4BD8] bg-[#5B4BD8] text-white shadow-[0_4px_12px_-6px_rgba(91,75,216,0.45)]"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-[#5B4BD8] hover:bg-[#5B4BD8]/5"
+                    ? "border-[#3D1289] bg-[#3D1289] text-white shadow-[0_4px_12px_-6px_rgba(61,18,137,0.45)]"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-[#3D1289] hover:bg-[#3D1289]/5"
                 }`}
                 data-testid={`has-stairs-${opt}${idSuffix}`}
               >
@@ -188,8 +188,8 @@ export default function StairsAccessSection({
                   aria-pressed={selected}
                   className={`py-2.5 sm:py-3 rounded-xl text-[14px] font-semibold transition-all border-2 cursor-pointer active:scale-[0.98] ${
                     selected
-                      ? "border-[#5B4BD8] bg-[#5B4BD8] text-white shadow-[0_4px_12px_-6px_rgba(91,75,216,0.45)]"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-[#5B4BD8] hover:bg-[#5B4BD8]/5"
+                      ? "border-[#3D1289] bg-[#3D1289] text-white shadow-[0_4px_12px_-6px_rgba(61,18,137,0.45)]"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-[#3D1289] hover:bg-[#3D1289]/5"
                   }`}
                   data-testid={`lift-${opt}${idSuffix}`}
                 >
@@ -236,7 +236,7 @@ export default function StairsAccessSection({
               type="button"
               onClick={() => setFloor(parsedFloor + 1)}
               aria-label="Increase floor"
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#5B4BD8] text-white flex items-center justify-center hover:bg-[#4736C0] active:scale-95 transition-all"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#3D1289] text-white flex items-center justify-center hover:bg-[#2C0966] active:scale-95 transition-all"
               data-testid={`floor-plus${idSuffix}`}
             >
               <Plus className="w-[18px] h-[18px] sm:w-5 sm:h-5" strokeWidth={2.5} />

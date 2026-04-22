@@ -95,7 +95,7 @@ export default function Navbar() {
               />
               <span className="font-extrabold text-[22px] md:text-[27px] tracking-tight leading-none">
                 <span style={{ color: "#0F172A" }}>Move</span>
-                <span style={{ color: "#5B4BD8" }}>4U</span>
+                <span style={{ color: "#3D1289" }}>4U</span>
               </span>
             </Link>
 

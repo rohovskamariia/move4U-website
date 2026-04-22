@@ -30,8 +30,11 @@ export default function AnnouncementBar() {
     <div
       className="w-full text-white text-center select-none"
       style={{
-        /* Solid brand purple — clean edge to edge, no fade, no neon. */
-        backgroundColor: "#5B4BD8",
+        /* Subtle gradient sampled from the M4U logo: lighter purple at the
+           edges, deeper purple in the centre — same shape as the logo's
+           own light-to-dark inner falloff. Smooth, premium, never neon. */
+        backgroundImage:
+          "linear-gradient(90deg, #461A9E 0%, #2C0966 50%, #461A9E 100%)",
       }}
       role="status"
       aria-live="polite"

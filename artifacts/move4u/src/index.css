@@ -373,23 +373,23 @@ body {
 /* Reusable purple gradient button — primary CTA across the site.    */
 /* ---------------------------------------------------------------- */
 .btn-purple {
-  /* Single brand purple — flat, calm, premium. No glow or shiny gradient. */
-  background-color: #5B4BD8;
+  /* Brand purple — sampled from the inner of the M4U logo. Matte, no glow. */
+  background-color: #3D1289;
   background-image: none;
   color: #ffffff;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
   transition: background-color 180ms ease, transform 180ms ease, opacity 180ms ease;
 }
 .btn-purple:hover:not(:disabled) {
-  background-color: #4736C0;
+  background-color: #2C0966;
   transform: translateY(-1px);
 }
 .btn-purple:active:not(:disabled) {
-  background-color: #3A2BA0;
+  background-color: #1F0648;
   transform: translateY(0);
 }
 .btn-purple:disabled {
-  background-color: #B7AFE7;
+  background-color: #B5A8D6;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;

@@ -324,19 +324,19 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
         <>
           {!canProceed() && getMissingHint() && (
             <div
-              className="mt-5 flex items-start gap-2 rounded-xl border border-[#5B4BD8]/20 bg-[#5B4BD8]/5 px-3.5 py-2.5"
+              className="mt-5 flex items-start gap-2 rounded-xl border border-[#3D1289]/20 bg-[#3D1289]/5 px-3.5 py-2.5"
               data-testid="booking-missing-hint"
               role="status"
               aria-live="polite"
             >
               <span
                 className="mt-[2px] flex h-4 w-4 flex-none items-center justify-center rounded-full text-[11px] font-bold text-white"
-                style={{ backgroundColor: "#5B4BD8" }}
+                style={{ backgroundColor: "#3D1289" }}
                 aria-hidden="true"
               >
                 !
               </span>
-              <p className="text-[13px] font-medium text-[#3A2BA0] leading-snug">
+              <p className="text-[13px] font-medium text-[#1F0648] leading-snug">
                 {getMissingHint()}
               </p>
             </div>
