@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Hash } from "lucide-react";
+import { Hash, MapPin } from "lucide-react";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import StairsAccessSection from "./StairsAccessSection";
+import { hasFullUKPostcode, isUKAddressMissingFullPostcode } from "@/lib/postcode";
 
 interface AddressStepProps {
   label: string;
@@ -46,27 +47,38 @@ export default function AddressStep({
   // without a number (route-only or postcode-only result).
   const [needsNumber, setNeedsNumber] = useState(false);
   const [unitNumber, setUnitNumber] = useState("");
+  // Postcode prompt — shown when the chosen / typed UK address is
+  // missing the inward part of its postcode (e.g. "London N22, UK").
+  const [needsPostcode, setNeedsPostcode] = useState(false);
+  const [manualPostcode, setManualPostcode] = useState("");
   // Track the last "core" address that came from Google so we can rebuild
   // the final string whenever the user edits the unit number.
   const coreAddressRef = useRef<string>(addressValue);
 
-  const commit = (core: string, unit: string) => {
+  const commit = (core: string, unit: string, postcode: string) => {
     const trimmedUnit = unit.trim();
+    const trimmedPostcode = postcode.trim().toUpperCase();
     coreAddressRef.current = core;
-    if (trimmedUnit && core) {
-      onAddressChange(`${trimmedUnit}, ${core}`);
-    } else {
-      onAddressChange(core);
+    let result = core;
+    if (trimmedUnit && core) result = `${trimmedUnit}, ${core}`;
+    // Append the manual postcode only if the core text doesn't already
+    // contain a full UK postcode — avoids duplicates when Google supplied
+    // it but the user typed one anyway.
+    if (trimmedPostcode && !hasFullUKPostcode(result)) {
+      result = `${result}, ${trimmedPostcode}`;
     }
+    onAddressChange(result);
   };
 
   const handleAddressChange = (
     val: string,
-    meta?: { hasStreetNumber: boolean },
+    meta?: { hasStreetNumber: boolean; hasFullPostcode?: boolean },
   ) => {
     if (val === "") {
       setNeedsNumber(false);
       setUnitNumber("");
+      setNeedsPostcode(false);
+      setManualPostcode("");
       coreAddressRef.current = "";
       onAddressChange("");
       return;
@@ -76,12 +88,32 @@ export default function AddressStep({
     const numberMissing = meta ? !meta.hasStreetNumber : false;
     setNeedsNumber(numberMissing);
     if (!numberMissing) setUnitNumber("");
-    commit(core, numberMissing ? unitNumber : "");
+
+    // Decide whether we need to ask for a postcode. We trust the meta
+    // hint from the input when present, then fall back to scanning the
+    // text ourselves so manual entry is also covered.
+    const hasFullFromMeta = meta?.hasFullPostcode === true;
+    const postcodeMissing = !hasFullFromMeta && isUKAddressMissingFullPostcode(core);
+    setNeedsPostcode(postcodeMissing);
+    if (!postcodeMissing) setManualPostcode("");
+
+    commit(
+      core,
+      numberMissing ? unitNumber : "",
+      postcodeMissing ? manualPostcode : "",
+    );
   };
 
   const handleUnitChange = (val: string) => {
     setUnitNumber(val);
-    commit(coreAddressRef.current, val);
+    commit(coreAddressRef.current, val, needsPostcode ? manualPostcode : "");
+  };
+
+  const handlePostcodeChange = (val: string) => {
+    // Allow only postcode-shaped characters; auto-uppercase for clarity.
+    const cleaned = val.toUpperCase().replace(/[^A-Z0-9 ]/g, "").slice(0, 8);
+    setManualPostcode(cleaned);
+    commit(coreAddressRef.current, needsNumber ? unitNumber : "", cleaned);
   };
 
   // Keep things consistent if parent resets the address externally.
@@ -89,9 +121,13 @@ export default function AddressStep({
     if (addressValue === "") {
       setNeedsNumber(false);
       setUnitNumber("");
+      setNeedsPostcode(false);
+      setManualPostcode("");
       coreAddressRef.current = "";
     }
   }, [addressValue]);
+
+  const postcodeFilledOk = manualPostcode ? hasFullUKPostcode(manualPostcode) : false;
 
   return (
     <div className="space-y-4">
@@ -106,6 +142,36 @@ export default function AddressStep({
         <p className="text-[11.5px] text-gray-500 mt-1.5">
           Can&rsquo;t find your address? Enter it manually.
         </p>
+
+        {needsPostcode && (
+          <div className="mt-3">
+            <label className="block text-xs font-medium text-gray-700 mb-1.5">
+              Full postcode
+              <span className="text-purple-700"> *</span>
+            </label>
+            <div className="relative">
+              <MapPin className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={manualPostcode}
+                onChange={(e) => handlePostcodeChange(e.target.value)}
+                placeholder="e.g. N22 8HE"
+                className={`w-full border rounded-xl pl-10 pr-3 py-3 text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  manualPostcode && !postcodeFilledOk
+                    ? "border-amber-300"
+                    : "border-gray-200"
+                }`}
+                autoComplete="postal-code"
+                inputMode="text"
+                spellCheck={false}
+                data-testid={`postcode-${label.toLowerCase().replace(/\s/g, "-")}`}
+              />
+            </div>
+            <p className="text-[11px] text-gray-500 mt-1.5">
+              We need the full postcode (e.g. N22 8HE) so the driver can find you.
+            </p>
+          </div>
+        )}
 
         {needsNumber && (
           <div className="mt-3">

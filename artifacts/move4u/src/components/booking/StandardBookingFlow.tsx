@@ -8,6 +8,7 @@ import {
 } from "./StairsAccessSection";
 import { submitBooking, uploadPhotos } from "@/lib/api";
 import AddressStep from "./AddressStep";
+import { isAddressAcceptable, isUKAddressMissingFullPostcode } from "@/lib/postcode";
 import ExtraStopsSection, { type ExtraStop } from "./ExtraStopsSection";
 import VanStep from "./VanStep";
 import HelpStep from "./HelpStep";
@@ -123,14 +124,15 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
   );
 
   const canProceed = () => {
-    if (step === "pickup") return !!pickupAddress && !!pickupLift;
+    if (step === "pickup")
+      return isAddressAcceptable(pickupAddress) && !!pickupLift;
     if (step === "dropoff") {
       // Drop-off proceeds only when drop-off itself is complete AND every
       // additional stop the user added has its address + stairs answered.
       const stopsValid = extraStops.every(
-        (s) => !!s.address.trim() && !!s.liftValue,
+        (s) => isAddressAcceptable(s.address) && !!s.liftValue,
       );
-      return !!dropoffAddress && !!dropoffLift && stopsValid;
+      return isAddressAcceptable(dropoffAddress) && !!dropoffLift && stopsValid;
     }
     if (step === "van") return !!vanSize;
     if (step === "help") return !!helpOption;
@@ -141,19 +143,28 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
   const getMissingHint = (): string | null => {
     if (step === "pickup") {
       if (!pickupAddress) return "Please enter the pickup address";
+      if (isUKAddressMissingFullPostcode(pickupAddress))
+        return "Please enter the full pickup postcode (e.g. N22 8HE)";
       if (!pickupLift) return "Please select if there are stairs";
       return null;
     }
     if (step === "dropoff") {
       if (!dropoffAddress) return "Please enter the drop-off address";
+      if (isUKAddressMissingFullPostcode(dropoffAddress))
+        return "Please enter the full drop-off postcode (e.g. N22 8HE)";
       if (!dropoffLift) return "Please select if there are stairs";
       const badStop = extraStops.findIndex(
-        (s) => !s.address.trim() || !s.liftValue,
+        (s) =>
+          !s.address.trim() ||
+          isUKAddressMissingFullPostcode(s.address) ||
+          !s.liftValue,
       );
       if (badStop !== -1) {
         const s = extraStops[badStop];
         if (!s.address.trim())
           return `Please enter the address for stop ${badStop + 1}`;
+        if (isUKAddressMissingFullPostcode(s.address))
+          return `Please enter the full postcode for stop ${badStop + 1}`;
         return `Please select if there are stairs for stop ${badStop + 1}`;
       }
       return null;

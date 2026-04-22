@@ -11,6 +11,8 @@ import { MapPin, Loader2, X } from "lucide-react";
 interface AddressMeta {
   /** True when Google returned a numbered street address (street_number). */
   hasStreetNumber: boolean;
+  /** True when the address contains a full UK postcode (e.g. "N22 8HE"). */
+  hasFullPostcode: boolean;
 }
 
 interface AddressAutocompleteProps {
@@ -154,6 +156,11 @@ function pick(components: AddressComponent[] | undefined, type: string): string 
 /** Build a clean full UK address from Place data, falling back gracefully. */
 function buildFullAddress(place: PlaceLike): string {
   const components = place.addressComponents;
+  // The component-built address is cleaner, but Google's `postal_code`
+  // component can be just an outward code (e.g. "N22") for street-level
+  // results — which would lose the inward part (e.g. "8HE"). When that
+  // happens, prefer the `formattedAddress` from Google because it
+  // typically carries the full postcode.
   if (components && components.length) {
     const streetNumber = pick(components, "street_number");
     const route = pick(components, "route");
@@ -163,6 +170,18 @@ function buildFullAddress(place: PlaceLike): string {
       pick(components, "administrative_area_level_2");
     const postcode = pick(components, "postal_code");
     const country = pick(components, "country") || "UK";
+
+    const componentPostcodeLooksFull = /\b[A-Z]{1,2}[0-9][0-9A-Z]?\s*[0-9][A-Z]{2}\b/i.test(postcode);
+    const formattedHasFullPostcode = place.formattedAddress
+      ? /\b[A-Z]{1,2}[0-9][0-9A-Z]?\s*[0-9][A-Z]{2}\b/i.test(place.formattedAddress)
+      : false;
+
+    // If the formattedAddress carries a fuller postcode than our
+    // component-built one, defer to Google's version.
+    if (!componentPostcodeLooksFull && formattedHasFullPostcode && place.formattedAddress) {
+      return place.formattedAddress;
+    }
+
     const street = [streetNumber, route].filter(Boolean).join(" ");
     const cityPostcode = [postalTown, postcode].filter(Boolean).join(" ");
     const parts = [street, cityPostcode, country].filter(Boolean);
@@ -327,7 +346,10 @@ export default function AddressAutocomplete({
     // entry works without the user having to pick a Google suggestion.
     // We mark `hasStreetNumber: true` so the unit-number prompt isn't
     // forced on manually-typed addresses — we trust the user.
-    onChange(q, { hasStreetNumber: true });
+    // `hasFullPostcode` is derived from the text so the parent can
+    // require a full UK postcode when one is missing.
+    const hasFullPostcode = /\b[A-Z]{1,2}[0-9][0-9A-Z]?\s*[0-9][A-Z]{2}\b/i.test(q);
+    onChange(q, { hasStreetNumber: true, hasFullPostcode });
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     debounceRef.current = window.setTimeout(() => {
       void fetchSuggestions(q);
@@ -354,10 +376,11 @@ export default function AddressAutocomplete({
       const hasStreetNumber = Boolean(
         pick(place.addressComponents, "street_number"),
       );
+      const hasFullPostcode = /\b[A-Z]{1,2}[0-9][0-9A-Z]?\s*[0-9][A-Z]{2}\b/i.test(finalText);
       if (finalText) {
         setQuery(finalText);
         lastConfirmedRef.current = finalText;
-        onChange(finalText, { hasStreetNumber });
+        onChange(finalText, { hasStreetNumber, hasFullPostcode });
       }
       setSuggestions([]);
       // End the autocomplete session — next keystroke starts a new one.
