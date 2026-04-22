@@ -161,6 +161,12 @@ export const HELP_PRICING: Record<string, { noHelp: number; driverHelp: number; 
   large: { noHelp: 45, driverHelp: 50, driverPlusHelper: 80 },
 };
 
+// ADDITIONAL CHARGES — Surcharges added on top of the hourly rate.
+// Edit these values to change pricing across the site (booking
+// estimate, summary card, and pricing page all read from here).
+export const EXTRA_STOP_CHARGE = 5; // £ per intermediate stop
+export const CONGESTION_CHARGE = 18; // £ flat — TfL Central London zone
+
 // STAIR CHARGES — Edit floor surcharge prices here
 export const STAIR_CHARGES: Record<string, number> = {
   none: 0,

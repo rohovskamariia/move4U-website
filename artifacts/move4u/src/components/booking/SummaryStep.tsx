@@ -1,9 +1,11 @@
-import { HELP_PRICING, VAN_SIZES } from "@/data/constants";
+import { HELP_PRICING, VAN_SIZES, EXTRA_STOP_CHARGE, CONGESTION_CHARGE } from "@/data/constants";
 import {
   getFloorChargeFromValue,
   getFloorLabelFromValue,
 } from "./StairsAccessSection";
 import type { ExtraStop } from "./ExtraStopsSection";
+import { isLikelyInCongestionZone } from "@/lib/congestionZone";
+import { Info } from "lucide-react";
 
 interface SummaryStepProps {
   service: string;
@@ -64,9 +66,24 @@ export default function SummaryStep({
 
   const pickupCharge = getFloorChargeFromValue(pickupFloor);
   const dropoffCharge = getFloorChargeFromValue(dropoffFloor);
-  const totalExtras = pickupCharge + dropoffCharge + stopChargesTotal;
+
+  // Each intermediate stop adds a flat per-stop fee on top of any
+  // floor charge it contributes. Pickup and drop-off do NOT incur
+  // this fee — they're already part of the base service.
+  const extraStopFee = cleanStops.length * EXTRA_STOP_CHARGE;
+
+  // Congestion Charge — conditional. Detected from the addresses;
+  // included in the headline total but clearly marked "may apply".
+  const congestionLikely = isLikelyInCongestionZone([
+    pickup,
+    dropoff,
+    ...cleanStops.map((s) => s.address),
+  ]);
+  const congestionCharge = congestionLikely ? CONGESTION_CHARGE : 0;
+
+  const totalExtras = pickupCharge + dropoffCharge + stopChargesTotal + extraStopFee;
   const estimatedBase = hourlyRate * hours;
-  const estimatedTotal = estimatedBase + totalExtras;
+  const estimatedTotal = estimatedBase + totalExtras + congestionCharge;
 
   const rows = [
     { label: "Service", value: service },
@@ -139,10 +156,62 @@ export default function SummaryStep({
           </span>
           <span className="text-white text-sm font-medium">
             £{hourlyRate}/hr × {formatTime(hours)}
-            {totalExtras > 0 ? ` + £${totalExtras} access` : ""}
+            {totalExtras > 0 ? ` + £${totalExtras} extras` : ""}
+            {congestionCharge > 0 ? ` + £${congestionCharge} CC*` : ""}
           </span>
         </div>
+        {congestionCharge > 0 && (
+          <p className="text-[11px] text-white/80 mt-2">
+            *Includes £{CONGESTION_CHARGE} Congestion Charge — may apply
+          </p>
+        )}
       </div>
+
+      {/* Extras breakdown — shown only when there are conditional or
+          per-stop charges so the customer understands exactly what
+          makes up the total. */}
+      {(extraStopFee > 0 || congestionCharge > 0) && (
+        <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden mb-4 divide-y divide-gray-50">
+          {extraStopFee > 0 && (
+            <div className="flex items-start justify-between gap-3 px-4 py-2.5">
+              <div className="min-w-0">
+                <p className="text-[13px] font-medium text-gray-900">
+                  Additional stops
+                </p>
+                <p className="text-[11.5px] text-gray-500 mt-0.5">
+                  £{EXTRA_STOP_CHARGE} × {cleanStops.length} stop
+                  {cleanStops.length === 1 ? "" : "s"}
+                </p>
+              </div>
+              <span className="text-[13px] font-semibold text-purple-700 tabular-nums shrink-0">
+                +£{extraStopFee}
+              </span>
+            </div>
+          )}
+          {congestionCharge > 0 && (
+            <div
+              className="flex items-start justify-between gap-3 px-4 py-2.5"
+              data-testid="summary-congestion-charge"
+            >
+              <div className="min-w-0 flex gap-2">
+                <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-[13px] font-medium text-gray-900">
+                    Congestion Charge may apply
+                  </p>
+                  <p className="text-[11.5px] text-gray-500 mt-0.5 leading-snug">
+                    Applies if your route passes through Central London
+                    congestion zone.
+                  </p>
+                </div>
+              </div>
+              <span className="text-[13px] font-semibold text-amber-600 tabular-nums shrink-0">
+                +£{congestionCharge}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Route card — full ordered route with pickup, any extra stops, drop-off. */}
       <div
