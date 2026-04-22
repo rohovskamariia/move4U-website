@@ -1,3 +1,4 @@
+import type { Dispatch, SetStateAction } from "react";
 import { Plus, X, MapPin } from "lucide-react";
 import AddressStep from "./AddressStep";
 
@@ -21,15 +22,28 @@ export const EMPTY_EXTRA_STOP: ExtraStop = {
 
 interface ExtraStopsSectionProps {
   stops: ExtraStop[];
-  onChange: (next: ExtraStop[]) => void;
+  /**
+   * The parent's React state setter — passed directly so that every update
+   * inside this section uses a functional update against the LATEST state.
+   *
+   * This matters because StairsAccessSection fires two synchronous updates
+   * back-to-back when the user taps "No" (onLiftChange + onFloorChange).
+   * If we used a plain `(next) => void` callback that closes over `stops`,
+   * the second call would read a stale array and overwrite the first one,
+   * so taps appeared to do nothing. Functional updates compose correctly.
+   */
+  setStops: Dispatch<SetStateAction<ExtraStop[]>>;
 }
 
-export default function ExtraStopsSection({ stops, onChange }: ExtraStopsSectionProps) {
-  const addStop = () => onChange([...stops, { ...EMPTY_EXTRA_STOP }]);
+export default function ExtraStopsSection({ stops, setStops }: ExtraStopsSectionProps) {
+  const addStop = () =>
+    setStops((prev) => [...prev, { ...EMPTY_EXTRA_STOP }]);
   const removeStop = (i: number) =>
-    onChange(stops.filter((_, idx) => idx !== i));
+    setStops((prev) => prev.filter((_, idx) => idx !== i));
   const updateStop = (i: number, patch: Partial<ExtraStop>) =>
-    onChange(stops.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
+    setStops((prev) =>
+      prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)),
+    );
 
   return (
     <div className="border-t border-gray-100 pt-4">

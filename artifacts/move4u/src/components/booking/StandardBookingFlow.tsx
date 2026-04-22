@@ -169,7 +169,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
               floorValue={dropoffFloor}
               onFloorChange={setDropoffFloor}
             />
-            <ExtraStopsSection stops={extraStops} onChange={setExtraStops} />
+            <ExtraStopsSection stops={extraStops} setStops={setExtraStops} />
           </div>
         );
       case "van":
