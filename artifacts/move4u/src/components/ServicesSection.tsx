@@ -34,8 +34,8 @@ export default function ServicesSection() {
          mobile keeps the focus on the service tiles. DESKTOP: unchanged
          — flat full-width gradient as before. */
       className="
-        relative z-10 -mt-6 rounded-t-[22px] bg-white shadow-[0_-8px_24px_-12px_rgba(76,29,149,0.18)]
-        pt-6 pb-9
+        relative z-10 -mt-3 rounded-t-[20px] bg-white shadow-[0_-6px_18px_-14px_rgba(76,29,149,0.14)]
+        pt-7 pb-9
         sm:mt-0 sm:rounded-none sm:bg-transparent sm:shadow-none sm:pt-16 sm:pb-16
       "
       style={{
