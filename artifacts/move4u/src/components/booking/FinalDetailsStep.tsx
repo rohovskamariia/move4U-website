@@ -170,7 +170,7 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
             >
               <p className="font-semibold mb-1">Please note:</p>
               <p className="leading-relaxed">
-                Last-minute and same-day bookings may be subject to an extra charge. Final pricing will be confirmed by our team before the booking is finalised.
+                Last-minute and same-day bookings may be subject to an additional charge depending on availability. Final price will be confirmed by our team.
               </p>
             </div>
           )}
@@ -210,8 +210,11 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
             })}
           </div>
           {todaySelected && TIME_WINDOWS.every((w) => isSlotDisabled(w.endHour)) && (
-            <p className="mt-2 text-[12px] text-gray-500">
-              No time slots remain today. Please pick a future date.
+            <p
+              className="mt-2 text-[12px] font-medium text-red-600"
+              data-testid="time-windows-all-passed"
+            >
+              Selected date is no longer available. Please choose another date.
             </p>
           )}
         </div>
