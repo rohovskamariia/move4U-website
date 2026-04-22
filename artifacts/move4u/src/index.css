@@ -589,3 +589,14 @@ body {
   .booking-mobile input[type="date"],
   .booking-mobile select { padding-top: 0.625rem; padding-bottom: 0.625rem; }
 }
+
+/* Services section — restore the original purple gradient on tablet
+   and up. On mobile it stays white with rounded top to overlap the
+   hero, per the modern "panel rides over banner" treatment. */
+@media (min-width: 640px) {
+  #services {
+    --svc-from: #faf8ff;
+    --svc-mid:  #f5f1fb;
+    --svc-to:   #f3eff9;
+  }
+}

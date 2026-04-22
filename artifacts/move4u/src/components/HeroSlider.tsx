@@ -33,7 +33,7 @@ export default function HeroSlider() {
     // min-h on mobile pins the hero to a stable height so swapping
     // slides (whose title/text lengths differ) never reflows the page.
     // Desktop keeps content-driven sizing.
-    <div className="relative bg-gray-900 text-white overflow-hidden min-h-[540px] sm:min-h-0">
+    <div className="relative bg-gray-900 text-white overflow-hidden min-h-[460px] sm:min-h-0">
       {/* Stacked background images — crossfade between slides. No blur, sharp originals. */}
       <div className="absolute inset-0">
         {SLIDES.map((s, i) => (
@@ -101,7 +101,7 @@ export default function HeroSlider() {
 
       {/* Mobile: top-aligned, compact padding, left-aligned text.
           Desktop: unchanged — vertically centred with generous padding. */}
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-20 sm:py-32 md:py-36 min-h-[540px] sm:min-h-0 flex flex-col items-start justify-start sm:block">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-12 sm:py-32 md:py-36 min-h-[460px] sm:min-h-0 flex flex-col items-start justify-start sm:block">
         <div className="max-w-2xl w-full text-left">
           {/* Slide content — re-keyed so each change replays the
               staggered rise-in for headline / subtext / buttons. */}
@@ -169,8 +169,10 @@ export default function HeroSlider() {
           <ChevronRight className="w-5 h-5" />
         </button>
 
-        {/* Dots */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+        {/* Dots — sit a touch higher on mobile so the rounded white
+            services panel can ride up over the hero edge without
+            covering them. */}
+        <div className="absolute bottom-10 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
           {SLIDES.map((_, i) => (
             <button
               key={i}

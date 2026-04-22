@@ -28,10 +28,19 @@ export default function ServicesSection() {
   return (
     <section
       id="services"
-      className="py-9 sm:py-16"
+      /* MOBILE: ride up over the bottom of the hero (-mt-6) with
+         rounded top corners and a soft top shadow so the join feels
+         intentional and modern instead of a hard cut. White panel on
+         mobile keeps the focus on the service tiles. DESKTOP: unchanged
+         — flat full-width gradient as before. */
+      className="
+        relative z-10 -mt-6 rounded-t-[22px] bg-white shadow-[0_-8px_24px_-12px_rgba(76,29,149,0.18)]
+        pt-6 pb-9
+        sm:mt-0 sm:rounded-none sm:bg-transparent sm:shadow-none sm:pt-16 sm:pb-16
+      "
       style={{
-        background:
-          "linear-gradient(180deg, #faf8ff 0%, #f5f1fb 60%, #f3eff9 100%)",
+        backgroundImage:
+          "linear-gradient(180deg, var(--svc-from, #ffffff) 0%, var(--svc-mid, #ffffff) 60%, var(--svc-to, #ffffff) 100%)",
       }}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
