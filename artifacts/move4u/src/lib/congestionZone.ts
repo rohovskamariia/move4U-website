@@ -3,12 +3,21 @@
 // Transport for London charges £18 to drive in the Central London CCZ.
 // Detection runs against free-form address strings (typically the
 // Google Places autocomplete value, e.g. "Oxford Circus, London W1B 3AG, UK").
-// We do NOT call any geocoding API — instead we use the UK postcode
-// outward code, reduced to its area prefix, and a small keyword fallback
-// for cases where the customer typed an area name but no postcode.
+//
+// Strategy (most accurate → fallback):
+//   1. Extract the FULL UK postcode from the address and check it against
+//      the official TfL CCZ postcode list (~18,600 codes — see
+//      `src/data/cczPostcodes.ts`). Exact match wins.
+//   2. If only an outward code is present, fall back to the area-prefix
+//      list (W1, EC1-4, WC1-2, SW1, SE1, N1-partial). Treated as
+//      "likely" since not every postcode in those areas is in the zone.
+//   3. If still no postcode, fall back to landmark/area keyword matching.
 
-// CCZ area prefixes — the reduced form (no trailing letter/digit).
-// W1B → W1, WC2N → WC2, EC1A → EC1, etc.
+import { CCZ_POSTCODES } from "@/data/cczPostcodes";
+
+// Area prefixes used for the OUTWARD-only fallback (when we can't
+// resolve a full postcode). These cover the central London zone at a
+// coarse level — kept identical to the previous behaviour.
 const CCZ_AREA_PREFIXES = [
   "W1",
   "WC1", "WC2",
@@ -30,18 +39,28 @@ const CCZ_KEYWORDS = [
 ];
 
 /**
- * Pull the outward code from a free-form address.
+ * Pull the full UK postcode (outward + inward) from a free-form address.
+ * Returns the normalised form WITHOUT a space, e.g. "EC1A1BB".
+ * Returns null when no full postcode is present.
+ */
+function extractFullPostcode(address: string): string | null {
+  if (!address) return null;
+  const m = address
+    .toUpperCase()
+    .match(/\b([A-Z]{1,2}[0-9][0-9A-Z]?)\s*([0-9][A-Z]{2})\b/);
+  return m ? `${m[1]}${m[2]}` : null;
+}
+
+/**
+ * Pull just the outward code from a free-form address.
  * "Oxford Circus, London W1B 3AG, UK" → "W1B"
- * "EC1A 1BB" → "EC1A"
- * Returns null when no UK postcode is present.
+ * "London W1B" → "W1B"
+ * Returns null when no outward code is present.
  */
 function extractOutwardCode(address: string): string | null {
   if (!address) return null;
-  // Full UK postcode: outward (1-2 letters + 1-2 digits + optional letter)
-  // followed by a space (or none) and the inward part (digit + 2 letters).
   const full = address.toUpperCase().match(/\b([A-Z]{1,2}[0-9][0-9A-Z]?)\s*[0-9][A-Z]{2}\b/);
   if (full) return full[1];
-  // Outward-only fallback (e.g. "London W1B")
   const outwardOnly = address.toUpperCase().match(/\b([A-Z]{1,2}[0-9][0-9A-Z]?)\b(?!\s*[0-9][A-Z]{2})/);
   return outwardOnly ? outwardOnly[1] : null;
 }
@@ -51,47 +70,60 @@ function extractOutwardCode(address: string): string | null {
  * "W1B" → "W1", "WC2N" → "WC2", "EC1A" → "EC1", "SW1" → "SW1"
  */
 function reduceToAreaPrefix(outward: string): string {
-  // Match leading letters + leading digits, drop any trailing letter.
   const m = outward.match(/^([A-Z]{1,2}[0-9]+)/);
   return m ? m[1] : outward;
 }
 
-function checkAddress(address: string): { matched: boolean; outward: string | null; prefix: string | null; via: "postcode" | "keyword" | null } {
-  const outward = extractOutwardCode(address);
+type Via = "postcode-exact" | "postcode-prefix" | "keyword" | null;
+
+function checkAddress(address: string): {
+  matched: boolean;
+  full: string | null;
+  outward: string | null;
+  prefix: string | null;
+  via: Via;
+} {
+  const full = extractFullPostcode(address);
+  const outward = full ? full.slice(0, full.length - 3) : extractOutwardCode(address);
   const prefix = outward ? reduceToAreaPrefix(outward) : null;
 
-  if (prefix && CCZ_AREA_PREFIXES.includes(prefix)) {
-    return { matched: true, outward, prefix, via: "postcode" };
+  // 1. Exact full-postcode match against the official list — most accurate.
+  if (full && CCZ_POSTCODES.has(full)) {
+    return { matched: true, full, outward, prefix, via: "postcode-exact" };
   }
 
-  const lower = address.toLowerCase();
-  if (CCZ_KEYWORDS.some((kw) => lower.includes(kw))) {
-    return { matched: true, outward, prefix, via: "keyword" };
+  // 2. Outward-only fallback — only when we don't have a full postcode.
+  //    A full postcode that ISN'T in the official list means the address is
+  //    NOT in the zone, so we deliberately don't fall through to the prefix
+  //    check in that case (would create false positives for e.g. EC1A 1BB-
+  //    adjacent codes that TfL excludes).
+  if (!full && prefix && CCZ_AREA_PREFIXES.includes(prefix)) {
+    return { matched: true, full: null, outward, prefix, via: "postcode-prefix" };
   }
 
-  return { matched: false, outward, prefix, via: null };
+  // 3. Keyword fallback — when no postcode at all, look for area names.
+  if (!full && !prefix) {
+    const lower = address.toLowerCase();
+    if (CCZ_KEYWORDS.some((kw) => lower.includes(kw))) {
+      return { matched: true, full: null, outward, prefix, via: "keyword" };
+    }
+  }
+
+  return { matched: false, full, outward, prefix, via: null };
 }
 
 /**
- * Returns true if any of the supplied addresses sits in (or passes
- * through) the Central London Congestion Charge Zone. Postcode match
- * OR keyword match is enough — both are not required.
+ * Returns true if any of the supplied addresses sits in the Central
+ * London Congestion Charge Zone. Checked across pickup, drop-off and
+ * any additional stops — a single match is enough.
  */
-export function isLikelyInCongestionZone(addresses: (string | undefined | null)[]): boolean {
-  let anyMatch = false;
+export function isLikelyInCongestionZone(
+  addresses: (string | undefined | null)[],
+): boolean {
   for (const raw of addresses) {
     const a = (raw ?? "").trim();
     if (!a) continue;
-    const result = checkAddress(a);
-    // eslint-disable-next-line no-console -- temporary debug logging per spec
-    console.log("[CCZ]", {
-      address: a,
-      outward: result.outward,
-      prefix: result.prefix,
-      matched: result.matched,
-      via: result.via,
-    });
-    if (result.matched) anyMatch = true;
+    if (checkAddress(a).matched) return true;
   }
-  return anyMatch;
+  return false;
 }

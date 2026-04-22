@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, Loader2, ChevronLeft, ChevronDown, Info, Plus, Minus, Route, Check, Hash, Clock, Sparkles } from "lucide-react";
-import { WASTE_LOADS, WASTE_EXTRA_ITEMS } from "@/data/constants";
+import { WASTE_LOADS, WASTE_EXTRA_ITEMS, CONGESTION_CHARGE } from "@/data/constants";
+import { isLikelyInCongestionZone } from "@/lib/congestionZone";
 import { submitBooking, uploadPhotos } from "@/lib/api";
 import { isValidPhone, isValidEmail } from "@/lib/validators";
 import WasteSizeModal from "@/components/WasteSizeModal";
@@ -133,13 +134,20 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   const stairsCharge = getFloorChargeFromValue(floorValue);
   const accessCharge = restrictedAccess ? RESTRICTED_ACCESS_SURCHARGE : 0;
   const surchargeTotal = stairsCharge + accessCharge;
+  // Congestion Charge — detected from the pickup postcode (waste flow has
+  // no customer drop-off — the load goes to a disposal site). Added on top
+  // of the calculated total but BEFORE the minimum-charge floor so a CCZ
+  // pickup never gets absorbed by the £60 minimum.
+  const congestionLikely = isLikelyInCongestionZone([pickup]);
+  const congestionCharge = congestionLikely ? CONGESTION_CHARGE : 0;
   const calculatedTotal = loadPrice + extrasTotal + surchargeTotal;
   // Minimum charge only kicks in once the user has actually picked something
   // (a load OR at least one item). An empty selection should still read £0.
   const hasSelection = !!selectedLoad || hasItems;
-  const estimatedTotal = hasSelection
+  const baseTotal = hasSelection
     ? Math.max(WASTE_MIN_CHARGE, calculatedTotal)
     : 0;
+  const estimatedTotal = baseTotal + (hasSelection ? congestionCharge : 0);
   const minChargeApplied = hasSelection && calculatedTotal < WASTE_MIN_CHARGE;
 
   // Per-step back navigation
@@ -349,7 +357,8 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                   notes: [
                     notes,
                     `Load: ${loadLabel}`,
-                    minChargeApplied ? `Min charge applied (calc £${calculatedTotal} → £${estimatedTotal})` : null,
+                    minChargeApplied ? `Min charge applied (calc £${calculatedTotal} → £${baseTotal})` : null,
+                    congestionCharge > 0 ? `Congestion Charge may apply (+£${congestionCharge})` : null,
                   ].filter(Boolean).join(" | "),
                 });
                 setBookingRef(result.bookingReference);
@@ -401,6 +410,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
               {!itemsOnlyMode && extrasTotal > 0 ? ` + £${extrasTotal} items` : ""}
               {itemsOnlyMode && extrasTotal > 0 ? ` £${extrasTotal} items` : ""}
               {surchargeTotal > 0 ? ` + £${surchargeTotal} access` : ""}
+              {congestionCharge > 0 ? ` + £${congestionCharge} CC*` : ""}
             </span>
           </div>
           {minChargeApplied && (
@@ -408,7 +418,36 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
               Minimum charge £{WASTE_MIN_CHARGE} applied
             </p>
           )}
+          {congestionCharge > 0 && (
+            <p className="text-[11px] text-white/80 mt-2">
+              *Includes £{CONGESTION_CHARGE} Congestion Charge — may apply
+            </p>
+          )}
         </div>
+
+        {congestionCharge > 0 && (
+          <div
+            className="bg-white border border-gray-100 rounded-2xl overflow-hidden mb-3"
+            data-testid="waste-summary-congestion-charge"
+          >
+            <div className="flex items-start justify-between gap-3 px-4 py-2.5">
+              <div className="min-w-0 flex gap-2">
+                <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-[13px] font-medium text-gray-900">
+                    Congestion Charge may apply
+                  </p>
+                  <p className="text-[11.5px] text-gray-500 mt-0.5 leading-snug">
+                    Pickup is in the Central London congestion zone.
+                  </p>
+                </div>
+              </div>
+              <span className="text-[13px] font-semibold text-amber-600 tabular-nums shrink-0">
+                +£{congestionCharge}
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden mb-3 divide-y divide-gray-50">
           {[
@@ -432,6 +471,9 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
             restrictedAccess ? { label: "Restricted access", value: `+£${RESTRICTED_ACCESS_SURCHARGE}` } : null,
             minChargeApplied
               ? { label: "Minimum charge adjustment", value: `+£${WASTE_MIN_CHARGE - calculatedTotal}` }
+              : null,
+            congestionCharge > 0
+              ? { label: "Congestion Charge (may apply)", value: `+£${congestionCharge}` }
               : null,
           ]
             .filter(Boolean)
