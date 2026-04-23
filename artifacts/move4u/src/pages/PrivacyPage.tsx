@@ -33,7 +33,7 @@ export default function PrivacyPage() {
               <li>Pickup and drop-off addresses</li>
               <li>Booking preferences and any notes you provide</li>
               <li>Photos you choose to upload to assist with your booking</li>
-              <li>Communication records via WhatsApp, phone, or email</li>
+              <li>Communication records via WhatsApp, Telegram, phone, or email</li>
             </ul>
           </section>
 
