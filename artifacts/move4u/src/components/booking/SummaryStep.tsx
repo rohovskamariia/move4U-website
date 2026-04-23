@@ -31,6 +31,10 @@ interface SummaryStepProps {
   helpOption: string;
   hours: number;
   notes: string;
+  /** Single Item Delivery — customer-supplied description of the item.
+   *  Shown as its own row in the summary so the customer can confirm
+   *  the team will know what to expect. */
+  itemDescription?: string;
   onContinue: () => void;
 }
 
@@ -66,6 +70,7 @@ export default function SummaryStep({
   helpOption,
   hours,
   notes,
+  itemDescription,
   onContinue,
 }: SummaryStepProps) {
   const singleItem = isSingleItem(serviceId);
@@ -117,7 +122,9 @@ export default function SummaryStep({
       label: "Pricing",
       value: `£${SINGLE_ITEM_PRICING.baseCharge} up to 1h, then £${SINGLE_ITEM_PRICING.extraHalfHourRate}/30 min`,
     });
-    rows.push({ label: "Van (for reference)", value: getVanLabel(vanSize) });
+    if (itemDescription && itemDescription.trim()) {
+      rows.push({ label: "Item", value: itemDescription.trim() });
+    }
   } else {
     rows.push({ label: "Van size", value: getVanLabel(vanSize) });
     rows.push({ label: "Help option", value: getHelpLabel(helpOption) });
@@ -201,7 +208,7 @@ export default function SummaryStep({
               `*Includes £${congestionCharge} Congestion Charge (${congestionEntries} entr${congestionEntries === 1 ? "y" : "ies"} × £${CONGESTION_CHARGE})`}
             {congestionCharge > 0 && outsideM25Charge > 0 ? " · " : ""}
             {outsideM25Charge > 0 &&
-              `Outside-M25 estimate: ~${outsideM25Miles} mi × £${OUTSIDE_M25_RATE}`}
+              `Outside London ~${outsideM25Miles} mi · estimate, see breakdown below`}
           </p>
         )}
       </div>
@@ -250,23 +257,43 @@ export default function SummaryStep({
           )}
           {outsideM25Charge > 0 && (
             <div
-              className="flex items-start justify-between gap-3 px-4 py-2.5"
+              className="px-4 py-3"
               data-testid="summary-outside-m25-charge"
             >
-              <div className="min-w-0 flex gap-2">
+              <div className="flex items-start gap-2 mb-2">
                 <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-[13px] font-medium text-gray-900">
-                    Outside-M25 mileage (estimate)
-                  </p>
-                  <p className="text-[11.5px] text-gray-500 mt-0.5 leading-snug">
-                    ~{outsideM25Miles} miles × £{OUTSIDE_M25_RATE}/mile. Final mileage confirmed on the day.
-                  </p>
-                </div>
+                <p className="text-[13px] font-medium text-gray-900">
+                  Outside London mileage (estimate)
+                </p>
               </div>
-              <span className="text-[13px] font-semibold text-amber-600 tabular-nums shrink-0">
-                +£{outsideM25Charge}
-              </span>
+              {/* Three-line breakdown — clearer than a single inline equation,
+                  which lets customers read distance, rate and total
+                  separately. */}
+              <dl className="text-[12.5px] text-gray-700 space-y-0.5 pl-6">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-500">Outside London distance</dt>
+                  <dd className="tabular-nums">~{outsideM25Miles} miles</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-500">Charge</dt>
+                  <dd className="tabular-nums">£{OUTSIDE_M25_RATE}/mile</dd>
+                </div>
+                <div className="flex justify-between gap-3 font-semibold text-amber-700">
+                  <dt>Total</dt>
+                  <dd className="tabular-nums">+£{outsideM25Charge}</dd>
+                </div>
+              </dl>
+              <p className="text-[11.5px] text-gray-500 mt-2 pl-6 leading-snug">
+                Estimated based on route. Final price may vary slightly depending on the actual route.
+                {outsideM25Miles >= 60 && (
+                  <>
+                    {" "}
+                    <span className="block mt-1 text-gray-600">
+                      Long distance jobs are priced based on route, not minimum hours.
+                    </span>
+                  </>
+                )}
+              </p>
             </div>
           )}
         </div>

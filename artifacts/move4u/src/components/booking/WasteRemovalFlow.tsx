@@ -341,21 +341,35 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
             className="bg-white border border-gray-100 rounded-2xl overflow-hidden mb-3"
             data-testid="waste-summary-outside-m25-charge"
           >
-            <div className="flex items-start justify-between gap-3 px-4 py-2.5">
-              <div className="min-w-0 flex gap-2">
+            <div className="px-4 py-3">
+              <div className="flex items-start gap-2 mb-2">
                 <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-[13px] font-medium text-gray-900">
-                    Outside-M25 mileage (estimate)
-                  </p>
-                  <p className="text-[11.5px] text-gray-500 mt-0.5 leading-snug">
-                    ~{outsideM25Miles} miles × £{OUTSIDE_M25_RATE}/mile. Final mileage confirmed on the day.
-                  </p>
-                </div>
+                <p className="text-[13px] font-medium text-gray-900">
+                  Outside London mileage (estimate)
+                </p>
               </div>
-              <span className="text-[13px] font-semibold text-amber-600 tabular-nums shrink-0">
-                +£{outsideM25Charge}
-              </span>
+              <dl className="text-[12.5px] text-gray-700 space-y-0.5 pl-6">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-500">Outside London distance</dt>
+                  <dd className="tabular-nums">~{outsideM25Miles} miles</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-500">Charge</dt>
+                  <dd className="tabular-nums">£{OUTSIDE_M25_RATE}/mile</dd>
+                </div>
+                <div className="flex justify-between gap-3 font-semibold text-amber-700">
+                  <dt>Total</dt>
+                  <dd className="tabular-nums">+£{outsideM25Charge}</dd>
+                </div>
+              </dl>
+              <p className="text-[11.5px] text-gray-500 mt-2 pl-6 leading-snug">
+                Estimated based on route. Final price may vary slightly depending on the actual route.
+                {outsideM25Miles >= 60 && (
+                  <span className="block mt-1 text-gray-600">
+                    Long distance jobs are priced based on route, not minimum hours.
+                  </span>
+                )}
+              </p>
             </div>
           </div>
         )}

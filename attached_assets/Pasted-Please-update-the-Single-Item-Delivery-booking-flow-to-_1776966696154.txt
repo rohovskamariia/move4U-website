@@ -1,0 +1,85 @@
+Please update the Single Item Delivery booking flow to make it simpler and more suitable for customers.
+
+1. Remove unnecessary selection options
+- Do NOT ask the customer to choose driver help van size/ helper options in Single Item Delivery
+- Do NOT show this as a required choice for the customer
+- Keep the booking flow simple
+
+2. Add a required description field
+Add a required field so the customer must describe what item they want to move.
+
+Label:
+“What are you moving?”
+
+Placeholder:
+e.g. Sofa, washing machine, table, wardrobe, fragile items, boxes, etc.
+
+Helper text:
+Please describe your item clearly so we can prepare the right equipment and team.
+
+3. Add a clear “Please note” section
+Add a short note in the Single Item Delivery flow explaining:
+
+- Minimum charge is £60 (up to 1 hour)
+- Additional time is charged at £30 per 30 minutes
+- If the item is large, heavy, bulky, or requires extra handling, an additional team member may be required and charged separately
+- Fragile or valuable items must be properly packed and protected before collection
+- If the item is not ready, not accessible, or delayed, waiting time may be charged
+- Final price will be confirmed after reviewing the request
+
+4. Heavy / large item logic
+Do NOT force the customer to choose extra help.
+
+Instead:
+- use the item description to help identify large / heavy items
+- if the item appears heavy or bulky (for example: sofa, wardrobe, piano, large appliance, etc.), flag it for review
+- admin can then decide whether an extra team member is needed and adjust pricing manually if required
+
+5. Keep customer flow simple
+Goal:
+The customer should only describe the item, upload photos if needed, and continue.
+Do not make the Single Item Delivery flow too complicated with extra manual choices.
+
+6. Optional but recommended
+If not already present, keep photo upload available for Single Item Delivery so the team can review bulky, fragile, or unusual items more accurately.
+
+Final goal:
+A simpler Single Item Delivery form for the customer, with enough information for the team to review large, heavy, fragile, or special items properly. Please apply the following small text and UX improvements.
+
+---
+
+1. Improve Outside M25 explanation text
+
+Current text:
+“Final mileage confirmed on the day”
+
+Replace with:
+“Estimated based on route. Final price may vary slightly depending on the actual route.”
+
+---
+
+2. Improve mileage price display (UX)
+
+Replace current format:
+
+~165 miles × £1/mile  
++£165  
+
+With clearer format:
+
+Outside London distance: ~165 miles  
+Charge: £1/mile  
+Total: £165  
+
+---
+
+3. Optional (but recommended)
+
+For long distance jobs, add a short note:
+
+“Long distance jobs are priced based on route, not minimum hours.”
+
+---
+
+Goal:
+Make pricing clearer, more transparent, and easier for customers to understand without confusion.

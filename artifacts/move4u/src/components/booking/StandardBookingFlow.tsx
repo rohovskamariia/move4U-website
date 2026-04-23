@@ -21,6 +21,7 @@ import { isAddressAcceptable, isUKAddressMissingFullPostcode } from "@/lib/postc
 import ExtraStopsSection, { type ExtraStop } from "./ExtraStopsSection";
 import VanStep from "./VanStep";
 import HelpStep from "./HelpStep";
+import SingleItemDetailsStep from "./SingleItemDetailsStep";
 import TimeStep from "./TimeStep";
 import NotesStep from "./NotesStep";
 import SummaryStep from "./SummaryStep";
@@ -32,20 +33,51 @@ interface StandardBookingFlowProps {
   onBack: () => void;
 }
 
-type Step = "pickup" | "dropoff" | "van" | "help" | "time" | "notes" | "summary" | "final";
+type Step =
+  | "pickup"
+  | "dropoff"
+  | "van"
+  | "help"
+  | "describe"
+  | "time"
+  | "notes"
+  | "summary"
+  | "final";
 
 const STEP_LABELS: Record<Step, string> = {
   pickup: "Pickup",
   dropoff: "Drop-off",
   van: "Van size",
   help: "Help option",
+  describe: "Item details",
   time: "Time",
   notes: "Notes",
   summary: "Summary",
   final: "Confirm",
 };
 
-const STEPS: Step[] = ["pickup", "dropoff", "van", "help", "time", "notes", "summary", "final"];
+// The standard step order for full removal services. Single Item Delivery
+// uses a simplified flow (see SINGLE_ITEM_STEPS) which skips the van and
+// help selections in favour of a single "describe your item" step.
+const FULL_STEPS: Step[] = [
+  "pickup",
+  "dropoff",
+  "van",
+  "help",
+  "time",
+  "notes",
+  "summary",
+  "final",
+];
+const SINGLE_ITEM_STEPS: Step[] = [
+  "pickup",
+  "dropoff",
+  "describe",
+  "time",
+  "notes",
+  "summary",
+  "final",
+];
 
 const getFloorCharge = getFloorChargeFromValue;
 
@@ -109,6 +141,13 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
   const [notes, setNotes] = useState("");
   const [photos, setPhotos] = useState<File[]>([]);
 
+  // Single Item Delivery — required item description (drives admin review
+  // for bulky/heavy items and is shown in the summary + booking notes).
+  const [itemDescription, setItemDescription] = useState("");
+
+  // Step list adapts to the service: single-item gets a simplified flow
+  // (no van/help selection — just "describe what you're moving").
+  const STEPS = singleItem ? SINGLE_ITEM_STEPS : FULL_STEPS;
   const currentIndex = STEPS.indexOf(step);
 
   const goNext = () => {
@@ -148,6 +187,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
     }
     if (step === "van") return !!vanSize;
     if (step === "help") return !!helpOption;
+    if (step === "describe") return itemDescription.trim().length >= 3;
     return true;
   };
 
@@ -184,6 +224,10 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
     if (step === "van") return vanSize ? null : "Please choose a van size";
     if (step === "help")
       return helpOption ? null : "Please choose how much help you need";
+    if (step === "describe")
+      return itemDescription.trim().length >= 3
+        ? null
+        : "Please describe the item you'd like us to move";
     return null;
   };
 
@@ -222,6 +266,13 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
         return <VanStep selected={vanSize} onSelect={setVanSize} />;
       case "help":
         return <HelpStep vanSize={vanSize} selected={helpOption} onSelect={setHelpOption} />;
+      case "describe":
+        return (
+          <SingleItemDetailsStep
+            description={itemDescription}
+            onDescriptionChange={setItemDescription}
+          />
+        );
       case "time":
         return (
           <TimeStep
@@ -251,6 +302,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
             helpOption={helpOption}
             hours={hours}
             notes={notes}
+            itemDescription={itemDescription}
             onContinue={() => setStep("final")}
           />
         );
@@ -335,7 +387,17 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
                 .join(" | ");
               // Append surcharge breakdown to notes so the admin / Telegram
               // message clearly shows what made up the total.
+              // For Single Item Delivery, surface the customer's item
+              // description first so the team sees it immediately. Flag
+              // anything that sounds bulky / heavy / fragile so admin
+              // can review before confirming the booking.
+              const desc = itemDescription.trim();
+              const bulkyKeywords = /\b(sofa|couch|wardrobe|piano|fridge|freezer|washer|dryer|mattress|king[- ]?size|bed frame|treadmill|safe|gym|pool table|heavy|fragile|glass|marble|chandelier|antique)\b/i;
+              const itemNote = isSingleItem(serviceId) && desc
+                ? `Item: ${desc}${bulkyKeywords.test(desc) ? " [REVIEW: bulky/heavy/fragile — confirm van + helper]" : ""}`
+                : null;
               const surchargeNotes = [
+                itemNote,
                 extraStopFee > 0
                   ? `Additional stops: ${cleanStopsForPrice.length} × £${EXTRA_STOP_CHARGE} = +£${extraStopFee}`
                   : null,
@@ -366,9 +428,18 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
                 dropoffDetails: formatFloorDetail(dropoffFloor, dropoffCharge),
                 extraAddress: extraAddressFormatted,
                 extraStops: formattedStops,
-                vanSize: vanLabel,
-                helpOption: helpLabels[helpOption] ?? helpOption,
-                peopleCount: peopleCounts[helpOption] ?? "",
+                // Single Item bookings don't ask the customer to pick a
+                // van or help level — the team decides from the item
+                // description (and any [REVIEW] flag) before confirming.
+                // Send neutral values so ops never reads the silent
+                // defaults as customer-confirmed selections.
+                vanSize: isSingleItem(serviceId) ? "To be confirmed" : vanLabel,
+                helpOption: isSingleItem(serviceId)
+                  ? "To be confirmed after review"
+                  : (helpLabels[helpOption] ?? helpOption),
+                peopleCount: isSingleItem(serviceId)
+                  ? ""
+                  : (peopleCounts[helpOption] ?? ""),
                 estimatedPrice: `£${totalPrice.toFixed(0)}`,
                 estimatedTime,
                 date,
