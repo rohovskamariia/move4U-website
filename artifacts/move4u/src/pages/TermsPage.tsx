@@ -49,7 +49,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">5. Payment</h2>
             <p>
-              Payment is due upon completion of the service unless otherwise agreed. Accepted payment methods will be confirmed at the time of booking. Prices quoted are in British Pounds (GBP) and include VAT where applicable.
+              Payment is due upon completion of the service unless otherwise agreed. Accepted payment methods will be confirmed at the time of booking. Prices quoted are in British Pounds (GBP).
             </p>
           </section>
 
