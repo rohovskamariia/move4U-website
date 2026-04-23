@@ -1,8 +1,14 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BackToHome from "@/components/BackToHome";
+import { usePageMeta } from "@/lib/usePageMeta";
 
 export default function PrivacyPage() {
+  usePageMeta({
+    title: "Privacy Policy | Move4U",
+    description: "How Move4U handles your personal data when you book our London removals and moving service.",
+    path: "/privacy",
+  });
   return (
     <div className="min-h-screen bg-white">
       <Navbar />

@@ -1,8 +1,14 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BackToHome from "@/components/BackToHome";
+import { usePageMeta } from "@/lib/usePageMeta";
 
 export default function CancellationPolicyPage() {
+  usePageMeta({
+    title: "Cancellation Policy | Move4U Removals London",
+    description: "Move4U cancellation and rescheduling policy for our London removals and moving service.",
+    path: "/cancellation-policy",
+  });
   return (
     <div className="min-h-screen bg-white">
       <Navbar />

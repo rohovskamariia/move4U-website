@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useRoute, Link } from "wouter";
+import { useNoIndex } from "@/lib/usePageMeta";
 
 export default function PayRedirectPage() {
+  useNoIndex();
   const [, params] = useRoute("/pay/:ref");
   const ref = params?.ref ?? "";
   const [error, setError] = useState<string | null>(null);

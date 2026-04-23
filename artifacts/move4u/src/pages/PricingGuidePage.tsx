@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import { Link } from "wouter";
 import BackToHome from "@/components/BackToHome";
 import { MessageCircle } from "lucide-react";
+import { usePageMeta } from "@/lib/usePageMeta";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS, CONTACT, EXTRA_STOP_CHARGE, CONGESTION_CHARGE } from "@/data/constants";
 import smallVan from "@assets/IMG_3410_1776508670556.webp";
 import mediumVan from "@assets/IMG_3409_1776508670556.webp";
@@ -38,6 +39,12 @@ const HELP_OPTIONS = [
 ];
 
 export default function PricingGuidePage() {
+  usePageMeta({
+    title: "Pricing Guide — Removals & Man and Van Rates in London | Move4U",
+    description:
+      "Transparent Move4U pricing for London removals: van sizes, hourly rates, waste removal loads, extra-stop and congestion charges. No hidden fees.",
+    path: "/pricing",
+  });
   const whatsappHref = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(CONTACT.whatsappDefaultMessage)}`;
 
   return (

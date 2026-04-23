@@ -1,0 +1,93 @@
+Please tighten the address search and validation logic.
+
+Current problem:
+- address search often shows “no matching addresses”
+- customers can type incomplete postcode fragments like “N22”
+- generic locations such as “Oxford Street” are not useful
+- we need exact addresses and full postcodes only
+
+Required behaviour:
+
+1. Search should prefer exact UK addresses with full postcodes
+- show only proper address suggestions
+- prefer full deliverable addresses
+- prefer suggestions that include a full postcode
+- do not prioritize vague place names or generic street-only results
+
+2. Do NOT treat incomplete postcode fragments as valid
+Examples:
+- “N22” = not valid
+- “W1” = not valid
+- “EC1A” = not enough by itself unless it is part of a full valid result
+
+3. Require a full postcode before continuing
+- customer must enter/select a full address with full postcode
+- if postcode is incomplete, show validation message
+- do not allow the booking to continue without a complete postcode
+
+4. Add clear helper text under the address field
+Example:
+“Please enter your full address or full postcode (e.g. N22 8HE).”
+
+5. Improve fallback behaviour
+- if autocomplete does not return results, allow manual address entry
+- but still require a full postcode in the postcode field before continuing
+
+6. Validation rule
+Only accept:
+- exact address selected from suggestions
+OR
+- manually entered full address with a full valid postcode
+
+Do NOT accept:
+- generic streets
+- area names only
+- incomplete postcode fragments
+
+7. Apply this consistently across all booking flows:
+- House Moving
+- Waste Removal
+- Commercial Moving
+- Single Item Delivery
+
+Goal:
+Customers should enter clear, exact addresses with full postcodes only, so drivers always receive usable address details.    Also Please improve search indexing / discoverability for move4u.uk.
+
+Current issue:
+The site opens by direct link, but it is difficult or impossible to find in Google search.
+
+Please check and implement:
+
+1. Proper indexing setup
+- create / verify robots.txt
+- create sitemap.xml
+- ensure important pages are indexable
+
+2. Google Search Console readiness
+- make sure the site can be submitted properly
+- ensure canonical domain is set correctly
+
+3. Domain consistency
+- choose one main version:
+  - move4u.uk
+  - or www.move4u.uk
+- redirect all other versions to the main domain
+
+4. Meta / SEO basics
+- proper page titles
+- meta descriptions
+- homepage title should clearly include:
+  Move4U, removals, London, moving service
+
+5. Technical checks
+- no accidental noindex tags
+- no blocked crawling
+- correct canonical tags
+- valid SSL on final domain
+
+6. Search visibility
+- make sure homepage is optimized to rank for brand name "Move4U"
+- make sure site can be found when searching the domain and company name
+
+Goal:
+move4u.uk should be properly indexable and easier to find in Google search.

@@ -1,8 +1,14 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BackToHome from "@/components/BackToHome";
+import { usePageMeta } from "@/lib/usePageMeta";
 
 export default function BookingPolicyPage() {
+  usePageMeta({
+    title: "Booking Policy | Move4U Removals London",
+    description: "Move4U booking policy: how reservations, deposits, and confirmations work for our London removals service.",
+    path: "/booking-policy",
+  });
   return (
     <div className="min-h-screen bg-white">
       <Navbar />

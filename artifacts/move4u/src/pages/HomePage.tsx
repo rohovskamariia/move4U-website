@@ -1,6 +1,7 @@
 import { useLayoutEffect } from "react";
 import { useLocation } from "wouter";
 import { consumeScrollTarget } from "@/lib/sectionNav";
+import { usePageMeta } from "@/lib/usePageMeta";
 import Navbar from "@/components/Navbar";
 import HeroSlider from "@/components/HeroSlider";
 import ServicesSection from "@/components/ServicesSection";
@@ -14,6 +15,12 @@ import {
 } from "lucide-react";
 
 export default function HomePage() {
+  usePageMeta({
+    title: "Move4U — Removals & Moving Service in London | Man and Van",
+    description:
+      "Move4U — trusted London removals and moving service. Man and van, house & flat moves, furniture delivery, waste removal and international moving. Fast, fair pricing, fully insured. Book online in minutes.",
+    path: "/",
+  });
   const [, setLocation] = useLocation();
 
   // If we landed here via section nav from another page, jump straight to

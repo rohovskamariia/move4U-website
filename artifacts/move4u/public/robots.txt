@@ -1,0 +1,16 @@
+# Move4U — robots.txt
+# Allow search engines to index all public pages. Internal admin and
+# checkout flow pages are excluded so they don't appear in search.
+
+User-agent: *
+Allow: /
+
+# Don't index admin or transactional/redirect-only pages.
+Disallow: /admin/
+Disallow: /admin/bookings
+Disallow: /secure-booking
+Disallow: /pay/
+Disallow: /payment-success
+
+# Canonical sitemap location.
+Sitemap: https://move4u.uk/sitemap.xml

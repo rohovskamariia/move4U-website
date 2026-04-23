@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "wouter";
 import BackToHome from "@/components/BackToHome";
+import { usePageMeta } from "@/lib/usePageMeta";
 import smallVan from "@assets/IMG_3410_1776508670556.webp";
 import mediumVan from "@assets/IMG_3409_1776508670556.webp";
 import largeVan from "@assets/IMG_3408_1776508670556.webp";
@@ -60,6 +61,12 @@ const VANS: VanInfo[] = [
 ];
 
 export default function VanGuidePage() {
+  usePageMeta({
+    title: "Van Size Guide — Choose the Right Van for Your London Move | Move4U",
+    description:
+      "Compare Move4U small, medium and large vans with capacity, dimensions and what fits inside — pick the right van for your London removal.",
+    path: "/van-guide",
+  });
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Navbar />

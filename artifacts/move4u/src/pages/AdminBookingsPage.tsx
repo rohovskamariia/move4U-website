@@ -6,6 +6,7 @@ import {
   MessageCircle, MessageSquare, Mail, PhoneCall,
 } from "lucide-react";
 import { toE164, toWhatsAppDigits } from "@/lib/validators";
+import { useNoIndex } from "@/lib/usePageMeta";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -296,6 +297,7 @@ function PasswordGate({ onAuth }: { onAuth: (key: string) => void }) {
 // ── Main admin panel ──────────────────────────────────────────
 
 export default function AdminBookingsPage() {
+  useNoIndex();
   const [authed,        setAuthed]        = useState(() => !!sessionStorage.getItem("mv4u_admin_key"));
   const [adminKey,      setAdminKey]      = useState(() => sessionStorage.getItem("mv4u_admin_key") ?? "");
   const [bookings,      setBookings]      = useState<BookingRecord[]>([]);

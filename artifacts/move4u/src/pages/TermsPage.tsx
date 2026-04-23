@@ -1,8 +1,14 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BackToHome from "@/components/BackToHome";
+import { usePageMeta } from "@/lib/usePageMeta";
 
 export default function TermsPage() {
+  usePageMeta({
+    title: "Terms & Conditions | Move4U",
+    description: "Move4U terms & conditions for our London removals and moving service.",
+    path: "/terms",
+  });
   return (
     <div className="min-h-screen bg-white">
       <Navbar />

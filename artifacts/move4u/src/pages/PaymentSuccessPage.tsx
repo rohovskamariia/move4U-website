@@ -1,8 +1,10 @@
 import { Link } from "wouter";
 import { CheckCircle2, Home, MessageCircle } from "lucide-react";
 import { CONTACT } from "@/data/constants";
+import { useNoIndex } from "@/lib/usePageMeta";
 
 export default function PaymentSuccessPage() {
+  useNoIndex();
   const whatsappUrl = `https://wa.me/${CONTACT.whatsapp.replace(/\D/g, "")}`;
 
   return (

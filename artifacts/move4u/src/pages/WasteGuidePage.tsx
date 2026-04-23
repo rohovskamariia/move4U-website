@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import { Link } from "wouter";
 import BackToHome from "@/components/BackToHome";
 import { WASTE_LOADS } from "@/data/constants";
+import { usePageMeta } from "@/lib/usePageMeta";
 import minLoad from "@assets/IMG_3575_1776610167208.webp";
 import quarterLoad from "@assets/IMG_3576_1776610167208.webp";
 import thirdLoad from "@assets/IMG_3577_1776610167208.webp";
@@ -22,6 +23,12 @@ const LOAD_IMAGES: Record<string, string> = {
 };
 
 export default function WasteGuidePage() {
+  usePageMeta({
+    title: "Waste Removal Guide — London Rubbish Clearance Loads | Move4U",
+    description:
+      "Move4U waste removal loads explained: from minimum to full van. Same-day rubbish clearance across London with transparent pricing.",
+    path: "/waste-guide",
+  });
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Navbar />

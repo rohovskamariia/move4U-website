@@ -9,6 +9,7 @@ import WasteRemovalFlow from "@/components/booking/WasteRemovalFlow";
 import InternationalFlow from "@/components/booking/InternationalFlow";
 import SomethingElseFlow from "@/components/booking/SomethingElseFlow";
 import { SERVICES } from "@/data/constants";
+import { usePageMeta } from "@/lib/usePageMeta";
 
 // Services that use the standard booking flow
 const STANDARD_SERVICES = ["house-move", "commercial-move", "single-item", "small-move"];
@@ -18,6 +19,12 @@ function getServiceLabel(id: string): string {
 }
 
 export default function BookingPage() {
+  usePageMeta({
+    title: "Book a Removal — London Moving Service | Move4U",
+    description:
+      "Book your London removal online with Move4U: house moves, single items, commercial moves, waste removal and international moving. Quick, transparent, fully insured.",
+    path: "/book",
+  });
   const params = useParams<{ service?: string }>();
   const [location] = useLocation();
   const [selectedService, setSelectedService] = useState<string | null>(params?.service || null);

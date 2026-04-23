@@ -80,7 +80,10 @@ const TEXT = {
 
 type PayMethod = "apple" | "google" | "card";
 
+import { useNoIndex } from "@/lib/usePageMeta";
+
 export default function SecureBookingPage() {
+  useNoIndex();
   const [form, setForm] = useState({
     bookingRef: "",
     name: "",
