@@ -1,4 +1,39 @@
-import { Minus, Plus } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, Info, Minus, Plus } from "lucide-react";
+
+/**
+ * Stairs & access info — collapsible helper that explains how stairs
+ * are counted toward floor charges. Hidden by default to keep the
+ * booking form uncluttered; expands on tap/click.
+ */
+function StairsAccessInfo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-2 sm:mt-3" data-testid="stairs-access-info">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="inline-flex items-center gap-1.5 text-[11.5px] sm:text-[12.5px] font-medium text-purple-700 hover:text-purple-800 transition-colors"
+        data-testid="stairs-access-info-toggle"
+      >
+        <Info className="w-3.5 h-3.5" />
+        <span>Stairs &amp; access info</span>
+        <ChevronDown
+          className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && (
+        <ul className="mt-2 space-y-1 bg-purple-50/70 border border-purple-100 rounded-lg px-3 py-2.5 text-[11.5px] sm:text-[12px] text-gray-700 list-disc pl-5 leading-relaxed">
+          <li>Up to 3 steps are considered ground level (no extra charge)</li>
+          <li>4 steps or more are counted as 1 floor</li>
+          <li>Each additional level is counted as an extra floor</li>
+          <li>Extra charges may apply if there is no lift available</li>
+        </ul>
+      )}
+    </div>
+  );
+}
 
 /**
  * Stairs & access — reusable section used by every booking flow.
@@ -281,9 +316,7 @@ export default function StairsAccessSection({
         </div>
       )}
 
-      <p className="text-[10.5px] sm:text-[11.5px] text-gray-500 mt-2 sm:mt-3 leading-snug sm:leading-relaxed">
-        Final price may vary depending on access and loading conditions.
-      </p>
+      <StairsAccessInfo />
     </div>
   );
 }

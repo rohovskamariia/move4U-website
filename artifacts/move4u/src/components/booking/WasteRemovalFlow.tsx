@@ -422,9 +422,6 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
             })}
         </div>
 
-        <p className="text-xs text-gray-500 mb-5 leading-relaxed">
-          Final price may vary depending on access and loading conditions.
-        </p>
         <button
           onClick={() => setStep("final")}
           className="btn-purple w-full py-2.5 sm:py-3.5 font-semibold rounded-xl text-sm"
