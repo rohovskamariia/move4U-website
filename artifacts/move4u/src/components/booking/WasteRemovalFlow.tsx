@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, ChevronLeft, ChevronDown, Info, Plus, Minus, Route, Check, Hash, Sparkles } from "lucide-react";
-import { WASTE_LOADS, WASTE_EXTRA_ITEMS, CONGESTION_CHARGE } from "@/data/constants";
-import { isLikelyInCongestionZone } from "@/lib/congestionZone";
+import { WASTE_LOADS, WASTE_EXTRA_ITEMS, CONGESTION_CHARGE, OUTSIDE_M25_RATE } from "@/data/constants";
+import { countCongestionEntries } from "@/lib/congestionZone";
+import { outsideM25MilesForRoute } from "@/lib/m25";
 import { submitBooking, uploadPhotos } from "@/lib/api";
 import WasteSizeModal from "@/components/WasteSizeModal";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
@@ -124,8 +125,12 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   // no customer drop-off — the load goes to a disposal site). Added on top
   // of the calculated total but BEFORE the minimum-charge floor so a CCZ
   // pickup never gets absorbed by the £60 minimum.
-  const congestionLikely = isLikelyInCongestionZone([pickup]);
-  const congestionCharge = congestionLikely ? CONGESTION_CHARGE : 0;
+  const congestionEntries = countCongestionEntries([pickup]);
+  const congestionCharge = congestionEntries * CONGESTION_CHARGE;
+  // Outside-M25 mileage estimate (one-way to/from disposal). Pickup outside
+  // the M25 means extra travel — billed at £1/mile on top of the base.
+  const outsideM25Miles = outsideM25MilesForRoute([pickup]);
+  const outsideM25Charge = outsideM25Miles * OUTSIDE_M25_RATE;
   const calculatedTotal = loadPrice + extrasTotal + surchargeTotal;
   // Minimum charge only kicks in once the user has actually picked something
   // (a load OR at least one item). An empty selection should still read £0.
@@ -133,7 +138,8 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
   const baseTotal = hasSelection
     ? Math.max(WASTE_MIN_CHARGE, calculatedTotal)
     : 0;
-  const estimatedTotal = baseTotal + (hasSelection ? congestionCharge : 0);
+  const estimatedTotal =
+    baseTotal + (hasSelection ? congestionCharge + outsideM25Charge : 0);
   const minChargeApplied = hasSelection && calculatedTotal < WASTE_MIN_CHARGE;
 
   // Per-step back navigation
@@ -237,7 +243,12 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                 notes,
                 `Load: ${loadLabel}`,
                 minChargeApplied ? `Min charge applied (calc £${calculatedTotal} → £${baseTotal})` : null,
-                congestionCharge > 0 ? `Congestion Charge may apply (+£${congestionCharge})` : null,
+                congestionCharge > 0
+                  ? `Congestion Charge: ${congestionEntries} × £${CONGESTION_CHARGE} = +£${congestionCharge}`
+                  : null,
+                outsideM25Charge > 0
+                  ? `Outside-M25 estimate: ~${outsideM25Miles} mi × £${OUTSIDE_M25_RATE} = +£${outsideM25Charge}`
+                  : null,
               ].filter(Boolean).join(" | "),
             });
           }}
@@ -282,6 +293,7 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
               {itemsOnlyMode && extrasTotal > 0 ? ` £${extrasTotal} items` : ""}
               {surchargeTotal > 0 ? ` + £${surchargeTotal} access` : ""}
               {congestionCharge > 0 ? ` + £${congestionCharge} CC*` : ""}
+              {outsideM25Charge > 0 ? ` + £${outsideM25Charge} M25*` : ""}
             </span>
           </div>
           {minChargeApplied && (
@@ -289,9 +301,13 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
               Minimum charge £{WASTE_MIN_CHARGE} applied
             </p>
           )}
-          {congestionCharge > 0 && (
+          {(congestionCharge > 0 || outsideM25Charge > 0) && (
             <p className="text-[11px] text-white/80 mt-2">
-              *Includes £{CONGESTION_CHARGE} Congestion Charge — may apply
+              {congestionCharge > 0 &&
+                `*Includes £${congestionCharge} Congestion Charge (${congestionEntries} entr${congestionEntries === 1 ? "y" : "ies"})`}
+              {congestionCharge > 0 && outsideM25Charge > 0 ? " · " : ""}
+              {outsideM25Charge > 0 &&
+                `Outside-M25 estimate: ~${outsideM25Miles} mi × £${OUTSIDE_M25_RATE}`}
             </p>
           )}
         </div>
@@ -306,15 +322,39 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
                 <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-[13px] font-medium text-gray-900">
-                    Congestion Charge may apply
+                    Congestion Charge ({congestionEntries} {congestionEntries === 1 ? "entry" : "entries"})
                   </p>
                   <p className="text-[11.5px] text-gray-500 mt-0.5 leading-snug">
-                    Pickup is in the Central London congestion zone.
+                    £{CONGESTION_CHARGE} per address inside the Central London zone.
                   </p>
                 </div>
               </div>
               <span className="text-[13px] font-semibold text-amber-600 tabular-nums shrink-0">
                 +£{congestionCharge}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {outsideM25Charge > 0 && (
+          <div
+            className="bg-white border border-gray-100 rounded-2xl overflow-hidden mb-3"
+            data-testid="waste-summary-outside-m25-charge"
+          >
+            <div className="flex items-start justify-between gap-3 px-4 py-2.5">
+              <div className="min-w-0 flex gap-2">
+                <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-[13px] font-medium text-gray-900">
+                    Outside-M25 mileage (estimate)
+                  </p>
+                  <p className="text-[11.5px] text-gray-500 mt-0.5 leading-snug">
+                    ~{outsideM25Miles} miles × £{OUTSIDE_M25_RATE}/mile. Final mileage confirmed on the day.
+                  </p>
+                </div>
+              </div>
+              <span className="text-[13px] font-semibold text-amber-600 tabular-nums shrink-0">
+                +£{outsideM25Charge}
               </span>
             </div>
           </div>
@@ -344,7 +384,16 @@ export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
               ? { label: "Minimum charge adjustment", value: `+£${WASTE_MIN_CHARGE - calculatedTotal}` }
               : null,
             congestionCharge > 0
-              ? { label: "Congestion Charge (may apply)", value: `+£${congestionCharge}` }
+              ? {
+                  label: `Congestion Charge × ${congestionEntries}`,
+                  value: `+£${congestionCharge}`,
+                }
+              : null,
+            outsideM25Charge > 0
+              ? {
+                  label: `Outside-M25 mileage (~${outsideM25Miles} mi)`,
+                  value: `+£${outsideM25Charge}`,
+                }
               : null,
           ]
             .filter(Boolean)

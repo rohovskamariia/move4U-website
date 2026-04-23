@@ -32,20 +32,46 @@ const SECTIONS: PolicySection[] = [
   },
   {
     title: "5. Minimum Booking Time",
-    body: "All bookings have a minimum duration of 2 hours. This includes travel time, loading and unloading, ensuring a smooth and efficient service.",
+    body:
+      "Most services have a 2-hour minimum (travel + loading + unloading). Single Item Delivery is the exception: a flat £60 covers the first hour, then £30 per extra 30 minutes.",
   },
   {
-    title: "6. Quotes",
+    title: "6. Time Rounding",
+    body:
+      "We round on-site time fairly: up to 4 minutes over a half-hour block is free; from 5 minutes onwards we round up to the next 30-minute block.",
+  },
+  {
+    title: "7. Stairs & Floor Counting",
+    body:
+      "Without a lift, every floor of stairs is £10. For partial flights, every 4 steps counts as one floor.",
+  },
+  {
+    title: "8. Congestion Charge",
+    body:
+      "£18 is added per address inside the Central London congestion zone. A pickup and drop-off both inside the zone adds £36.",
+  },
+  {
+    title: "9. Outside the M25",
+    body:
+      "Jobs that go beyond the M25 are charged at £1 per extra mile on top of the base price. Final mileage is confirmed on the day.",
+  },
+  {
+    title: "10. Waste Removal — Minimum Booking",
+    body:
+      "Waste removal bookings are subject to a minimum charge of £60. If the total of selected items is below £60, the price is rounded up. For small jobs, individual items can be selected without choosing a load size.",
+  },
+  {
+    title: "11. Quotes",
     body:
       "All quotes are estimates based on the information provided. Final pricing may change if the job conditions differ on the day (extra items, additional stairs, parking issues, etc.).",
   },
   {
-    title: "7. Changes to Bookings",
+    title: "12. Changes to Bookings",
     body:
       "If you need to change the date, time or address of a confirmed booking, please let us know as early as possible. We will do our best to accommodate changes subject to availability.",
   },
   {
-    title: "8. Contact",
+    title: "13. Contact",
     body:
       "For any booking questions, contact us at move4u.uk@gmail.com or call +44 7946 259714.",
   },

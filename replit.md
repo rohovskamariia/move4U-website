@@ -36,7 +36,17 @@ A professional, clean removals website for Move4U, a self-employed removals serv
 - **`artifacts/move4u/src/data/constants.ts`** — SLIDES array for carousel text
 
 ### Service pricing (van, help options)
-- **`artifacts/move4u/src/data/constants.ts`** — VAN_SIZES and HELP_PRICING
+- **`artifacts/move4u/src/data/constants.ts`** — VAN_SIZES, HELP_PRICING, OUTSIDE_M25_RATE, SINGLE_ITEM_PRICING, CONGESTION_CHARGE
+- **`artifacts/move4u/src/lib/pricing.ts`** — `computeBaseServiceCharge`, `getHourlyRate`, `isSingleItem`, `computeSingleItemBase` (single source of truth used by SummaryStep and StandardBookingFlow submit)
+- **`artifacts/move4u/src/lib/m25.ts`** — postcode-area outside-M25 mileage estimate (£1/mile, 30-mile fallback for unknown non-London areas)
+- **`artifacts/move4u/src/lib/congestionZone.ts`** — `countCongestionEntries` (£18 per CCZ address)
+
+Pricing rules:
+- Standard services: per-van × help-level hourly rate, 2-hour minimum.
+- Single Item Delivery: flat £60 covers 1 hour, +£30 per 30 min after, 1-hour minimum, independent of van/help.
+- CCZ: £18 per address inside the zone (pickup + drop-off + each extra stop counted separately).
+- Outside M25: ~£1/mile (estimate, reconciled on the day).
+- Stairs (no lift): £10/floor; every 4 steps = 1 floor (policy text).
 
 ### Waste removal extra item pricing
 - **`artifacts/move4u/src/data/constants.ts`** — WASTE_LOADS and WASTE_EXTRA_ITEMS

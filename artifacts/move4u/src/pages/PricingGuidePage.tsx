@@ -4,7 +4,17 @@ import { Link } from "wouter";
 import BackToHome from "@/components/BackToHome";
 import { MessageCircle } from "lucide-react";
 import { usePageMeta } from "@/lib/usePageMeta";
-import { WASTE_LOADS, WASTE_EXTRA_ITEMS, CONTACT, EXTRA_STOP_CHARGE, CONGESTION_CHARGE } from "@/data/constants";
+import {
+  WASTE_LOADS,
+  WASTE_EXTRA_ITEMS,
+  CONTACT,
+  EXTRA_STOP_CHARGE,
+  CONGESTION_CHARGE,
+  HELP_PRICING,
+  VAN_SIZES,
+  OUTSIDE_M25_RATE,
+  SINGLE_ITEM_PRICING,
+} from "@/data/constants";
 import smallVan from "@assets/IMG_3410_1776508670556.webp";
 import mediumVan from "@assets/IMG_3409_1776508670556.webp";
 import largeVan from "@assets/IMG_3408_1776508670556.webp";
@@ -16,11 +26,20 @@ import threeQuarterLoad from "@assets/IMG_3579_1776610167209.webp";
 import fullLoad from "@assets/IMG_3580_1776610167209.webp";
 import xlLoad from "@assets/IMG_3580_1776610167209.webp";
 
-const VANS = [
-  { name: "Small Van", price: "£35", desc: "Perfect for single items, small flat moves & deliveries.", image: smallVan },
-  { name: "Medium Van", price: "£40", desc: "Great for studio / 1-bedroom moves and bigger deliveries.", image: mediumVan },
-  { name: "Large Van", price: "£45", desc: "Ideal for 1–2 bedroom flats and commercial moves.", image: largeVan },
-];
+// Van line-up — base hourly rate (driver-only) is sourced from `HELP_PRICING`
+// so this page can never drift out of sync with the booking flow.
+const VAN_IMAGES: Record<string, string> = {
+  small: smallVan,
+  medium: mediumVan,
+  large: largeVan,
+};
+const VANS = VAN_SIZES.map((v) => ({
+  id: v.id,
+  name: v.name,
+  price: `£${HELP_PRICING[v.id]?.noHelp ?? v.basePrice}`,
+  desc: v.description,
+  image: VAN_IMAGES[v.id] ?? smallVan,
+}));
 
 const LOAD_IMAGES: Record<string, string> = {
   minimum: minLoad,
@@ -32,10 +51,30 @@ const LOAD_IMAGES: Record<string, string> = {
   extra_large: xlLoad,
 };
 
+// Help-level differentials shown on the page are computed live from
+// HELP_PRICING using the medium van as the reference point. This keeps
+// the page in lock-step with the booking engine and the per-van grid
+// rendered below.
+const REFERENCE_VAN = "medium" as const;
+const REF = HELP_PRICING[REFERENCE_VAN];
+const fmtDelta = (delta: number) =>
+  delta === 0 ? "Included" : `+£${delta}/hour`;
 const HELP_OPTIONS = [
-  { label: "No help", price: "Included", note: "Driver drives only — you load & unload." },
-  { label: "Driver help", price: "+£5/hour", note: "Driver helps load and unload as a 2nd pair of hands." },
-  { label: "Driver + helper", price: "+£30/hour", note: "Two professional movers handle everything for you." },
+  {
+    label: "No help",
+    price: fmtDelta(0),
+    note: "Driver drives only — you load & unload.",
+  },
+  {
+    label: "Driver help",
+    price: fmtDelta(REF.driverHelp - REF.noHelp),
+    note: "Driver helps load and unload as a 2nd pair of hands.",
+  },
+  {
+    label: "Driver + helper",
+    price: fmtDelta(REF.driverPlusHelper - REF.noHelp),
+    note: "Two professional movers handle everything for you.",
+  },
 ];
 
 export default function PricingGuidePage() {
@@ -113,9 +152,51 @@ export default function PricingGuidePage() {
           </div>
           <p className="mt-3 text-[13px] text-gray-600 bg-purple-50/70 border border-purple-100 rounded-xl px-4 py-2.5">
             <span className="font-semibold text-gray-900">Example:</span>{" "}
-            Medium van (£40) + driver help (£5) ={" "}
-            <span className="font-semibold text-purple-700">£45/hour</span>
+            Medium van + driver help ={" "}
+            <span className="font-semibold text-purple-700">
+              £{REF.driverHelp}/hour
+            </span>{" "}
+            · with a helper ={" "}
+            <span className="font-semibold text-purple-700">
+              £{REF.driverPlusHelper}/hour
+            </span>
           </p>
+        </Section>
+
+        {/* Per-van × help-level grid — the full hourly-rate matrix so
+            customers can read the exact rate for any combination at a
+            glance, instead of doing the addition themselves. */}
+        <Section
+          title="Hourly rates by van and help level"
+          subtitle="Final price = hourly rate × hours (minimum 2 hours)."
+        >
+          <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-[0_4px_18px_-10px_rgba(76,29,149,0.15)]">
+            <div className="overflow-x-auto">
+              <table className="w-full text-[13px] sm:text-sm">
+                <thead className="bg-purple-50/60 text-gray-700">
+                  <tr>
+                    <th className="text-left font-semibold px-4 py-2.5">Van</th>
+                    <th className="text-right font-semibold px-4 py-2.5">No help</th>
+                    <th className="text-right font-semibold px-4 py-2.5">+ Driver help</th>
+                    <th className="text-right font-semibold px-4 py-2.5">+ Helper</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {VAN_SIZES.map((v) => {
+                    const p = HELP_PRICING[v.id];
+                    return (
+                      <tr key={v.id}>
+                        <td className="px-4 py-2.5 font-medium text-gray-900">{v.name}</td>
+                        <td className="px-4 py-2.5 text-right text-purple-700 font-semibold tabular-nums">£{p.noHelp}/hr</td>
+                        <td className="px-4 py-2.5 text-right text-purple-700 font-semibold tabular-nums">£{p.driverHelp}/hr</td>
+                        <td className="px-4 py-2.5 text-right text-purple-700 font-semibold tabular-nums">£{p.driverPlusHelper}/hr</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </Section>
 
         {/* SECTION 3 — Additional charges */}
@@ -124,9 +205,22 @@ export default function PricingGuidePage() {
           subtitle="Optional or route-dependent fees added to your booking when relevant."
         >
           <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden divide-y divide-gray-50 shadow-[0_4px_18px_-10px_rgba(76,29,149,0.15)]">
-            <ExtraChargeRow label="Congestion Charge" price={`£${CONGESTION_CHARGE}`} />
-            <ExtraChargeRow label="Stairs (no lift)" price="£10 per floor" />
-            <ExtraChargeRow label="Additional stops" price={`£${EXTRA_STOP_CHARGE} per stop`} />
+            <ExtraChargeRow
+              label={`Congestion Charge (per address inside zone)`}
+              price={`£${CONGESTION_CHARGE}`}
+            />
+            <ExtraChargeRow
+              label="Outside the M25"
+              price={`£${OUTSIDE_M25_RATE} per mile`}
+            />
+            <ExtraChargeRow
+              label="Stairs (no lift) — every 4 steps counts as 1 floor"
+              price="£10 per floor"
+            />
+            <ExtraChargeRow
+              label="Additional stops"
+              price={`£${EXTRA_STOP_CHARGE} per stop`}
+            />
             <ExtraChargeRow label="Extra time" price="From £17.50 / 30 min" />
           </div>
         </Section>
@@ -193,8 +287,8 @@ export default function PricingGuidePage() {
         <div className="grid sm:grid-cols-2 gap-4 sm:gap-5 mb-12 sm:mb-14">
           <InfoCard
             title="Single Item Delivery"
-            highlight="From £15"
-            desc="Final price depends on item size, distance and stairs."
+            highlight={`From £${SINGLE_ITEM_PRICING.baseCharge}`}
+            desc={`£${SINGLE_ITEM_PRICING.baseCharge} covers up to ${SINGLE_ITEM_PRICING.baseHours} hour. £${SINGLE_ITEM_PRICING.extraHalfHourRate} per extra 30 minutes after that.`}
           />
           <InfoCard
             title="International Moving"

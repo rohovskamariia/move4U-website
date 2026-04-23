@@ -127,3 +127,22 @@ export function isLikelyInCongestionZone(
   }
   return false;
 }
+
+/**
+ * Count the number of CCZ entries on a route. Each address that sits in
+ * the zone counts as one entry — pickup AND drop-off both in the zone
+ * means two entries, so the customer is billed £18 × 2 = £36.
+ *
+ * Empty / blank addresses are skipped.
+ */
+export function countCongestionEntries(
+  addresses: (string | undefined | null)[],
+): number {
+  let count = 0;
+  for (const raw of addresses) {
+    const a = (raw ?? "").trim();
+    if (!a) continue;
+    if (checkAddress(a).matched) count++;
+  }
+  return count;
+}

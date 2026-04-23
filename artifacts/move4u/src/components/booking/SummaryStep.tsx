@@ -1,14 +1,25 @@
-import { HELP_PRICING, VAN_SIZES, EXTRA_STOP_CHARGE, CONGESTION_CHARGE } from "@/data/constants";
+import {
+  HELP_PRICING,
+  VAN_SIZES,
+  EXTRA_STOP_CHARGE,
+  CONGESTION_CHARGE,
+  OUTSIDE_M25_RATE,
+  SINGLE_ITEM_PRICING,
+} from "@/data/constants";
 import {
   getFloorChargeFromValue,
   getFloorLabelFromValue,
 } from "./StairsAccessSection";
 import type { ExtraStop } from "./ExtraStopsSection";
-import { isLikelyInCongestionZone } from "@/lib/congestionZone";
+import { countCongestionEntries } from "@/lib/congestionZone";
+import { outsideM25MilesForRoute } from "@/lib/m25";
+import { computeBaseServiceCharge, isSingleItem } from "@/lib/pricing";
 import { Info } from "lucide-react";
 
 interface SummaryStepProps {
   service: string;
+  /** Service id used to switch pricing model (e.g. "single-item"). */
+  serviceId?: string;
   pickup: string;
   pickupFloor: string;
   dropoff: string;
@@ -45,6 +56,7 @@ function formatTime(h: number) {
 // Live booking summary with estimated price
 export default function SummaryStep({
   service,
+  serviceId = "",
   pickup,
   pickupFloor,
   dropoff,
@@ -56,6 +68,7 @@ export default function SummaryStep({
   notes,
   onContinue,
 }: SummaryStepProps) {
+  const singleItem = isSingleItem(serviceId);
   const cleanStops = extraStops.filter((s) => s.address.trim());
   const stopCharges = cleanStops.map((s) => getFloorChargeFromValue(s.floorValue));
   const stopChargesTotal = stopCharges.reduce((a, b) => a + b, 0);
@@ -72,26 +85,45 @@ export default function SummaryStep({
   // this fee — they're already part of the base service.
   const extraStopFee = cleanStops.length * EXTRA_STOP_CHARGE;
 
-  // Congestion Charge — conditional. Detected from the addresses;
-  // included in the headline total but clearly marked "may apply".
-  const congestionLikely = isLikelyInCongestionZone([
+  // Congestion Charge — counted PER ENTRY. Pickup, drop-off and each
+  // intermediate stop in the CCZ each add £18.
+  const congestionEntries = countCongestionEntries([
     pickup,
     dropoff,
     ...cleanStops.map((s) => s.address),
   ]);
-  const congestionCharge = congestionLikely ? CONGESTION_CHARGE : 0;
+  const congestionCharge = congestionEntries * CONGESTION_CHARGE;
+
+  // Outside-M25 surcharge — automatic estimate based on postcode area.
+  // Approximates the one-way distance from the M25 to the furthest
+  // address; final mileage is reconciled on the day.
+  const outsideM25Miles = outsideM25MilesForRoute([
+    pickup,
+    dropoff,
+    ...cleanStops.map((s) => s.address),
+  ]);
+  const outsideM25Charge = outsideM25Miles * OUTSIDE_M25_RATE;
 
   const totalExtras = pickupCharge + dropoffCharge + stopChargesTotal + extraStopFee;
-  const estimatedBase = hourlyRate * hours;
-  const estimatedTotal = estimatedBase + totalExtras + congestionCharge;
+  const estimatedBase = computeBaseServiceCharge(serviceId, vanSize, helpOption, hours);
+  const estimatedTotal =
+    estimatedBase + totalExtras + congestionCharge + outsideM25Charge;
 
-  const rows = [
+  const rows: { label: string; value: string }[] = [
     { label: "Service", value: service },
-    { label: "Van size", value: getVanLabel(vanSize) },
-    { label: "Help option", value: getHelpLabel(helpOption) },
-    { label: "Hourly rate", value: `£${hourlyRate}/hr` },
-    { label: "Estimated time", value: formatTime(hours) },
-  ].filter(Boolean) as { label: string; value: string }[];
+  ];
+  if (singleItem) {
+    rows.push({
+      label: "Pricing",
+      value: `£${SINGLE_ITEM_PRICING.baseCharge} up to 1h, then £${SINGLE_ITEM_PRICING.extraHalfHourRate}/30 min`,
+    });
+    rows.push({ label: "Van (for reference)", value: getVanLabel(vanSize) });
+  } else {
+    rows.push({ label: "Van size", value: getVanLabel(vanSize) });
+    rows.push({ label: "Help option", value: getHelpLabel(helpOption) });
+    rows.push({ label: "Hourly rate", value: `£${hourlyRate}/hr` });
+  }
+  rows.push({ label: "Estimated time", value: formatTime(hours) });
 
   // Route shown in order: Pickup → Additional stop 1, 2, ... → Final destination.
   // We render this as its own card so the customer can clearly see the full
@@ -155,14 +187,21 @@ export default function SummaryStep({
             £{estimatedTotal.toFixed(0)}
           </span>
           <span className="text-white text-sm font-medium">
-            £{hourlyRate}/hr × {formatTime(hours)}
+            {singleItem
+              ? `Single Item — £${estimatedBase}`
+              : `£${hourlyRate}/hr × ${formatTime(hours)}`}
             {totalExtras > 0 ? ` + £${totalExtras} extras` : ""}
             {congestionCharge > 0 ? ` + £${congestionCharge} CC*` : ""}
+            {outsideM25Charge > 0 ? ` + £${outsideM25Charge} M25*` : ""}
           </span>
         </div>
-        {congestionCharge > 0 && (
+        {(congestionCharge > 0 || outsideM25Charge > 0) && (
           <p className="text-[11px] text-white/80 mt-2">
-            *Includes £{CONGESTION_CHARGE} Congestion Charge — may apply
+            {congestionCharge > 0 &&
+              `*Includes £${congestionCharge} Congestion Charge (${congestionEntries} entr${congestionEntries === 1 ? "y" : "ies"} × £${CONGESTION_CHARGE})`}
+            {congestionCharge > 0 && outsideM25Charge > 0 ? " · " : ""}
+            {outsideM25Charge > 0 &&
+              `Outside-M25 estimate: ~${outsideM25Miles} mi × £${OUTSIDE_M25_RATE}`}
           </p>
         )}
       </div>
@@ -170,7 +209,7 @@ export default function SummaryStep({
       {/* Extras breakdown — shown only when there are conditional or
           per-stop charges so the customer understands exactly what
           makes up the total. */}
-      {(extraStopFee > 0 || congestionCharge > 0) && (
+      {(extraStopFee > 0 || congestionCharge > 0 || outsideM25Charge > 0) && (
         <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden mb-4 divide-y divide-gray-50">
           {extraStopFee > 0 && (
             <div className="flex items-start justify-between gap-3 px-4 py-2.5">
@@ -197,16 +236,36 @@ export default function SummaryStep({
                 <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-[13px] font-medium text-gray-900">
-                    Congestion Charge may apply
+                    Congestion Charge ({congestionEntries} {congestionEntries === 1 ? "entry" : "entries"})
                   </p>
                   <p className="text-[11.5px] text-gray-500 mt-0.5 leading-snug">
-                    Applies if your route passes through Central London
-                    congestion zone.
+                    £{CONGESTION_CHARGE} per address inside the Central London zone.
                   </p>
                 </div>
               </div>
               <span className="text-[13px] font-semibold text-amber-600 tabular-nums shrink-0">
                 +£{congestionCharge}
+              </span>
+            </div>
+          )}
+          {outsideM25Charge > 0 && (
+            <div
+              className="flex items-start justify-between gap-3 px-4 py-2.5"
+              data-testid="summary-outside-m25-charge"
+            >
+              <div className="min-w-0 flex gap-2">
+                <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-[13px] font-medium text-gray-900">
+                    Outside-M25 mileage (estimate)
+                  </p>
+                  <p className="text-[11.5px] text-gray-500 mt-0.5 leading-snug">
+                    ~{outsideM25Miles} miles × £{OUTSIDE_M25_RATE}/mile. Final mileage confirmed on the day.
+                  </p>
+                </div>
+              </div>
+              <span className="text-[13px] font-semibold text-amber-600 tabular-nums shrink-0">
+                +£{outsideM25Charge}
               </span>
             </div>
           )}

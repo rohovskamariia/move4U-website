@@ -5,12 +5,21 @@ import BookingPolicyModal from "@/components/BookingPolicyModal";
 interface TimeStepProps {
   hours: number;
   onHoursChange: (h: number) => void;
+  /** Minimum bookable hours. Defaults to 2; Single Item Delivery uses 1. */
+  minHours?: number;
+  /** Custom helper line shown under the stepper. Defaults to the standard 2-hour minimum policy link. */
+  minLabel?: string;
 }
 
-// Time selection — plus/minus buttons, 30-minute steps, minimum 2 hours.
+// Time selection — plus/minus buttons, 30-minute steps.
 // Minimum-booking note lives here (the only place it's relevant).
-export default function TimeStep({ hours, onHoursChange }: TimeStepProps) {
-  const MIN = 2;
+export default function TimeStep({
+  hours,
+  onHoursChange,
+  minHours = 2,
+  minLabel,
+}: TimeStepProps) {
+  const MIN = minHours;
   const STEP = 0.5;
   const [showPolicy, setShowPolicy] = useState(false);
 
@@ -77,7 +86,7 @@ export default function TimeStep({ hours, onHoursChange }: TimeStepProps) {
       >
         <Clock className="w-4 h-4 shrink-0" />
         <span className="underline underline-offset-2 decoration-purple-300">
-          Minimum booking: 2 hours
+          {minLabel ?? `Minimum booking: ${MIN} hour${MIN === 1 ? "" : "s"}`}
         </span>
       </button>
 

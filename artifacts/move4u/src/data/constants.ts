@@ -111,8 +111,8 @@ export const SERVICES = [
   {
     id: "single-item",
     title: "Single Item Delivery",
-    price: "From £15",
-    description: "Quick delivery for furniture and individual items. Final price depends on distance and stairs.",
+    price: "From £60",
+    description: "Quick delivery for furniture and individual items. Minimum £60 covers up to 1 hour.",
     icon: "Package",
   },
   {
@@ -150,14 +150,14 @@ export const VAN_SIZES = [
   {
     id: "medium",
     name: "Medium Van",
-    basePrice: 40,
+    basePrice: 45,
     dimensions: "3.0m x 1.8m x 1.8m",
     description: "Suitable for 1-bed flat moves or larger single-item deliveries. A popular all-round choice.",
   },
   {
     id: "large",
     name: "Large Van",
-    basePrice: 45,
+    basePrice: 50,
     dimensions: "3.8m x 1.9m x 2.0m",
     description: "Best for 2–3 bed house moves or full office relocations. Maximum space and flexibility.",
   },
@@ -166,16 +166,25 @@ export const VAN_SIZES = [
 // HELP OPTION PRICING — Based on van size. Edit here to change prices.
 // Format: { noHelp, driverHelp, driverPlusHelper }
 export const HELP_PRICING: Record<string, { noHelp: number; driverHelp: number; driverPlusHelper: number }> = {
-  small: { noHelp: 35, driverHelp: 40, driverPlusHelper: 70 },
-  medium: { noHelp: 40, driverHelp: 45, driverPlusHelper: 75 },
-  large: { noHelp: 45, driverHelp: 50, driverPlusHelper: 80 },
+  small: { noHelp: 35, driverHelp: 45, driverPlusHelper: 65 },
+  medium: { noHelp: 45, driverHelp: 55, driverPlusHelper: 75 },
+  large: { noHelp: 50, driverHelp: 60, driverPlusHelper: 90 },
 };
 
 // ADDITIONAL CHARGES — Surcharges added on top of the hourly rate.
 // Edit these values to change pricing across the site (booking
 // estimate, summary card, and pricing page all read from here).
 export const EXTRA_STOP_CHARGE = 5; // £ per intermediate stop
-export const CONGESTION_CHARGE = 18; // £ flat — TfL Central London zone
+export const CONGESTION_CHARGE = 18; // £ per CCZ entry — TfL Central London zone
+export const OUTSIDE_M25_RATE = 1; // £ per mile outside the M25 ring road
+
+// SINGLE ITEM DELIVERY — fixed-formula pricing (NOT hourly van rate).
+// £60 covers up to the first hour, then £30 per additional 30 minutes.
+export const SINGLE_ITEM_PRICING = {
+  baseCharge: 60, // £ — covers the first hour
+  baseHours: 1,   // hours included in base charge
+  extraHalfHourRate: 30, // £ per additional 30 min after the first hour
+};
 
 // STAIR CHARGES — Edit floor surcharge prices here
 export const STAIR_CHARGES: Record<string, number> = {

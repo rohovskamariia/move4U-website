@@ -1,11 +1,20 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { CheckCircle, ChevronLeft, Home, Plus } from "lucide-react";
-import { CONTACT, HELP_PRICING, VAN_SIZES } from "@/data/constants";
+import {
+  CONTACT,
+  EXTRA_STOP_CHARGE,
+  CONGESTION_CHARGE,
+  OUTSIDE_M25_RATE,
+  VAN_SIZES,
+} from "@/data/constants";
 import {
   getFloorChargeFromValue,
   getFloorLabelFromValue,
 } from "./StairsAccessSection";
+import { computeBaseServiceCharge, isSingleItem } from "@/lib/pricing";
+import { countCongestionEntries } from "@/lib/congestionZone";
+import { outsideM25MilesForRoute } from "@/lib/m25";
 import { submitBooking, uploadPhotos } from "@/lib/api";
 import AddressStep from "./AddressStep";
 import { isAddressAcceptable, isUKAddressMissingFullPostcode } from "@/lib/postcode";
@@ -91,7 +100,10 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
   // Van, help, time
   const [vanSize, setVanSize] = useState("medium");
   const [helpOption, setHelpOption] = useState("driver-help");
-  const [hours, setHours] = useState(2);
+  // Single Item Delivery uses a 1-hour minimum (£60 covers the first hour);
+  // every other service uses the standard 2-hour minimum.
+  const singleItem = isSingleItem(serviceId);
+  const [hours, setHours] = useState(singleItem ? 1 : 2);
 
   // Notes and photos
   const [notes, setNotes] = useState("");
@@ -211,13 +223,25 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
       case "help":
         return <HelpStep vanSize={vanSize} selected={helpOption} onSelect={setHelpOption} />;
       case "time":
-        return <TimeStep hours={hours} onHoursChange={setHours} />;
+        return (
+          <TimeStep
+            hours={hours}
+            onHoursChange={setHours}
+            minHours={singleItem ? 1 : 2}
+            minLabel={
+              singleItem
+                ? "Minimum charge: £60 (covers up to 1 hour)"
+                : undefined
+            }
+          />
+        );
       case "notes":
         return <NotesStep value={notes} onChange={setNotes} photos={photos} onPhotosChange={setPhotos} showPhotos={showPhotos} />;
       case "summary":
         return (
           <SummaryStep
             service={serviceLabel}
+            serviceId={serviceId}
             pickup={pickupAddress}
             pickupFloor={pickupFloor}
             dropoff={dropoffAddress}
@@ -235,19 +259,38 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
           <FinalDetailsStep
             onSubmitted={(ref) => setSubmittedRef(ref)}
             onSubmit={async ({ date, timeWindow, name, phone, email, contactMethod }) => {
-              const pricing = HELP_PRICING[vanSize] || HELP_PRICING.medium;
-              let hourlyRate = pricing.noHelp;
-              if (helpOption === "driver-help") hourlyRate = pricing.driverHelp;
-              if (helpOption === "driver-plus-helper") hourlyRate = pricing.driverPlusHelper;
+              const baseCharge = computeBaseServiceCharge(
+                serviceId,
+                vanSize,
+                helpOption,
+                hours,
+              );
               const pickupCharge = getFloorCharge(pickupFloor);
               const dropoffCharge = getFloorCharge(dropoffFloor);
-              const stopsCharge = extraStops.reduce(
-                (sum, s) =>
-                  sum + (s.address.trim() ? getFloorCharge(s.floorValue) : 0),
+              const cleanStopsForPrice = extraStops.filter((s) => s.address.trim());
+              const stopsCharge = cleanStopsForPrice.reduce(
+                (sum, s) => sum + getFloorCharge(s.floorValue),
                 0,
               );
+              const extraStopFee =
+                cleanStopsForPrice.length * EXTRA_STOP_CHARGE;
+              const cczAddresses = [
+                pickupAddress,
+                dropoffAddress,
+                ...cleanStopsForPrice.map((s) => s.address),
+              ];
+              const congestionEntries = countCongestionEntries(cczAddresses);
+              const congestionCharge = congestionEntries * CONGESTION_CHARGE;
+              const outsideMiles = outsideM25MilesForRoute(cczAddresses);
+              const outsideCharge = outsideMiles * OUTSIDE_M25_RATE;
               const totalPrice =
-                hourlyRate * hours + pickupCharge + dropoffCharge + stopsCharge;
+                baseCharge +
+                pickupCharge +
+                dropoffCharge +
+                stopsCharge +
+                extraStopFee +
+                congestionCharge +
+                outsideCharge;
               const vanLabel = VAN_SIZES.find((v) => v.id === vanSize)?.name ?? vanSize;
               const helpLabels: Record<string, string> = {
                 "no-help": "No help needed",
@@ -290,6 +333,27 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
               const extraAddressFormatted = formattedStops
                 .map((s, i) => `${i + 1}. ${s}`)
                 .join(" | ");
+              // Append surcharge breakdown to notes so the admin / Telegram
+              // message clearly shows what made up the total.
+              const surchargeNotes = [
+                extraStopFee > 0
+                  ? `Additional stops: ${cleanStopsForPrice.length} × £${EXTRA_STOP_CHARGE} = +£${extraStopFee}`
+                  : null,
+                congestionCharge > 0
+                  ? `Congestion Charge: ${congestionEntries} × £${CONGESTION_CHARGE} = +£${congestionCharge}`
+                  : null,
+                outsideCharge > 0
+                  ? `Outside-M25 estimate: ~${outsideMiles} mi × £${OUTSIDE_M25_RATE} = +£${outsideCharge}`
+                  : null,
+                isSingleItem(serviceId)
+                  ? `Single Item pricing: £60 base (1h) + £30/30 min after`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" | ");
+              const fullNotes = [notes, surchargeNotes]
+                .filter(Boolean)
+                .join(" || ");
               return await submitBooking({
                 service: serviceLabel,
                 name,
@@ -311,7 +375,7 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
                 timeWindow,
                 wasteAddons: "",
                 uploadedFiles: photoUrls.join(", "),
-                notes,
+                notes: fullNotes,
               });
             }}
           />

@@ -1,0 +1,223 @@
+Please update pricing logic, pricing display, and booking policy consistently across the website.
+
+This should be done carefully and in one system, so the same rules apply everywhere they are relevant.
+
+---
+
+1. Update van pricing everywhere
+
+Replace van pricing everywhere it appears, including:
+- Pricing page
+- Van cards
+- Booking flow
+- Estimate / summary
+- Admin panel
+- Any helper text or pricing notes
+- Any illustrations or captions where van prices appear
+
+Use these prices:
+
+Small Van
+- No help: £35/hour
+- Driver help: £45/hour
+- Driver + helper: £65/hour
+
+Medium Van
+- No help: £45/hour
+- Driver help: £55/hour
+- Driver + helper: £75/hour
+
+Large Van
+- No help: £50/hour
+- Driver help: £60/hour
+- Driver + helper: £90/hour
+
+Make sure no old van pricing remains anywhere.
+
+---
+
+2. Update Single Item Delivery pricing logic
+
+Important:
+Single Item Delivery is NOT charged per item.
+It is charged based on time.
+
+Use this rule:
+
+- Minimum charge: £60
+- £60 covers up to 1 hour
+- After 1 hour, charge £30 per additional 30 minutes
+
+Examples:
+- 1 hour = £60
+- 1 hour 30 minutes = £90
+- 2 hours = £120
+
+This logic must be applied in:
+- automatic pricing calculation
+- estimate
+- summary
+- admin panel
+- pricing page
+- booking policy
+
+Also update any “from” pricing text for Single Item Delivery.
+Do NOT show misleading low prices like “from £15”.
+Single Item Delivery should reflect the real minimum logic.
+
+---
+
+3. Time calculation rule (booking policy only) 
+
+Apply this automatic time rule:
+
+- Up to 4 extra minutes = no charge
+- 5 minutes or more = add 30 minutes
+
+Examples:
+- 2h 04min = charged as 2h
+- 2h 05min = charged as 2.5h
+
+This applies to all relevant services.
+
+---
+
+4. Additional stop pricing
+
+Add Additional Stop pricing across the system.
+
+Rule:
+- Each additional stop = £5
+
+Apply this to:
+- House Moving
+- Commercial Moving
+- Single Item Delivery
+- Waste Removal
+
+This must be:
+- added automatically in estimate
+- shown in summary
+- included in final pricing logic
+- mentioned on the Pricing page
+
+---
+
+5. Stairs / floors logic
+
+Update stairs logic and explain it clearly.
+
+Rule:
+- 4 steps already count as 1 flight of stairs / 1 floor
+
+This must be:
+
+- added to Booking Policy
+- included on Pricing page as a clear extra charge rule
+
+Keep the wording simple and clear so customers understand.
+
+---
+
+6. Congestion Charge (CCZ)
+
+Keep CCZ logic active and make sure it is postcode-based.
+
+If a route involves CCZ, apply £18 per CCZ entry.
+
+Example logic:
+- one relevant CCZ entry = £18
+- if both pickup and drop-off are in CCZ, this may result in £36 total
+
+Make sure CCZ is properly checked against postcode logic and applied consistently in:
+- estimate
+- summary
+- admin panel
+- pricing calculation
+
+No need to over-explain this everywhere, but the calculation must be correct.
+
+---
+
+7. Outside M25 pricing
+
+Add automatic outside-M25 pricing logic.
+
+This should apply to:
+- House Moving
+- Commercial Moving
+- Single Item Delivery
+- Waste Removal
+
+Logic:
+- If the journey goes outside M25, charge £1 per mile for the distance outside M25
+- Once the route is inside M25, that part should no longer be charged as outside-M25 mileage
+
+Important:
+The site should determine this automatically based on the entered addresses / route.
+
+Customer-facing behaviour:
+- customer does not need to calculate anything manually
+- system should calculate it automatically
+- at the end, show the extra amount clearly in the estimate / summary
+
+Example:
+- “Outside M25 charge: £10”
+
+Also:
+- add this rule to Pricing page
+- add a short clear mention in Booking Policy so customers understand the rule
+
+Keep the wording simple, not too long.
+
+---
+
+8. Pricing page updates
+
+Update the Pricing page so it includes all relevant extra charges and correct pricing logic.
+
+Make sure Pricing page includes:
+- updated van prices
+- Single Item minimum £60 (up to 1 hour)
+- additional time for Single Item: £30 per 30 minutes
+- additional stop: £5 per stop
+- stairs / floors rule
+- outside M25: £1 per mile
+- CCZ logic as already used
+
+This should be clearly shown, but not over-explained.
+
+---
+
+9. Booking Policy updates
+
+Update Booking Policy so customers understand the important rules.
+
+Add / update these rules:
+- Single Item Delivery minimum £60 up to 1 hour
+- additional 30 minutes = £30 for Single Item after the first hour
+- 4 steps count as 1 floor
+- outside M25 = £1 per mile
+- any other relevant time calculation / grace period rules
+
+Keep it short, clear, and professional.
+
+---
+
+10. Keep logic consistent everywhere
+
+Very important:
+The same pricing rules must match in all places:
+- Pricing page
+- Booking flow
+- Estimate
+- Summary
+- Admin panel
+- Booking Policy
+
+No contradictions.
+No old prices.
+No outdated text.
+
+Goal:
+One consistent pricing system across the whole website, with correct automatic calculation and clear customer-facing rules.
