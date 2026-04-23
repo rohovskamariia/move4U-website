@@ -1,14 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <url><loc>https://move4u.uk/</loc></url>
-  <url><loc>https://move4u.uk/book</loc></url>
-  <url><loc>https://move4u.uk/pricing</loc></url>
-  <url><loc>https://move4u.uk/van-guide</loc></url>
-  <url><loc>https://move4u.uk/waste-guide</loc></url>
-  <url><loc>https://move4u.uk/booking-policy</loc></url>
-  <url><loc>https://move4u.uk/cancellation-policy</loc></url>
-  <url><loc>https://move4u.uk/terms</loc></url>
-  <url><loc>https://move4u.uk/privacy</loc></url>
+  <url>
+    <loc>https://move4u.uk/</loc>
+  </url>
+
+  <url>
+    <loc>https://move4u.uk/book</loc>
+  </url>
+
+  <url>
+    <loc>https://move4u.uk/pricing</loc>
+  </url>
+
+  <url>
+    <loc>https://move4u.uk/van-guide</loc>
+  </url>
+
+  <url>
+    <loc>https://move4u.uk/waste-guide</loc>
+  </url>
+
+  <url>
+    <loc>https://move4u.uk/booking-policy</loc>
+  </url>
+
+  <url>
+    <loc>https://move4u.uk/cancellation-policy</loc>
+  </url>
+
+  <url>
+    <loc>https://move4u.uk/terms</loc>
+  </url>
+
+  <url>
+    <loc>https://move4u.uk/privacy</loc>
+  </url>
 
 </urlset>
