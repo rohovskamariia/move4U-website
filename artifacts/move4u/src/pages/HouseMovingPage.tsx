@@ -19,6 +19,11 @@ import {
 import heroImg from "@/assets/hero/move4u_hero_v3.png";
 import pricingBgImg from "@/assets/hero/move4u_hero_v1.png";
 import teamImg from "@/assets/reviews/move4u_real_move.webp";
+import {
+  LargeVanIcon,
+  MediumVanIcon,
+  SmallVanIcon,
+} from "@/components/VanIcons";
 
 /**
  * /house-moving — premium SEO + conversion landing page.
@@ -99,11 +104,20 @@ export default function HouseMovingPage() {
     medium: "1–2 bed flats",
     large: "Family homes",
   };
+  // One small van illustration per size. Mapped here so the JSX stays
+  // declarative and we never accidentally render the wrong icon for a
+  // given van id.
+  const vanIcons: Record<string, typeof SmallVanIcon> = {
+    small: SmallVanIcon,
+    medium: MediumVanIcon,
+    large: LargeVanIcon,
+  };
   const vans = VAN_SIZES.map((v) => ({
     id: v.id,
     name: v.name,
     price: `£${HELP_PRICING[v.id]?.noHelp ?? v.basePrice}`,
     note: vanNotes[v.id] ?? v.description,
+    Icon: vanIcons[v.id] ?? SmallVanIcon,
   }));
 
   // Driver-help delta is uniform across van sizes (driverHelp - noHelp).
@@ -301,19 +315,20 @@ export default function HouseMovingPage() {
 
         {/* ============================================================
             HOW IT WORKS — 3 simple numbered steps
+            (compact spacing — keeps page rhythm tight)
             ============================================================ */}
-        <section className="py-14 sm:py-20 bg-white">
+        <section className="py-10 sm:py-14 bg-white">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-9 sm:mb-12">
-              <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2.5">
+            <div className="text-center mb-6 sm:mb-8">
+              <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2">
                 HOW IT WORKS
               </p>
-              <h2 className="text-[26px] sm:text-4xl font-bold text-gray-900 tracking-tight">
+              <h2 className="text-[22px] sm:text-[28px] font-bold text-gray-900 tracking-tight">
                 How it works
               </h2>
             </div>
 
-            <ol className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
+            <ol className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               {[
                 {
                   n: 1,
@@ -333,10 +348,10 @@ export default function HouseMovingPage() {
               ].map((s) => (
                 <li
                   key={s.n}
-                  className="relative bg-white rounded-2xl p-5 sm:p-6 ring-1 ring-purple-100/70 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.06),_0_18px_40px_-22px_rgba(74,49,156,0.16)]"
+                  className="relative bg-white rounded-2xl p-4 sm:p-5 ring-1 ring-purple-100/70 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.06),_0_18px_40px_-22px_rgba(74,49,156,0.16)]"
                 >
                   <div
-                    className="w-10 h-10 rounded-xl text-white flex items-center justify-center font-bold text-[16px] mb-4 shadow-[0_6px_16px_-6px_rgba(74,49,156,0.55)]"
+                    className="w-8 h-8 rounded-lg text-white flex items-center justify-center font-bold text-[14px] mb-3 shadow-[0_6px_16px_-6px_rgba(74,49,156,0.55)]"
                     style={{
                       backgroundImage:
                         "linear-gradient(135deg, #6d4ed3 0%, #5b3fb8 55%, #4a319c 100%)",
@@ -345,10 +360,10 @@ export default function HouseMovingPage() {
                   >
                     {s.n}
                   </div>
-                  <h3 className="font-semibold text-gray-900 text-[15px] sm:text-[16px] tracking-tight mb-1.5">
+                  <h3 className="font-semibold text-gray-900 text-[14.5px] tracking-tight mb-1">
                     {s.title}
                   </h3>
-                  <p className="text-gray-500 text-[13px] sm:text-[13.5px] leading-relaxed">
+                  <p className="text-gray-500 text-[12.5px] sm:text-[13px] leading-relaxed">
                     {s.text}
                   </p>
                 </li>
@@ -359,37 +374,38 @@ export default function HouseMovingPage() {
 
         {/* ============================================================
             WHAT WE HANDLE — 4 clean light cards (no packing)
+            (compact: smaller heading + cards, tighter padding)
             ============================================================ */}
-        <section className="py-14 sm:py-20 bg-[#faf8fd]">
+        <section className="py-10 sm:py-14 bg-[#faf8fd]">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-9 sm:mb-12">
-              <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2.5">
+            <div className="text-center mb-6 sm:mb-8">
+              <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2">
                 WHAT WE HANDLE FOR YOU
               </p>
-              <h2 className="text-[26px] sm:text-4xl font-bold text-gray-900 tracking-tight">
+              <h2 className="text-[22px] sm:text-[28px] font-bold text-gray-900 tracking-tight">
                 Everything handled — so you don't have to
               </h2>
             </div>
 
-            <ul className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+            <ul className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {handled.map(({ icon: Icon, title, text }) => (
                 <li
                   key={title}
-                  className="bg-white rounded-2xl p-4 sm:p-5 ring-1 ring-purple-100/70 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.08),_0_18px_40px_-22px_rgba(74,49,156,0.18)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_18px_-6px_rgba(74,49,156,0.12),_0_24px_48px_-22px_rgba(74,49,156,0.28)]"
+                  className="bg-white rounded-2xl p-3.5 sm:p-4 ring-1 ring-purple-100/70 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.08),_0_18px_40px_-22px_rgba(74,49,156,0.18)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_18px_-6px_rgba(74,49,156,0.12),_0_24px_48px_-22px_rgba(74,49,156,0.28)]"
                 >
                   <div
-                    className="text-white w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center mb-3 shadow-[0_6px_16px_-6px_rgba(74,49,156,0.55)]"
+                    className="text-white w-9 h-9 rounded-lg flex items-center justify-center mb-2.5 shadow-[0_6px_16px_-6px_rgba(74,49,156,0.55)]"
                     style={{
                       backgroundImage:
                         "linear-gradient(135deg, #6d4ed3 0%, #5b3fb8 55%, #4a319c 100%)",
                     }}
                   >
-                    <Icon className="w-[18px] h-[18px]" strokeWidth={2.25} />
+                    <Icon className="w-4 h-4" strokeWidth={2.25} />
                   </div>
-                  <h3 className="font-semibold text-gray-900 text-[14.5px] sm:text-[15px] tracking-tight mb-1">
+                  <h3 className="font-semibold text-gray-900 text-[14px] tracking-tight mb-0.5">
                     {title}
                   </h3>
-                  <p className="text-gray-500 text-[12.5px] sm:text-[13px] leading-relaxed">
+                  <p className="text-gray-500 text-[12.5px] leading-relaxed">
                     {text}
                   </p>
                 </li>
@@ -522,7 +538,7 @@ export default function HouseMovingPage() {
             easy to scan.
             ============================================================ */}
         <section
-          className="relative isolate overflow-hidden py-14 sm:py-20"
+          className="relative isolate overflow-hidden py-10 sm:py-14"
           aria-label="Pricing"
         >
           {/* Background image — covers full section */}
@@ -532,14 +548,14 @@ export default function HouseMovingPage() {
             aria-hidden="true"
             className="absolute inset-0 w-full h-full object-cover object-center select-none pointer-events-none"
           />
-          {/* Purple brand overlay — kept moderate so the van still reads
-              through but text remains comfortably legible */}
+          {/* Purple brand overlay — softer than before so the van photo
+              reads through more clearly while text stays legible */}
           <div
             aria-hidden="true"
             className="absolute inset-0 pointer-events-none"
             style={{
               backgroundImage:
-                "linear-gradient(135deg, rgba(61,18,137,0.92) 0%, rgba(74,49,156,0.86) 55%, rgba(91,63,184,0.82) 100%)",
+                "linear-gradient(135deg, rgba(61,18,137,0.78) 0%, rgba(74,49,156,0.72) 55%, rgba(91,63,184,0.66) 100%)",
             }}
           />
           {/* Subtle spotlight for depth */}
@@ -549,36 +565,42 @@ export default function HouseMovingPage() {
           />
 
           <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-9 sm:mb-12">
-              <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-200 mb-2.5">
+            <div className="text-center mb-6 sm:mb-8">
+              <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-200 mb-2">
                 PRICING
               </p>
-              <h2 className="text-[26px] sm:text-4xl font-bold text-white tracking-tight mb-2.5">
+              <h2 className="text-[22px] sm:text-[28px] font-bold text-white tracking-tight mb-2">
                 Simple, transparent pricing
               </h2>
-              <p className="text-purple-100/85 text-[14px] sm:text-base max-w-xl mx-auto leading-relaxed">
+              <p className="text-purple-100/90 text-[13.5px] sm:text-[14.5px] max-w-xl mx-auto leading-relaxed">
                 Pay by the hour. No hidden fees, no surprises.
               </p>
             </div>
 
-            {/* Van rates — light pricing cards, all weighted equally */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-5 items-stretch">
+            {/* Van rates — compact light pricing cards. Each card has its
+                own van illustration (small / medium / large body) so the
+                size jump is visible at a glance. */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 items-stretch">
               {vans.map((v) => (
                 <div
                   key={v.id}
-                  className="relative bg-white rounded-2xl p-5 ring-1 ring-white/20 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.35)] text-center transition-all"
+                  className="relative bg-white rounded-2xl p-4 ring-1 ring-white/20 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.35)] text-center transition-all"
                 >
-                  <p className="text-[12px] font-semibold tracking-wide text-purple-700 mb-1.5 uppercase">
+                  {/* Van illustration */}
+                  <div className="flex items-end justify-center h-12 mb-2 text-purple-700">
+                    <v.Icon className="h-12 w-auto max-w-full" />
+                  </div>
+                  <p className="text-[11.5px] font-semibold tracking-wide text-purple-700 mb-1 uppercase">
                     {v.name}
                   </p>
-                  <p className="text-gray-400 text-[11.5px] mb-2">from</p>
-                  <p className="text-[28px] sm:text-[32px] font-bold text-gray-900 tracking-tight leading-none">
+                  <p className="text-gray-400 text-[11px] mb-1.5">from</p>
+                  <p className="text-[24px] sm:text-[28px] font-bold text-gray-900 tracking-tight leading-none">
                     {v.price}
-                    <span className="text-gray-400 text-[15px] font-medium">
+                    <span className="text-gray-400 text-[14px] font-medium">
                       /hr
                     </span>
                   </p>
-                  <p className="text-gray-500 text-[12.5px] mt-2">{v.note}</p>
+                  <p className="text-gray-500 text-[12px] mt-1.5">{v.note}</p>
                 </div>
               ))}
             </div>
@@ -586,8 +608,8 @@ export default function HouseMovingPage() {
             {/* Help options + minimum note — translucent strip so it sits
                 naturally on the purple background instead of looking like
                 a stuck-on white box */}
-            <ul className="bg-white/10 backdrop-blur-sm rounded-2xl ring-1 ring-white/20 p-4 sm:p-5 mb-7 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 text-center sm:text-left">
-              <li className="flex items-center justify-center sm:justify-start gap-2.5 text-[13.5px]">
+            <ul className="bg-white/10 backdrop-blur-sm rounded-2xl ring-1 ring-white/20 p-3.5 sm:p-4 mb-5 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 text-center sm:text-left">
+              <li className="flex items-center justify-center sm:justify-start gap-2.5 text-[13px]">
                 <HandHelping
                   className="w-4 h-4 text-purple-200 shrink-0"
                   strokeWidth={2.25}
@@ -597,7 +619,7 @@ export default function HouseMovingPage() {
                   +£{driverHelpDelta}/hr
                 </span>
               </li>
-              <li className="flex items-center justify-center sm:justify-start gap-2.5 text-[13.5px]">
+              <li className="flex items-center justify-center sm:justify-start gap-2.5 text-[13px]">
                 <HandHelping
                   className="w-4 h-4 text-purple-200 shrink-0"
                   strokeWidth={2.25}
@@ -609,25 +631,24 @@ export default function HouseMovingPage() {
                   +£{driverPlusHelperFromDelta}/hr
                 </span>
               </li>
-              <li className="flex items-center justify-center sm:justify-end gap-2.5 text-[13px] text-purple-100/80">
+              <li className="flex items-center justify-center sm:justify-end gap-2.5 text-[12.5px] text-purple-100/80">
                 Minimum booking: 2 hours
               </li>
             </ul>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
               <button
                 onClick={() => setLocation("/book/house-move")}
-                className="bg-white text-purple-900 font-semibold px-7 py-3 rounded-full inline-flex items-center justify-center gap-2 hover:bg-purple-50 hover:-translate-y-0.5 transition-all text-[14px] sm:text-[15px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.45)]"
+                className="bg-white text-purple-900 font-semibold px-5 py-2.5 rounded-full inline-flex items-center justify-center gap-2 hover:bg-purple-50 hover:-translate-y-0.5 transition-all text-[13.5px] sm:text-[14px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.45)]"
                 data-testid="pricing-book-now"
               >
                 Book now
                 <ArrowRight className="w-4 h-4" strokeWidth={2.25} />
               </button>
-              {/* "Call us" replaces the previous "View full pricing" button.
-                  Uses a tel: link for native click-to-call on mobile. */}
+              {/* "Call us" — tel: link for native click-to-call on mobile. */}
               <a
                 href={`tel:${CONTACT.driver}`}
-                className="bg-white/10 hover:bg-white/20 ring-1 ring-white/40 text-white font-semibold px-7 py-3 rounded-full inline-flex items-center justify-center gap-2 transition-all text-[14px] sm:text-[15px] backdrop-blur-sm"
+                className="bg-white/10 hover:bg-white/20 ring-1 ring-white/40 text-white font-semibold px-5 py-2.5 rounded-full inline-flex items-center justify-center gap-2 transition-all text-[13.5px] sm:text-[14px] backdrop-blur-sm"
                 data-testid="pricing-call-us"
                 aria-label={`Call us on ${CONTACT.driverDisplay}`}
               >
@@ -638,72 +659,6 @@ export default function HouseMovingPage() {
           </div>
         </section>
 
-        {/* ============================================================
-            FINAL CTA — soft purple gradient banner, moderate height
-            (intentionally lighter than a full hero — this is a closer,
-            not another hero)
-            ============================================================ */}
-        <section className="py-10 sm:py-14 px-4 sm:px-6">
-          <div
-            className="relative max-w-5xl mx-auto rounded-3xl px-6 sm:px-10 py-10 sm:py-12 text-center overflow-hidden ring-1 ring-purple-200/60"
-            style={{
-              backgroundImage:
-                "linear-gradient(135deg, #f4ecff 0%, #e9dcff 55%, #dccaf8 100%)",
-            }}
-          >
-            {/* Soft accent glow — kept very subtle for the lighter look */}
-            <div
-              aria-hidden="true"
-              className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/40 blur-3xl pointer-events-none"
-            />
-            <div
-              aria-hidden="true"
-              className="absolute -bottom-20 -left-12 w-60 h-60 rounded-full bg-purple-200/40 blur-3xl pointer-events-none"
-            />
-
-            <div className="relative">
-              <h2 className="text-[24px] sm:text-[32px] font-bold text-gray-900 tracking-tight mb-2.5">
-                Ready to move without stress?
-              </h2>
-              <p className="text-gray-600 text-[14px] sm:text-[15px] leading-relaxed max-w-xl mx-auto mb-6">
-                Get your quote in seconds and book your move today.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center mb-5">
-                <button
-                  onClick={() => setLocation("/book")}
-                  className="btn-purple inline-flex items-center justify-center gap-2 font-semibold px-7 py-3 rounded-full text-[14px] sm:text-[15px]"
-                  data-testid="final-get-quote"
-                >
-                  Get a Quote
-                  <ArrowRight className="w-4 h-4" strokeWidth={2.25} />
-                </button>
-                <button
-                  onClick={() => setLocation("/book/house-move")}
-                  className="bg-white text-purple-800 font-semibold px-7 py-3 rounded-full inline-flex items-center justify-center gap-2 hover:bg-purple-50 hover:-translate-y-0.5 ring-1 ring-purple-200 transition-all text-[14px] sm:text-[15px]"
-                  data-testid="final-book-house-move"
-                >
-                  Book House Moving
-                  <ArrowRight className="w-4 h-4" strokeWidth={2.25} />
-                </button>
-              </div>
-
-              {/* Trust line — same wording as the trust strip for consistency.
-                  Uses text-gray-700 to keep AA contrast on the lighter
-                  purple gradient stops. */}
-              <p className="text-[12.5px] sm:text-[13px] text-gray-700">
-                No hidden fees{" "}
-                <span aria-hidden="true" className="text-gray-400 mx-1.5">
-                  •
-                </span>
-                Fast response{" "}
-                <span aria-hidden="true" className="text-gray-400 mx-1.5">
-                  •
-                </span>
-                Trusted across London
-              </p>
-            </div>
-          </div>
-        </section>
       </main>
 
       <Footer />

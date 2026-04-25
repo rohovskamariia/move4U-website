@@ -1,0 +1,76 @@
+Please refine the /house-moving page.
+
+1. Remove the final CTA section
+Remove the bottom section:
+“Ready to move without stress?”
+
+It is not needed anymore because the page already has enough booking buttons.
+
+2. Make pricing section smaller
+Current pricing section is too tall and takes too much screen space.
+
+Please reduce:
+- section height
+- top/bottom padding
+- card size
+- spacing between elements
+
+It should feel premium but compact, not like a huge hero section.
+
+3. Add van images inside pricing cards
+Each pricing card should include a small van image:
+
+- Small Van → small van image
+- Medium Van → medium van image
+- Large Van → large van image
+
+Use the existing van images from the site if available.
+
+The images should be inside the cards, not only as background.
+
+4. Keep purple background, but make it softer
+The pricing section can keep a purple background/overlay, but make it lighter and cleaner.
+
+It should not look too dark or heavy.
+
+5. Keep buttons
+Keep:
+- Book now
+- Call us
+
+But make the buttons smaller and cleaner.
+
+6. Goal
+Pricing should look like a compact premium pricing block with van images, not a huge heavy section.  Please make the middle sections of /house-moving more compact.
+
+Current issue:
+“How it works” and “Everything handled” sections are too tall and have too much empty space. They make the page feel stretched.
+
+Please adjust:
+
+1. Reduce vertical spacing
+- Reduce top and bottom padding for these sections
+- Reduce large empty gaps between headings and cards
+- Bring sections closer together
+
+2. Make “How it works” cards smaller
+- Reduce card height
+- Reduce internal padding
+- Keep text short
+- Keep 3 cards in one row on desktop
+- On mobile, stack them but make them more compact
+
+3. Make “Everything handled” section smaller
+- Reduce heading size slightly
+- Reduce card height
+- Reduce icon size slightly
+- Reduce padding inside cards
+- Keep cards clean but not oversized
+
+4. Keep design premium
+- Do not make it cramped
+- Keep enough whitespace, but less than now
+- The section should feel light and quick to read
+
+Goal:
+The page should feel smoother and shorter, not stretched or oversized.
