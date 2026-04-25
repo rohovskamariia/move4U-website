@@ -1,0 +1,188 @@
+Redesign the /house-moving page for Move4U to be clean, modern, premium, and conversion-focused.
+
+IMPORTANT GOALS:
+- Increase bookings (main goal)
+- Make page look professional and trustworthy
+- Keep it simple (not overloaded)
+- Keep current booking system (DO NOT change logic of /book)
+
+STYLE:
+- White background
+- Purple accents (same as homepage)
+- Rounded cards
+- Soft shadows
+- Clean spacing (like modern SaaS / service sites)
+- Mobile-first design
+
+---
+
+PAGE STRUCTURE + LOGIC:
+
+1. HERO SECTION (MOST IMPORTANT)
+
+Design:
+- Full width section with background image (moving van / people carrying sofa)
+- Add soft dark overlay so text is readable
+
+Left side:
+Title:
+House Moving in London
+
+Subtitle:
+Reliable and professional house moving service across London. We handle everything so you can move stress-free.
+
+Buttons:
+- Get a Quote → goes to /book
+- Book Now → goes to /book/house-move
+
+Under buttons (small trust line):
+✔ Fully insured  
+✔ No hidden fees  
+✔ 5-star service  
+
+Right side (VERY IMPORTANT – conversion block):
+Create a small “quote card”
+
+Title:
+Get your quick quote
+
+Fields:
+- Pickup address
+- Drop-off address
+
+Button:
+Get Quote → redirect to /book/house-move
+
+NOTE:
+This is NOT a full booking system, just a quick entry that pushes user into real booking flow.
+
+---
+
+2. WHAT’S INCLUDED (LIGHT SECTION)
+
+Create 4 clean cards only:
+
+- Careful handling  
+We treat your furniture like our own
+
+- Loading & unloading  
+Fast and safe moving process
+
+- Transport  
+Reliable vans across London
+
+- Flexible booking  
+Same-day & scheduled moves
+
+Keep text short. No long paragraphs.
+
+---
+
+3. WHY CHOOSE MOVE4U (TRUST SECTION)
+
+Create 4 items in grid:
+
+- Transparent pricing  
+Clear hourly rates, no surprises
+
+- Same-day availability  
+We can move you today
+
+- London & UK coverage  
+Local and long-distance moves
+
+- Customer support  
+We help before, during and after
+
+Design:
+Icons + short text only (no big blocks)
+
+---
+
+4. PRICING PREVIEW (VERY IMPORTANT FOR CONVERSION)
+
+Do NOT overload.
+
+Simple block:
+
+Title:
+Simple, transparent pricing
+
+Show:
+
+Small Van — from £35/hr  
+Medium Van — from £45/hr  
+Large Van — from £50/hr  
+
+Help options:
+Driver help +£10/hr  
+Driver + helper +£30/hr  
+
+Small note:
+Minimum booking: 2 hours
+
+Buttons:
+- View full pricing → /pricing
+- Book now → /book/house-move
+
+---
+
+5. REVIEWS SECTION (LIGHT)
+
+Show 2–3 cards only:
+
+Example:
+“Fast and professional service. Highly recommended.”
+— London
+
+Button:
+See reviews on Google
+
+(For now can be placeholder, later link to real Google reviews)
+
+---
+
+6. FINAL CTA (VERY IMPORTANT)
+
+Purple background section
+
+Text:
+Ready to move?
+
+Subtitle:
+Get your quote in seconds and book your move today.
+
+Buttons:
+- Get a Quote → /book
+- Book House Moving → /book/house-move
+
+---
+
+NAVIGATION LOGIC (VERY IMPORTANT):
+
+- Services cards (on homepage) → go to service pages (like /house-moving)
+- “Learn More” → service page
+- “Book” → /book/house-move
+- “Get Quote” → /book
+
+This creates:
+SEO → service pages  
+Conversion → booking page  
+
+---
+
+DESIGN RULES:
+
+- Do NOT overload with text
+- Use short blocks
+- Use whitespace
+- Keep it premium (not cheap looking)
+- Make it similar to modern service landing pages
+
+---
+
+RESULT:
+
+User lands → sees trust → sees price → clicks → books
+
+That is the goal.

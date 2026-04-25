@@ -20,6 +20,12 @@ interface AddressAutocompleteProps {
   onChange: (val: string, meta?: AddressMeta) => void;
   placeholder?: string;
   testId?: string;
+  /**
+   * Optional DOM id forwarded to the underlying <input>. Use this when an
+   * external <label htmlFor="..."> needs to associate with the input
+   * (a11y — screen readers + click-to-focus).
+   */
+  id?: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -212,6 +218,7 @@ export default function AddressAutocomplete({
   onChange,
   placeholder,
   testId,
+  id,
 }: AddressAutocompleteProps) {
   const [query, setQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<AutocompleteSuggestion[]>([]);
@@ -446,6 +453,7 @@ export default function AddressAutocomplete({
         <MapPin className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input
           ref={inputRef}
+          id={id}
           type="text"
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}
