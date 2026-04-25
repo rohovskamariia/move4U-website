@@ -16,6 +16,10 @@ export default function HeroSlider() {
   const pointerStartY = useRef<number | null>(null);
   const isHorizontalSwipe = useRef<boolean>(false);
   const draggingRef = useRef<boolean>(false);
+  // Latest horizontal delta — kept in a ref so onPointerEnd can read the
+  // most recent value synchronously, avoiding stale-state misses on fast
+  // flicks (React batches setDragOffset updates).
+  const latestDxRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const startAutoAdvance = useCallback(() => {
@@ -65,6 +69,7 @@ export default function HeroSlider() {
     pointerStartY.current = clientY;
     isHorizontalSwipe.current = false;
     draggingRef.current = true;
+    latestDxRef.current = 0;
     stopAutoAdvance();
   };
 
@@ -86,6 +91,7 @@ export default function HeroSlider() {
       // Soft rubber-band so the drag feels alive without exposing seams.
       const width = containerRef.current?.clientWidth ?? 1;
       const limited = Math.max(-width * 0.5, Math.min(width * 0.5, dx));
+      latestDxRef.current = limited;
       setDragOffset(limited);
     }
   };
@@ -96,7 +102,10 @@ export default function HeroSlider() {
       return;
     }
     draggingRef.current = false;
-    const offset = dragOffset;
+    // Read from ref, not state, so a fast flick whose final move event
+    // hasn't yet flushed through React's batched updates still counts.
+    const offset = latestDxRef.current;
+    latestDxRef.current = 0;
     setDragOffset(0);
     if (isHorizontalSwipe.current && Math.abs(offset) > SWIPE_THRESHOLD_PX) {
       if (offset < 0) next();
@@ -120,6 +129,10 @@ export default function HeroSlider() {
     <div
       ref={containerRef}
       className="relative bg-gray-900 text-white overflow-hidden min-h-[460px] sm:min-h-[600px] md:min-h-[640px] lg:min-h-[660px] select-none"
+      // Let the browser own vertical scroll; we own horizontal swipe.
+      // This both improves perceived smoothness and tells the browser it
+      // does not need to wait for our handlers to decide on scroll.
+      style={{ touchAction: "pan-y" }}
       onTouchStart={(e) => {
         const t = e.touches[0];
         onPointerDown(t.clientX, t.clientY);
@@ -291,14 +304,17 @@ export default function HeroSlider() {
           <ChevronRight className="w-5 h-5" />
         </button>
 
-        {/* Dots — generous touch targets for thumbs (py-2 wraps the visible
-            bar in a 36px-tall hit area) while keeping the visual the same. */}
-        <div className="absolute bottom-8 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+        {/* Dots — each button is a true 44×44 hit target (mobile a11y
+            minimum) with the small visible pill centred inside. We
+            negate the wrapper's vertical/horizontal padding via -mx/-my
+            so the visual rhythm of the dots row stays unchanged. */}
+        <div className="absolute bottom-4 sm:bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
           {SLIDES.map((_, i) => (
             <button
               key={i}
               onClick={() => goTo(i)}
-              className="px-1 py-2 -my-1 group"
+              type="button"
+              className="group inline-flex items-center justify-center w-11 h-11 -mx-1.5"
               aria-label={`Go to slide ${i + 1}`}
               aria-current={i === current ? "true" : undefined}
               data-testid={`slider-dot-${i}`}
