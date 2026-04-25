@@ -4,18 +4,20 @@ import { usePageMeta } from "@/lib/usePageMeta";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
-import { HELP_PRICING, VAN_SIZES } from "@/data/constants";
+import { CONTACT, HELP_PRICING, VAN_SIZES } from "@/data/constants";
 import {
   ArrowRight,
   Boxes,
   CheckCircle2,
   HandHelping,
+  Phone,
   Quote,
   Sofa,
   Star,
   Truck,
 } from "lucide-react";
 import heroImg from "@/assets/hero/move4u_hero_v3.png";
+import pricingBgImg from "@/assets/hero/move4u_hero_v1.png";
 import teamImg from "@/assets/reviews/move4u_real_move.webp";
 
 /**
@@ -514,18 +516,47 @@ export default function HouseMovingPage() {
         </section>
 
         {/* ============================================================
-            PRICING PREVIEW — simple, transparent (Most popular badge)
+            PRICING PREVIEW — branded purple block over a real van photo.
+            Layered: van image → soft purple gradient overlay → content.
+            White cards keep contrast against the overlay so prices stay
+            easy to scan.
             ============================================================ */}
-        <section className="py-14 sm:py-20 bg-[#faf8fd]">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        <section
+          className="relative isolate overflow-hidden py-14 sm:py-20"
+          aria-label="Pricing"
+        >
+          {/* Background image — covers full section */}
+          <img
+            src={pricingBgImg}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover object-center select-none pointer-events-none"
+          />
+          {/* Purple brand overlay — kept moderate so the van still reads
+              through but text remains comfortably legible */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage:
+                "linear-gradient(135deg, rgba(61,18,137,0.92) 0%, rgba(74,49,156,0.86) 55%, rgba(91,63,184,0.82) 100%)",
+            }}
+          />
+          {/* Subtle spotlight for depth */}
+          <div
+            aria-hidden="true"
+            className="absolute -top-24 -right-20 w-96 h-96 rounded-full bg-white/10 blur-3xl pointer-events-none"
+          />
+
+          <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-9 sm:mb-12">
-              <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2.5">
+              <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-200 mb-2.5">
                 PRICING
               </p>
-              <h2 className="text-[26px] sm:text-4xl font-bold text-gray-900 tracking-tight mb-2.5">
+              <h2 className="text-[26px] sm:text-4xl font-bold text-white tracking-tight mb-2.5">
                 Simple, transparent pricing
               </h2>
-              <p className="text-gray-500 text-[14px] sm:text-base max-w-xl mx-auto leading-relaxed">
+              <p className="text-purple-100/85 text-[14px] sm:text-base max-w-xl mx-auto leading-relaxed">
                 Pay by the hour. No hidden fees, no surprises.
               </p>
             </div>
@@ -535,7 +566,7 @@ export default function HouseMovingPage() {
               {vans.map((v) => (
                 <div
                   key={v.id}
-                  className="relative bg-white rounded-2xl p-5 ring-1 ring-purple-100/70 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.06),_0_18px_40px_-22px_rgba(74,49,156,0.14)] text-center transition-all"
+                  className="relative bg-white rounded-2xl p-5 ring-1 ring-white/20 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.35)] text-center transition-all"
                 >
                   <p className="text-[12px] font-semibold tracking-wide text-purple-700 mb-1.5 uppercase">
                     {v.name}
@@ -552,33 +583,33 @@ export default function HouseMovingPage() {
               ))}
             </div>
 
-            {/* Help options + minimum note — kept compact and clean */}
-            <ul className="bg-white rounded-2xl ring-1 ring-purple-100/60 p-4 sm:p-5 mb-7 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 text-center sm:text-left">
+            {/* Help options + minimum note — translucent strip so it sits
+                naturally on the purple background instead of looking like
+                a stuck-on white box */}
+            <ul className="bg-white/10 backdrop-blur-sm rounded-2xl ring-1 ring-white/20 p-4 sm:p-5 mb-7 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 text-center sm:text-left">
               <li className="flex items-center justify-center sm:justify-start gap-2.5 text-[13.5px]">
                 <HandHelping
-                  className="w-4 h-4 text-purple-700 shrink-0"
+                  className="w-4 h-4 text-purple-200 shrink-0"
                   strokeWidth={2.25}
                 />
-                <span className="text-gray-700">
-                  <span className="font-semibold text-gray-900">
-                    Driver help
-                  </span>{" "}
+                <span className="text-purple-100/90">
+                  <span className="font-semibold text-white">Driver help</span>{" "}
                   +£{driverHelpDelta}/hr
                 </span>
               </li>
               <li className="flex items-center justify-center sm:justify-start gap-2.5 text-[13.5px]">
                 <HandHelping
-                  className="w-4 h-4 text-purple-700 shrink-0"
+                  className="w-4 h-4 text-purple-200 shrink-0"
                   strokeWidth={2.25}
                 />
-                <span className="text-gray-700">
-                  <span className="font-semibold text-gray-900">
+                <span className="text-purple-100/90">
+                  <span className="font-semibold text-white">
                     Driver + helper
                   </span>{" "}
                   +£{driverPlusHelperFromDelta}/hr
                 </span>
               </li>
-              <li className="flex items-center justify-center sm:justify-end gap-2.5 text-[13px] text-gray-500">
+              <li className="flex items-center justify-center sm:justify-end gap-2.5 text-[13px] text-purple-100/80">
                 Minimum booking: 2 hours
               </li>
             </ul>
@@ -586,19 +617,23 @@ export default function HouseMovingPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={() => setLocation("/book/house-move")}
-                className="btn-purple inline-flex items-center justify-center gap-2 font-semibold px-7 py-3 rounded-full text-[14px] sm:text-[15px]"
+                className="bg-white text-purple-900 font-semibold px-7 py-3 rounded-full inline-flex items-center justify-center gap-2 hover:bg-purple-50 hover:-translate-y-0.5 transition-all text-[14px] sm:text-[15px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.45)]"
                 data-testid="pricing-book-now"
               >
                 Book now
                 <ArrowRight className="w-4 h-4" strokeWidth={2.25} />
               </button>
-              <button
-                onClick={() => setLocation("/pricing")}
-                className="border border-gray-200 bg-white text-gray-800 font-semibold px-7 py-3 rounded-full hover:bg-gray-50 hover:-translate-y-0.5 transition-all text-[14px] sm:text-[15px]"
-                data-testid="pricing-view-full"
+              {/* "Call us" replaces the previous "View full pricing" button.
+                  Uses a tel: link for native click-to-call on mobile. */}
+              <a
+                href={`tel:${CONTACT.driver}`}
+                className="bg-white/10 hover:bg-white/20 ring-1 ring-white/40 text-white font-semibold px-7 py-3 rounded-full inline-flex items-center justify-center gap-2 transition-all text-[14px] sm:text-[15px] backdrop-blur-sm"
+                data-testid="pricing-call-us"
+                aria-label={`Call us on ${CONTACT.driverDisplay}`}
               >
-                View full pricing
-              </button>
+                <Phone className="w-4 h-4" strokeWidth={2.25} />
+                Call us
+              </a>
             </div>
           </div>
         </section>
