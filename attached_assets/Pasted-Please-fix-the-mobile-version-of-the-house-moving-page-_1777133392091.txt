@@ -1,0 +1,152 @@
+Please fix the mobile version of the /house-moving page.
+
+Main goal:
+Make the mobile page compact, clean, fast and easy to scan.
+
+1. Hero section
+
+The current hero image is too zoomed in.
+
+Please:
+- zoom out the background image
+- show more of the van / moving scene
+- make it cleaner and less cropped
+
+Remove from hero:
+- “Move without stress — we handle everything”
+- long subtitle text
+- top “Get a Quote” button
+- top “Book Now” button
+- extra trust points if they make it too busy
+
+Keep only:
+- small label: “House Moving Service”
+- Quick Quote form
+
+2. Quick Quote form
+
+Move the Quick Quote form ON TOP of the hero image.
+
+It should:
+- sit inside the hero section
+- overlay the image
+- be centered
+- be smaller and more compact
+- look clean and premium
+
+Keep fields:
+- Pickup address
+- Drop-off address
+
+Button:
+- Check price
+
+Do not place the form below the image.
+
+3. Pricing section mobile fix
+
+Current issue:
+Pricing cards are too big and stacked vertically.
+
+Please:
+- keep 3 pricing cards in one row on mobile, like desktop
+- scale them down proportionally
+- do not stack them vertically
+- reduce card padding
+- reduce van image size
+- keep pricing section compact
+
+Cards:
+- Small Van
+- Medium Van
+- Large Van
+
+Keep prices and logic unchanged.
+
+4. Why Choose Us + Reviews
+
+Merge these into one clean section.
+
+Do not make reviews a separate large section.
+
+Desktop:
+- image on one side
+- text, bullet points and one small review on the other side
+
+Mobile:
+- stack the content
+- reduce spacing
+- keep it compact
+- avoid large empty gaps
+
+5. What We Handle section
+
+Make this section smaller.
+
+Please:
+- reduce card size
+- reduce padding
+- reduce icon size slightly
+- keep 2-column grid on mobile
+- reduce vertical spacing
+
+6. General mobile spacing
+
+Across the whole mobile page:
+- reduce large empty gaps
+- reduce section padding
+- reduce oversized headings if needed
+- make text shorter and easier to scan
+- avoid repeated large card layouts
+
+Final goal:
+The mobile version should feel compact, fast, clean and easy to use.
+
+It should NOT feel:
+- stretched
+- oversized
+- heavy
+- like desktop squeezed into mobile Please make the “How it works” and “What we handle for you” sections much more compact on mobile.
+
+1. How it works section
+
+Current issue:
+The cards are too large and take too much vertical space.
+
+Please change mobile layout to a compact 1-2-3 step line instead of large cards.
+
+Mobile design:
+- Show steps as a simple vertical list
+- Use a thin line connecting 1 → 2 → 3
+- Small numbered circles
+- Short text only
+
+Example:
+1 — Enter your addresses  
+2 — Get your quote  
+3 — We handle your move
+
+Do not use big cards on mobile for this section.
+
+2. What we handle section
+
+Current issue:
+The cards are too large and heavy.
+
+Please make this section smaller on mobile:
+- reduce card height
+- reduce padding
+- reduce icon size
+- reduce heading size slightly
+- keep 2-column layout
+- shorten descriptions if needed
+
+3. Overall mobile goal
+
+The page should feel:
+- lighter
+- faster to scan
+- less stretched
+- not overloaded
+
+Do not change desktop layout unless needed. 
