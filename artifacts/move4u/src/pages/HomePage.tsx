@@ -16,9 +16,9 @@ import {
 
 export default function HomePage() {
   usePageMeta({
-    title: "Move4U — Removals & Moving Service in London | Man and Van",
+    title: "Move4U London Removals | Man and Van from £35/h | Same-Day Service",
     description:
-      "Move4U — trusted London removals and moving service. Man and van, house & flat moves, furniture delivery, waste removal and international moving. Fast, fair pricing, fully insured. Book online in minutes.",
+      "Fast and reliable removals in London from £35/hour. House moves, man and van, furniture delivery and waste removal. Same-day service available. Get a quote online.",
     path: "/",
   });
   const [, setLocation] = useLocation();
@@ -210,10 +210,10 @@ export default function HomePage() {
             ABOUT MOVE4U
           </p>
           <h2 className="text-[24px] sm:text-3xl font-bold text-gray-900 mb-3 tracking-tight">
-            London's Trusted Moving Service
+            London's Trusted Removals & Man and Van Service
           </h2>
           <p className="text-gray-600 text-[14px] sm:text-base leading-relaxed max-w-2xl mx-auto mb-7">
-            Move4U offers house moving, waste removal, single item delivery, commercial moving and international moving across London and surrounding areas. Clear pricing, flexible booking and professional service every time.
+            Move4U is a London-based removals company offering house moving, man and van, furniture delivery, commercial moving and waste removal services across London and surrounding areas. From single-item drop-offs to full house moves, we provide a same-day moving service with clear hourly pricing from £35/hour and friendly, professional movers.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button

@@ -46,7 +46,7 @@ export default function HeroSlider() {
           >
             <img
               src={s.image}
-              alt=""
+              alt={`${s.title} — Move4U London removals and man and van service`}
               /* On mobile we widen the visible portion of the photograph
                  by switching to object-contain-ish behaviour via a slight
                  scale-down on the container (see hero-img-mobile in

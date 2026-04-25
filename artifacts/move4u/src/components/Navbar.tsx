@@ -97,7 +97,7 @@ export default function Navbar() {
               >
                 <img
                   src="/m4u-icon.png"
-                  alt=""
+                  alt="Move4U logo — London removals and man and van service"
                   className="w-full h-full object-cover scale-[1.12] select-none block"
                   draggable={false}
                 />
