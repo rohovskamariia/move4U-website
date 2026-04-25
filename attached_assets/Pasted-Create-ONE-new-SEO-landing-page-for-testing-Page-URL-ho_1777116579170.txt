@@ -1,0 +1,88 @@
+Create ONE new SEO landing page for testing.
+
+Page URL:
+/house-moving
+
+Important:
+- Do NOT change existing booking forms
+- Do NOT change pricing logic
+- Do NOT change /book/house-move
+- This page is only an additional SEO landing page
+
+Design requirements:
+The page must look clean, modern, premium and trustworthy.
+Avoid generic or cheap-looking layouts.
+Use good spacing, clear sections, and a professional tone.
+The design should match a high-quality London service business.
+
+---
+
+CONTENT (high quality, natural, not robotic):
+
+Title:
+House Moving in London
+
+Subtitle:
+Reliable and professional house moving service across London, tailored to make your move simple and stress-free.
+
+---
+
+Intro (natural tone, not generic):
+Move4U offers a dependable and well-organised house moving service across London and the UK. Whether you’re relocating from a small flat or a full property, our team ensures careful handling, efficient transport and a smooth experience from start to finish.
+
+---
+
+Key benefits (clean layout):
+- Professional and careful handling of all items
+- Flexible scheduling, including same-day availability
+- Support with loading and unloading
+- Suitable for both small and large moves
+- Reliable service across London and surrounding areas
+
+---
+
+Trust section (important tone):
+We focus on delivering a reliable and straightforward moving experience. Our team works efficiently while taking care of your belongings, ensuring your move is handled safely and without unnecessary stress.
+
+---
+
+CTA section (important):
+Button:
+“Book House Moving” → link to /book/house-move
+
+Secondary button:
+“Get a Quote” → link to /book
+
+---
+
+Small FAQ (short and clean):
+
+Question:
+How much does house moving cost?
+
+Answer:
+The price depends on the size of the move, time required and distance. You can get a quick estimate through our booking system.
+
+---
+
+SEO settings:
+
+SEO title:
+House Moving London | Move4U Removals Service
+
+Meta description:
+Professional house moving service in London by Move4U. Reliable removals, careful handling and flexible booking available. Get a quote online.
+
+Keywords (natural usage only, no spam):
+house moving London, removals London, moving services London, man and van London
+
+---
+
+Additional requirements:
+- Add this page to sitemap.xml
+- Make “House Moving” card on homepage clickable → /house-moving
+- Ensure text sounds human, premium and trustworthy (not AI-generated style)
+- Keep layout visually appealing (not text-heavy, not cluttered)
+
+Goal:
+Create a premium-looking service page that builds trust, reflects real quality, and converts visitors into bookings.

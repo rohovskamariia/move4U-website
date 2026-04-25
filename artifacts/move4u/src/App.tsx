@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import HomePage from "@/pages/HomePage";
+import HouseMovingPage from "@/pages/HouseMovingPage";
 import BookingPage from "@/pages/BookingPage";
 import TermsPage from "@/pages/TermsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
@@ -27,6 +28,7 @@ function Router() {
       <ScrollToTop />
       <Switch>
         <Route path="/" component={HomePage} />
+        <Route path="/house-moving" component={HouseMovingPage} />
         <Route path="/book" component={BookingPage} />
         <Route path="/book/:service" component={BookingPage} />
         <Route path="/terms" component={TermsPage} />

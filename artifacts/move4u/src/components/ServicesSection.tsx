@@ -64,7 +64,13 @@ export default function ServicesSection() {
               <button
                 key={service.id}
                 type="button"
-                onClick={() => setLocation(`/book/${service.id}`)}
+                onClick={() =>
+                  setLocation(
+                    service.id === "house-move"
+                      ? "/house-moving"
+                      : `/book/${service.id}`,
+                  )
+                }
                 className="bg-white rounded-2xl ring-1 ring-purple-100/60 p-3.5 flex flex-col items-center justify-center text-center min-h-[108px] shadow-[0_2px_6px_-2px_rgba(74,49,156,0.08),_0_10px_22px_-12px_rgba(74,49,156,0.18)] active:bg-purple-50/40 active:scale-[0.98] transition-all duration-300"
                 data-testid={`service-card-${service.id}`}
               >
@@ -120,11 +126,17 @@ export default function ServicesSection() {
 
                 <div className="flex gap-2 pt-1">
                   <button
-                    onClick={() => setLocation(`/book/${service.id}`)}
+                    onClick={() =>
+                      setLocation(
+                        service.id === "house-move"
+                          ? "/house-moving"
+                          : `/book/${service.id}`,
+                      )
+                    }
                     className="btn-purple flex-1 inline-flex items-center justify-center gap-1.5 text-[12.5px] font-semibold py-2.5 px-3 rounded-full"
                     data-testid={`book-service-${service.id}`}
                   >
-                    Book
+                    {service.id === "house-move" ? "Learn More" : "Book"}
                     <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.25} />
                   </button>
                   <button
