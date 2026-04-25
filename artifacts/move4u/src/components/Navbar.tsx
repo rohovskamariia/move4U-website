@@ -96,10 +96,14 @@ export default function Navbar() {
                 aria-hidden="true"
               >
                 <img
-                  src="/m4u-icon.png"
+                  src="/m4u-icon.webp"
+                  width={128}
+                  height={128}
                   alt="Move4U logo — London removals and man and van service"
                   className="w-full h-full object-cover scale-[1.12] select-none block"
                   draggable={false}
+                  decoding="async"
+                  fetchPriority="high"
                 />
               </span>
               <span className="font-extrabold text-[22px] md:text-[27px] tracking-tight leading-none">

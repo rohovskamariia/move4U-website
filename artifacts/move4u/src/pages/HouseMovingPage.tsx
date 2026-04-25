@@ -16,14 +16,11 @@ import {
   Star,
   Truck,
 } from "lucide-react";
-import heroImg from "@/assets/hero/move4u_hero_v3.png";
-import pricingBgImg from "@/assets/hero/move4u_hero_v1.png";
+import heroImg from "@/assets/hero/move4u_hero_v3.webp";
 import teamImg from "@/assets/reviews/move4u_real_move.webp";
-import {
-  LargeVanIcon,
-  MediumVanIcon,
-  SmallVanIcon,
-} from "@/components/VanIcons";
+import vanSmallImg from "@/assets/vans/van_small.webp";
+import vanMediumImg from "@/assets/vans/van_medium.webp";
+import vanLargeImg from "@/assets/vans/van_large.webp";
 
 /**
  * /house-moving — premium SEO + conversion landing page.
@@ -104,20 +101,20 @@ export default function HouseMovingPage() {
     medium: "1–2 bed flats",
     large: "Family homes",
   };
-  // One small van illustration per size. Mapped here so the JSX stays
-  // declarative and we never accidentally render the wrong icon for a
-  // given van id.
-  const vanIcons: Record<string, typeof SmallVanIcon> = {
-    small: SmallVanIcon,
-    medium: MediumVanIcon,
-    large: LargeVanIcon,
+  // One real van photo per size — small panel van / medium Sprinter /
+  // large Luton box. Mapped by id so the JSX stays declarative and a
+  // wrong photo can never be paired with the wrong van label.
+  const vanImages: Record<string, string> = {
+    small: vanSmallImg,
+    medium: vanMediumImg,
+    large: vanLargeImg,
   };
   const vans = VAN_SIZES.map((v) => ({
     id: v.id,
     name: v.name,
     price: `£${HELP_PRICING[v.id]?.noHelp ?? v.basePrice}`,
     note: vanNotes[v.id] ?? v.description,
-    Icon: vanIcons[v.id] ?? SmallVanIcon,
+    image: vanImages[v.id] ?? vanSmallImg,
   }));
 
   // Driver-help delta is uniform across van sizes (driverHelp - noHelp).
@@ -150,6 +147,9 @@ export default function HouseMovingPage() {
               src={heroImg}
               alt="Move4U removals team carrying furniture into a van during a London house move"
               className="w-full h-full object-cover"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
             />
             {/* Soft dark overlay for legibility */}
             <div
@@ -532,63 +532,65 @@ export default function HouseMovingPage() {
         </section>
 
         {/* ============================================================
-            PRICING PREVIEW — branded purple block over a real van photo.
-            Layered: van image → soft purple gradient overlay → content.
-            White cards keep contrast against the overlay so prices stay
-            easy to scan.
+            PRICING PREVIEW — clean soft-purple gradient block.
+            No background photo: the brand colour does the lifting and
+            the white pricing cards (each with a real van photo on top)
+            carry the focus.
             ============================================================ */}
         <section
           className="relative isolate overflow-hidden py-10 sm:py-14"
           aria-label="Pricing"
+          style={{
+            backgroundImage:
+              "linear-gradient(135deg, #f4ecff 0%, #e9dcff 55%, #dccaf8 100%)",
+          }}
         >
-          {/* Background image — covers full section */}
-          <img
-            src={pricingBgImg}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 w-full h-full object-cover object-center select-none pointer-events-none"
-          />
-          {/* Purple brand overlay — softer than before so the van photo
-              reads through more clearly while text stays legible */}
+          {/* Subtle accent glows for depth — kept very soft so the section
+              still reads as a flat brand-coloured panel, not a busy hero. */}
           <div
             aria-hidden="true"
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              backgroundImage:
-                "linear-gradient(135deg, rgba(61,18,137,0.78) 0%, rgba(74,49,156,0.72) 55%, rgba(91,63,184,0.66) 100%)",
-            }}
+            className="absolute -top-20 -right-16 w-72 h-72 rounded-full bg-white/40 blur-3xl pointer-events-none"
           />
-          {/* Subtle spotlight for depth */}
           <div
             aria-hidden="true"
-            className="absolute -top-24 -right-20 w-96 h-96 rounded-full bg-white/10 blur-3xl pointer-events-none"
+            className="absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-purple-200/40 blur-3xl pointer-events-none"
           />
 
           <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-6 sm:mb-8">
-              <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-200 mb-2">
+              <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2">
                 PRICING
               </p>
-              <h2 className="text-[22px] sm:text-[28px] font-bold text-white tracking-tight mb-2">
+              <h2 className="text-[22px] sm:text-[28px] font-bold text-gray-900 tracking-tight mb-2">
                 Simple, transparent pricing
               </h2>
-              <p className="text-purple-100/90 text-[13.5px] sm:text-[14.5px] max-w-xl mx-auto leading-relaxed">
+              <p className="text-gray-600 text-[13.5px] sm:text-[14.5px] max-w-xl mx-auto leading-relaxed">
                 Pay by the hour. No hidden fees, no surprises.
               </p>
             </div>
 
-            {/* Van rates — compact light pricing cards. Each card has its
-                own van illustration (small / medium / large body) so the
-                size jump is visible at a glance. */}
+            {/* Van rates — clean white pricing cards. Each card shows a
+                real photo of the van size at the top so customers can
+                tell small / medium / large apart at a glance. All photos
+                render at the same display height for visual consistency. */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 items-stretch">
               {vans.map((v) => (
                 <div
                   key={v.id}
-                  className="relative bg-white rounded-2xl p-4 ring-1 ring-white/20 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.35)] text-center transition-all"
+                  className="relative bg-white rounded-2xl p-4 sm:p-5 ring-1 ring-purple-100/70 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.08),_0_18px_40px_-22px_rgba(74,49,156,0.20)] text-center transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_18px_-6px_rgba(74,49,156,0.14),_0_24px_48px_-22px_rgba(74,49,156,0.30)]"
                 >
-                  {/* Van illustration */}
-                  <div className="flex items-end justify-center h-12 mb-2 text-purple-700">
-                    <v.Icon className="h-12 w-auto max-w-full" />
+                  {/* Van photo — uniform height container so all 3 vans
+                      sit on the same baseline regardless of their actual
+                      length-to-height ratio. */}
+                  <div className="flex items-center justify-center h-16 sm:h-20 mb-2.5">
+                    <img
+                      src={v.image}
+                      alt={`${v.name} — Move4U ${v.id} van`}
+                      className="max-h-full max-w-full object-contain select-none"
+                      loading="lazy"
+                      decoding="async"
+                      draggable={false}
+                    />
                   </div>
                   <p className="text-[11.5px] font-semibold tracking-wide text-purple-700 mb-1 uppercase">
                     {v.name}
@@ -605,33 +607,35 @@ export default function HouseMovingPage() {
               ))}
             </div>
 
-            {/* Help options + minimum note — translucent strip so it sits
-                naturally on the purple background instead of looking like
-                a stuck-on white box */}
-            <ul className="bg-white/10 backdrop-blur-sm rounded-2xl ring-1 ring-white/20 p-3.5 sm:p-4 mb-5 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 text-center sm:text-left">
+            {/* Help options + minimum note — light strip on the soft
+                purple background, with brand-purple icons and dark text
+                for AA contrast. */}
+            <ul className="bg-white/70 backdrop-blur-sm rounded-2xl ring-1 ring-purple-200/60 p-3.5 sm:p-4 mb-5 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 text-center sm:text-left">
               <li className="flex items-center justify-center sm:justify-start gap-2.5 text-[13px]">
                 <HandHelping
-                  className="w-4 h-4 text-purple-200 shrink-0"
+                  className="w-4 h-4 text-purple-700 shrink-0"
                   strokeWidth={2.25}
                 />
-                <span className="text-purple-100/90">
-                  <span className="font-semibold text-white">Driver help</span>{" "}
+                <span className="text-gray-700">
+                  <span className="font-semibold text-gray-900">
+                    Driver help
+                  </span>{" "}
                   +£{driverHelpDelta}/hr
                 </span>
               </li>
               <li className="flex items-center justify-center sm:justify-start gap-2.5 text-[13px]">
                 <HandHelping
-                  className="w-4 h-4 text-purple-200 shrink-0"
+                  className="w-4 h-4 text-purple-700 shrink-0"
                   strokeWidth={2.25}
                 />
-                <span className="text-purple-100/90">
-                  <span className="font-semibold text-white">
+                <span className="text-gray-700">
+                  <span className="font-semibold text-gray-900">
                     Driver + helper
                   </span>{" "}
                   +£{driverPlusHelperFromDelta}/hr
                 </span>
               </li>
-              <li className="flex items-center justify-center sm:justify-end gap-2.5 text-[12.5px] text-purple-100/80">
+              <li className="flex items-center justify-center sm:justify-end gap-2.5 text-[12.5px] text-gray-600">
                 Minimum booking: 2 hours
               </li>
             </ul>
@@ -639,7 +643,7 @@ export default function HouseMovingPage() {
             <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
               <button
                 onClick={() => setLocation("/book/house-move")}
-                className="bg-white text-purple-900 font-semibold px-5 py-2.5 rounded-full inline-flex items-center justify-center gap-2 hover:bg-purple-50 hover:-translate-y-0.5 transition-all text-[13.5px] sm:text-[14px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.45)]"
+                className="btn-purple inline-flex items-center justify-center gap-2 font-semibold px-5 py-2.5 rounded-full text-[13.5px] sm:text-[14px]"
                 data-testid="pricing-book-now"
               >
                 Book now
@@ -648,7 +652,7 @@ export default function HouseMovingPage() {
               {/* "Call us" — tel: link for native click-to-call on mobile. */}
               <a
                 href={`tel:${CONTACT.driver}`}
-                className="bg-white/10 hover:bg-white/20 ring-1 ring-white/40 text-white font-semibold px-5 py-2.5 rounded-full inline-flex items-center justify-center gap-2 transition-all text-[13.5px] sm:text-[14px] backdrop-blur-sm"
+                className="bg-white text-purple-800 ring-1 ring-purple-200 hover:bg-purple-50 hover:-translate-y-0.5 font-semibold px-5 py-2.5 rounded-full inline-flex items-center justify-center gap-2 transition-all text-[13.5px] sm:text-[14px]"
                 data-testid="pricing-call-us"
                 aria-label={`Call us on ${CONTACT.driverDisplay}`}
               >

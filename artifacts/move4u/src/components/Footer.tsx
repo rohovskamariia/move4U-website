@@ -19,10 +19,14 @@ export default function Footer() {
               aria-hidden="true"
             >
               <img
-                src="/m4u-icon.png"
+                src="/m4u-icon.webp"
+                width={128}
+                height={128}
                 alt="Move4U logo — London removals and man and van service"
                 className="w-full h-full object-cover scale-[1.12] select-none block"
                 draggable={false}
+                loading="lazy"
+                decoding="async"
               />
             </span>
             Move4U
