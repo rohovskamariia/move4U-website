@@ -88,9 +88,9 @@ export default function HouseMovingPage() {
   ];
 
   const whyPoints = [
-    "We arrive on time",
-    "We handle items carefully",
-    "Clear pricing — no surprises",
+    "On-time arrival",
+    "Careful handling",
+    "Clear pricing",
     "Same-day availability",
   ];
 
@@ -146,7 +146,7 @@ export default function HouseMovingPage() {
             <img
               src={heroImg}
               alt="Move4U removals team carrying furniture into a van during a London house move"
-              className="w-full h-full object-cover"
+              className="house-hero-img w-full h-full object-cover"
               loading="eager"
               fetchPriority="high"
               decoding="async"
@@ -162,7 +162,7 @@ export default function HouseMovingPage() {
             />
           </div>
 
-          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-8 lg:pt-20 pb-10 lg:pb-24">
+          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-7 lg:pt-20 pb-7 lg:pb-24">
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 items-center">
               {/* LEFT — full marketing copy. Hidden on mobile/tablet to
                   keep the hero focused on the conversion form (per
@@ -221,15 +221,19 @@ export default function HouseMovingPage() {
               </p>
 
               {/* RIGHT — quick quote card. On mobile this is the only
-                  thing in the hero (with the eyebrow above) so we make
-                  it more compact and centered with a tight max width. */}
-              <div className="lg:col-span-5 mx-auto w-full max-w-sm lg:max-w-none">
-                <div className="bg-white rounded-2xl lg:rounded-3xl p-4 lg:p-6 shadow-[0_30px_70px_-20px_rgba(20,12,46,0.55)] ring-1 ring-white/30">
-                  <div className="mb-3 lg:mb-4">
-                    <p className="text-[10.5px] font-semibold tracking-[0.2em] text-purple-700 mb-1">
+                  thing in the hero so we make it noticeably more compact:
+                  narrower max-width, reduced padding, smaller title and
+                  labels, and shorter inputs (via the .quick-quote-mobile
+                  class which scopes the override to this card only — the
+                  AddressAutocomplete input height in the full booking
+                  flow stays untouched). */}
+              <div className="lg:col-span-5 mx-auto w-full max-w-[320px] lg:max-w-none px-3 lg:px-0">
+                <div className="quick-quote-mobile bg-white rounded-2xl lg:rounded-3xl p-3 lg:p-6 shadow-[0_30px_70px_-20px_rgba(20,12,46,0.55)] ring-1 ring-white/30">
+                  <div className="mb-2.5 lg:mb-4">
+                    <p className="text-[10px] lg:text-[10.5px] font-semibold tracking-[0.2em] text-purple-700 mb-0.5 lg:mb-1">
                       QUICK QUOTE
                     </p>
-                    <h2 className="text-[18px] lg:text-[22px] font-bold text-gray-900 tracking-tight">
+                    <h2 className="text-[15.5px] lg:text-[22px] font-bold text-gray-900 tracking-tight leading-tight">
                       Get your quick quote
                     </h2>
                     {/* Helper subtitle — desktop only; mobile keeps it
@@ -245,12 +249,12 @@ export default function HouseMovingPage() {
                       e.preventDefault();
                       onQuickQuote();
                     }}
-                    className="space-y-2.5 lg:space-y-3"
+                    className="space-y-2 lg:space-y-3"
                   >
                     <div>
                       <label
                         htmlFor="quick-pickup"
-                        className="block text-[12px] font-semibold text-gray-700 mb-1"
+                        className="block text-[10.5px] lg:text-[12px] font-semibold text-gray-700 mb-0.5 lg:mb-1 uppercase tracking-wide lg:normal-case lg:tracking-normal"
                       >
                         Pickup address
                       </label>
@@ -258,14 +262,14 @@ export default function HouseMovingPage() {
                         id="quick-pickup"
                         value={pickup}
                         onChange={(v) => setPickup(v)}
-                        placeholder="Enter pickup postcode or address"
+                        placeholder="Pickup postcode"
                         testId="quick-quote-pickup"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor="quick-dropoff"
-                        className="block text-[12px] font-semibold text-gray-700 mb-1"
+                        className="block text-[10.5px] lg:text-[12px] font-semibold text-gray-700 mb-0.5 lg:mb-1 uppercase tracking-wide lg:normal-case lg:tracking-normal"
                       >
                         Drop-off address
                       </label>
@@ -273,13 +277,13 @@ export default function HouseMovingPage() {
                         id="quick-dropoff"
                         value={dropoff}
                         onChange={(v) => setDropoff(v)}
-                        placeholder="Enter drop-off postcode or address"
+                        placeholder="Drop-off postcode"
                         testId="quick-quote-dropoff"
                       />
                     </div>
                     <button
                       type="submit"
-                      className="btn-purple w-full inline-flex items-center justify-center gap-2 font-semibold px-6 py-2.5 lg:py-3 rounded-full text-[14px] mt-1"
+                      className="btn-purple w-full inline-flex items-center justify-center gap-1.5 lg:gap-2 font-semibold px-4 lg:px-6 py-2 lg:py-3 rounded-full text-[13px] lg:text-[14px] mt-1"
                       data-testid="quick-quote-submit"
                     >
                       {/* "Check price" on mobile, "Get Quote" on desktop —
@@ -287,7 +291,7 @@ export default function HouseMovingPage() {
                           is unchanged. */}
                       <span className="lg:hidden">Check price</span>
                       <span className="hidden lg:inline">Get Quote</span>
-                      <ArrowRight className="w-4 h-4" strokeWidth={2.25} />
+                      <ArrowRight className="w-3.5 h-3.5 lg:w-4 lg:h-4" strokeWidth={2.25} />
                     </button>
                     <p className="hidden lg:block text-[11.5px] text-gray-400 text-center pt-1">
                       No payment required to get a quote.
@@ -335,7 +339,7 @@ export default function HouseMovingPage() {
             connecting rail (per redesign brief — no oversized cards).
             Desktop: original 3-card grid, untouched.
             ============================================================ */}
-        <section className="py-7 sm:py-14 bg-white">
+        <section className="py-6 sm:py-14 bg-white">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-4 sm:mb-8">
               <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-1.5 sm:mb-2">
@@ -436,14 +440,15 @@ export default function HouseMovingPage() {
             Mobile: tightened padding/icon/text so the 2-col grid feels
             light, not stretched. Desktop: untouched.
             ============================================================ */}
-        <section className="py-8 sm:py-14 bg-[#faf8fd]">
+        <section className="py-6 sm:py-14 bg-[#faf8fd]">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-5 sm:mb-8">
               <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-1.5 sm:mb-2">
                 WHAT WE HANDLE FOR YOU
               </p>
               <h2 className="text-[19px] sm:text-[28px] font-bold text-gray-900 tracking-tight leading-snug">
-                Everything handled — so you don't have to
+                <span className="sm:hidden">Everything handled for you</span>
+                <span className="hidden sm:inline">Everything handled — so you don't have to</span>
               </h2>
             </div>
 
@@ -483,11 +488,13 @@ export default function HouseMovingPage() {
             bullet list) — no separate reviews section.
             Mobile: tighter vertical rhythm + smaller image.
             ============================================================ */}
-        <section className="py-9 sm:py-20 bg-white">
+        <section className="py-6 sm:py-20 bg-white">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-center">
-              {/* IMAGE */}
-              <div className="lg:col-span-6 order-2 lg:order-1">
+              {/* IMAGE — hidden on mobile so the merged Why Choose +
+                  Reviews section reads as one compact block (per brief).
+                  Returns at lg+ as the left half of the split layout. */}
+              <div className="hidden lg:block lg:col-span-6 order-2 lg:order-1">
                 <div className="relative">
                   <div
                     aria-hidden="true"
@@ -605,7 +612,7 @@ export default function HouseMovingPage() {
             cleanly against the brand purple.
             ============================================================ */}
         <section
-          className="relative bg-white py-9 sm:py-16"
+          className="relative bg-white py-6 sm:py-16"
           aria-label="Pricing"
         >
           <div className="max-w-4xl mx-auto px-4 sm:px-6">

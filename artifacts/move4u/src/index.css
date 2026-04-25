@@ -537,6 +537,45 @@ body {
 }
 
 /* ----------------------------------------------------------------- */
+/* Quick Quote card on mobile — scoped overrides so the AddressAuto-  */
+/* complete inputs feel lighter (smaller height, smaller font) WITHOUT */
+/* affecting the same component anywhere else (booking flow etc.).    */
+/* ----------------------------------------------------------------- */
+@media (max-width: 1023px) {
+  .quick-quote-mobile input[type="text"],
+  .quick-quote-mobile input:not([type]) {
+    /* Compactness via padding + radius only.
+       IMPORTANT: do NOT drop font-size below 16px on mobile —
+       iOS Safari will auto-zoom on focus, causing a layout jump.
+       AddressAutocomplete intentionally sets `text-base` (16px)
+       on mobile for this reason. */
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
+    padding-left: 2.1rem;       /* keep room for the leading map-pin */
+    padding-right: 2rem;
+    border-radius: 0.625rem;    /* slightly tighter corners */
+  }
+  /* Slightly nudge the leading map-pin icon to match the tighter input. */
+  .quick-quote-mobile .lucide-map-pin {
+    width: 0.9rem;
+    height: 0.9rem;
+    left: 0.7rem;
+  }
+}
+
+/* ----------------------------------------------------------------- */
+/* House Moving hero — on mobile, anchor the photo near the upper     */
+/* portion so the workers/van stay visible instead of being cropped.  */
+/* The hero image is wide-landscape; in a tall mobile container with  */
+/* object-cover, anchoring at "center 30%" keeps the action in frame. */
+/* ----------------------------------------------------------------- */
+@media (max-width: 1023px) {
+  .house-hero-img {
+    object-position: 60% 30%;
+  }
+}
+
+/* ----------------------------------------------------------------- */
 /* Waste Removal flow — additional mobile compactness on top of the   */
 /* generic .booking-mobile rules. Only applies on phones.             */
 /* ----------------------------------------------------------------- */
