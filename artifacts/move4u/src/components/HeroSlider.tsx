@@ -1,23 +1,52 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { SLIDES, CONTACT, type SlideButton } from "@/data/constants";
 
-// Hero slider — auto-advances every 6 seconds with a smooth crossfade.
-// Edit slide content and images in src/data/constants.ts
+const AUTO_ADVANCE_MS = 6000;
+const SWIPE_THRESHOLD_PX = 45;
+
 export default function HeroSlider() {
   const [current, setCurrent] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
   const [, setLocation] = useLocation();
 
-  useEffect(() => {
-    const timer = setInterval(() => {
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pointerStartX = useRef<number | null>(null);
+  const pointerStartY = useRef<number | null>(null);
+  const isHorizontalSwipe = useRef<boolean>(false);
+  const draggingRef = useRef<boolean>(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const startAutoAdvance = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
       setCurrent((prev) => (prev + 1) % SLIDES.length);
-    }, 6000);
-    return () => clearInterval(timer);
+    }, AUTO_ADVANCE_MS);
   }, []);
 
-  const prev = () => setCurrent((c) => (c - 1 + SLIDES.length) % SLIDES.length);
-  const next = () => setCurrent((c) => (c + 1) % SLIDES.length);
+  const stopAutoAdvance = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    startAutoAdvance();
+    return stopAutoAdvance;
+  }, [startAutoAdvance, stopAutoAdvance]);
+
+  const goTo = useCallback(
+    (index: number) => {
+      setCurrent(((index % SLIDES.length) + SLIDES.length) % SLIDES.length);
+      startAutoAdvance();
+    },
+    [startAutoAdvance],
+  );
+
+  const prev = useCallback(() => goTo(current - 1), [current, goTo]);
+  const next = useCallback(() => goTo(current + 1), [current, goTo]);
 
   const handleAction = (action: SlideButton["action"]) => {
     if (action === "book") setLocation("/book");
@@ -27,15 +56,108 @@ export default function HeroSlider() {
     }
   };
 
+  // ----- Touch / pointer swipe handlers -----------------------------------
+  // Works for both touch (mobile) and mouse drag (desktop). We track only
+  // horizontal movement; if the user is clearly scrolling vertically we
+  // disengage so the page can scroll naturally.
+  const onPointerDown = (clientX: number, clientY: number) => {
+    pointerStartX.current = clientX;
+    pointerStartY.current = clientY;
+    isHorizontalSwipe.current = false;
+    draggingRef.current = true;
+    stopAutoAdvance();
+  };
+
+  const onPointerMove = (clientX: number, clientY: number) => {
+    if (!draggingRef.current || pointerStartX.current === null || pointerStartY.current === null) return;
+    const dx = clientX - pointerStartX.current;
+    const dy = clientY - pointerStartY.current;
+    if (!isHorizontalSwipe.current) {
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) {
+        isHorizontalSwipe.current = true;
+      } else if (Math.abs(dy) > 8) {
+        // Vertical scroll — give up, let the page scroll.
+        draggingRef.current = false;
+        setDragOffset(0);
+        return;
+      }
+    }
+    if (isHorizontalSwipe.current) {
+      // Soft rubber-band so the drag feels alive without exposing seams.
+      const width = containerRef.current?.clientWidth ?? 1;
+      const limited = Math.max(-width * 0.5, Math.min(width * 0.5, dx));
+      setDragOffset(limited);
+    }
+  };
+
+  const onPointerEnd = () => {
+    if (!draggingRef.current) {
+      startAutoAdvance();
+      return;
+    }
+    draggingRef.current = false;
+    const offset = dragOffset;
+    setDragOffset(0);
+    if (isHorizontalSwipe.current && Math.abs(offset) > SWIPE_THRESHOLD_PX) {
+      if (offset < 0) next();
+      else prev();
+    } else {
+      startAutoAdvance();
+    }
+    pointerStartX.current = null;
+    pointerStartY.current = null;
+    isHorizontalSwipe.current = false;
+  };
+
   const slide = SLIDES[current];
 
   return (
-    // min-h on mobile pins the hero to a stable height so swapping
-    // slides (whose title/text lengths differ) never reflows the page.
-    // Desktop keeps content-driven sizing.
-    <div className="relative bg-gray-900 text-white overflow-hidden min-h-[460px] sm:min-h-0">
-      {/* Stacked background images — crossfade between slides. No blur, sharp originals. */}
-      <div className="absolute inset-0">
+    // Stable height on every breakpoint — slides have different title/text
+    // lengths, so without a locked height the container resizes between
+    // slides and the background image visibly "jumps". Mobile keeps its
+    // existing 460px floor; desktop now also has a floor so the photo
+    // stays anchored regardless of which slide is showing.
+    <div
+      ref={containerRef}
+      className="relative bg-gray-900 text-white overflow-hidden min-h-[460px] sm:min-h-[600px] md:min-h-[640px] lg:min-h-[660px] select-none"
+      onTouchStart={(e) => {
+        const t = e.touches[0];
+        onPointerDown(t.clientX, t.clientY);
+      }}
+      onTouchMove={(e) => {
+        const t = e.touches[0];
+        onPointerMove(t.clientX, t.clientY);
+      }}
+      onTouchEnd={onPointerEnd}
+      onTouchCancel={onPointerEnd}
+      onMouseDown={(e) => {
+        // Only respond to primary button. Avoid hijacking clicks on
+        // interactive children (buttons, links).
+        if (e.button !== 0) return;
+        const target = e.target as HTMLElement;
+        if (target.closest("button, a")) return;
+        onPointerDown(e.clientX, e.clientY);
+      }}
+      onMouseMove={(e) => {
+        if (!draggingRef.current) return;
+        onPointerMove(e.clientX, e.clientY);
+      }}
+      onMouseUp={onPointerEnd}
+      onMouseLeave={() => {
+        if (draggingRef.current) onPointerEnd();
+      }}
+    >
+      {/* Stacked background images — crossfade between slides. The image
+          stack itself never moves; we only fade opacity so the photograph
+          stays perfectly anchored. A small horizontal translate is applied
+          while the user is actively swiping for tactile feedback. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          transform: dragOffset !== 0 ? `translate3d(${dragOffset * 0.25}px, 0, 0)` : undefined,
+          transition: draggingRef.current ? "none" : "transform 350ms cubic-bezier(0.22, 1, 0.36, 1)",
+        }}
+      >
         {SLIDES.map((s, i) => (
           <div
             key={s.id}
@@ -47,11 +169,12 @@ export default function HeroSlider() {
             <img
               src={s.image}
               alt={`${s.title} — Move4U London removals and man and van service`}
-              /* On mobile we widen the visible portion of the photograph
-                 by switching to object-contain-ish behaviour via a slight
-                 scale-down on the container (see hero-img-mobile in
-                 index.css), so the subject doesn't feel cropped/zoomed. */
+              /* Always fill the container exactly — width/height + object-cover
+                 plus a fixed container height means zero CLS and zero shift
+                 between slides. */
               className="hero-img-mobile w-full h-full object-cover"
+              width={1920}
+              height={1080}
               style={{
                 objectPosition: s.imagePosition ?? "center",
                 ...(s.imageFilter
@@ -60,6 +183,7 @@ export default function HeroSlider() {
               }}
               loading={i === 0 ? "eager" : "lazy"}
               decoding="async"
+              draggable={false}
               {...(i === 0 ? { fetchPriority: "high" as const } : { fetchPriority: "low" as const })}
             />
           </div>
@@ -68,9 +192,7 @@ export default function HeroSlider() {
 
       {/* Soft neutral readability gradient — only darkens the left edge
           where the headline sits, then fades quickly so the photograph
-          stays clean, sharp and natural across the rest of the frame.
-          No purple tint — the brand colour lives in the CTAs, not on top
-          of the photo. */}
+          stays clean, sharp and natural across the rest of the frame. */}
       <div
         className="hero-grad-desktop absolute inset-0 pointer-events-none hidden sm:block"
         style={{
@@ -78,10 +200,7 @@ export default function HeroSlider() {
             "linear-gradient(100deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.32) 28%, rgba(0,0,0,0.12) 52%, rgba(0,0,0,0.02) 78%, rgba(0,0,0,0) 100%)",
         }}
       />
-      {/* Mobile readability scrim — the headline spans the full width on
-          phones, so we apply an even top-to-bottom darken instead of a
-          left-only one. Strong enough at the top for white text to read
-          cleanly, fades to nothing past the buttons. */}
+      {/* Mobile readability scrim */}
       <div
         className="absolute inset-0 pointer-events-none sm:hidden"
         style={{
@@ -90,7 +209,7 @@ export default function HeroSlider() {
         }}
       />
 
-      {/* Whisper-thin bottom vignette so the dot indicators stay readable */}
+      {/* Bottom vignette so the dot indicators stay readable */}
       <div
         className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
         style={{
@@ -99,23 +218,12 @@ export default function HeroSlider() {
         }}
       />
 
-      {/* Mobile: top-aligned, compact padding, left-aligned text.
-          Desktop: unchanged — vertically centred with generous padding. */}
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-12 sm:py-32 md:py-36 min-h-[460px] sm:min-h-0 flex flex-col items-start justify-start sm:block">
-        {/* Mobile: text sits in the upper-middle area (pt-16 above + the
-            min-h on the container keeps total height stable). Buttons
-            are absolutely positioned at a fixed bottom offset further
-            down, so they stay at the SAME vertical position on every
-            slide regardless of how many lines the headline / body
-            text take. Desktop layout untouched. */}
-        <div className="max-w-2xl w-full text-left sm:block">
-          {/* Slide content — re-keyed so each change replays the
-              staggered rise-in for headline / subtext / buttons. */}
+      {/* Content. Desktop now uses min-h matching the outer container with
+          flex centering, so text is vertically centered regardless of how
+          many lines a slide's title/body wraps to. */}
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-12 sm:py-0 min-h-[460px] sm:min-h-[600px] md:min-h-[640px] lg:min-h-[660px] flex flex-col items-start justify-start sm:justify-center">
+        <div className="max-w-2xl w-full text-left">
           <div key={slide.id} className="hero-stagger">
-            {/* Eyebrow slot — always rendered so the headline lands at
-                the same vertical position on every slide. When a slide
-                has no subtitle we render an invisible placeholder of
-                the same height to keep the layout perfectly stable. */}
             {slide.subtitle ? (
               <p
                 className="text-white/90 font-semibold text-[11px] sm:text-sm uppercase tracking-[0.18em] mb-2 sm:mb-4"
@@ -153,10 +261,7 @@ export default function HeroSlider() {
                     className={
                       isPrimary
                         ? "btn-purple inline-flex items-center justify-center font-semibold px-6 sm:px-7 py-2.5 sm:py-3 rounded-full text-[13.5px] sm:text-base shadow-[0_8px_22px_-8px_rgba(61,18,137,0.6)]"
-                        : /* Secondary CTA: solid white-on-mobile so it
-                             never looks weak against the photograph;
-                             reverts to translucent glass on desktop. */
-                          "inline-flex items-center justify-center bg-white text-purple-800 font-semibold px-6 sm:px-7 py-2.5 sm:py-3 rounded-full border border-white hover:bg-purple-50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 text-[13.5px] sm:text-base shadow-[0_8px_22px_-12px_rgba(0,0,0,0.5)]"
+                        : "inline-flex items-center justify-center bg-white text-purple-800 font-semibold px-6 sm:px-7 py-2.5 sm:py-3 rounded-full border border-white hover:bg-purple-50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 text-[13.5px] sm:text-base shadow-[0_8px_22px_-12px_rgba(0,0,0,0.5)]"
                     }
                     data-testid={`slide-${slide.id}-cta-${i}`}
                   >
@@ -186,20 +291,24 @@ export default function HeroSlider() {
           <ChevronRight className="w-5 h-5" />
         </button>
 
-        {/* Dots — sit a touch higher on mobile so the rounded white
-            services panel can ride up over the hero edge without
-            covering them. */}
-        <div className="absolute bottom-10 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+        {/* Dots — generous touch targets for thumbs (py-2 wraps the visible
+            bar in a 36px-tall hit area) while keeping the visual the same. */}
+        <div className="absolute bottom-8 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
           {SLIDES.map((_, i) => (
             <button
               key={i}
-              onClick={() => setCurrent(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === current ? "bg-white w-8" : "bg-white/40 w-2 hover:bg-white/60"
-              }`}
+              onClick={() => goTo(i)}
+              className="px-1 py-2 -my-1 group"
               aria-label={`Go to slide ${i + 1}`}
+              aria-current={i === current ? "true" : undefined}
               data-testid={`slider-dot-${i}`}
-            />
+            >
+              <span
+                className={`block h-2 rounded-full transition-all duration-300 ${
+                  i === current ? "bg-white w-8" : "bg-white/40 w-2 group-hover:bg-white/60"
+                }`}
+              />
+            </button>
           ))}
         </div>
       </div>
