@@ -4,16 +4,13 @@ import { usePageMeta } from "@/lib/usePageMeta";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
-import { HELP_PRICING, REVIEWS, VAN_SIZES } from "@/data/constants";
+import { HELP_PRICING, VAN_SIZES } from "@/data/constants";
 import {
   ArrowRight,
   Boxes,
   CheckCircle2,
-  Clock,
   HandHelping,
-  MapPin,
   Quote,
-  ShieldCheck,
   Sofa,
   Star,
   Truck,
@@ -105,7 +102,6 @@ export default function HouseMovingPage() {
     name: v.name,
     price: `£${HELP_PRICING[v.id]?.noHelp ?? v.basePrice}`,
     note: vanNotes[v.id] ?? v.description,
-    popular: v.id === "medium",
   }));
 
   // Driver-help delta is uniform across van sizes (driverHelp - noHelp).
@@ -115,10 +111,6 @@ export default function HouseMovingPage() {
   const driverPlusHelperFromDelta = Math.min(
     ...Object.values(HELP_PRICING).map((p) => p.driverPlusHelper - p.noHelp),
   );
-
-  // Show only 2 reviews on this landing page (per spec). Picks the first
-  // two 5-star ones to keep the social proof strong.
-  const featuredReviews = REVIEWS.filter((r) => r.rating === 5).slice(0, 2);
 
   // Placeholder Google reviews link — defaults to a Google search for the
   // brand until a real Google Business profile URL is wired in.
@@ -276,34 +268,32 @@ export default function HouseMovingPage() {
         </section>
 
         {/* ============================================================
-            TRUST STRIP — compact 4.9 rating + tagline directly under hero
+            TRUST STRIP — single, simple horizontal row under the hero
             ============================================================ */}
         <section
-          aria-label="Customer rating and trust signals"
+          aria-label="Trust signals"
           className="border-y border-purple-100/70 bg-gradient-to-b from-white to-[#faf8fd]"
         >
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6 text-center sm:text-left">
-              <div className="flex items-center justify-center sm:justify-start gap-2.5">
-                <div className="flex items-center gap-0.5">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className="w-4 h-4 text-yellow-400 fill-yellow-400"
+            <ul className="flex flex-wrap items-center justify-center gap-x-6 sm:gap-x-10 gap-y-2 text-[12.5px] sm:text-[13.5px] text-gray-600">
+              {["No hidden fees", "Fast response", "Trusted across London"].map(
+                (t, i) => (
+                  <li key={t} className="flex items-center gap-2">
+                    {i > 0 && (
+                      <span
+                        aria-hidden="true"
+                        className="hidden sm:inline-block w-1 h-1 rounded-full bg-gray-300 -ml-3 sm:-ml-5"
+                      />
+                    )}
+                    <CheckCircle2
+                      className="w-3.5 h-3.5 text-purple-700 shrink-0"
+                      strokeWidth={2.5}
                     />
-                  ))}
-                </div>
-                <p className="text-[13.5px] sm:text-sm">
-                  <span className="font-semibold text-gray-900">4.9</span>
-                  <span className="text-gray-500">
-                    {" "}— trusted by customers across London
-                  </span>
-                </p>
-              </div>
-              <p className="text-[12.5px] sm:text-[13px] text-gray-500">
-                Same-day moves · Professional team · Transparent pricing
-              </p>
-            </div>
+                    <span className="font-medium text-gray-700">{t}</span>
+                  </li>
+                ),
+              )}
+            </ul>
           </div>
         </section>
 
@@ -461,7 +451,7 @@ export default function HouseMovingPage() {
                   A small, dedicated London team focused on doing your move
                   properly — not a faceless platform.
                 </p>
-                <ul className="space-y-3">
+                <ul className="space-y-3 mb-7">
                   {whyPoints.map((point) => (
                     <li
                       key={point}
@@ -477,6 +467,47 @@ export default function HouseMovingPage() {
                     </li>
                   ))}
                 </ul>
+
+                {/* Small inline review preview — keeps social proof in the
+                    same 2-column block instead of needing a full carousel
+                    section below. */}
+                <div className="bg-[#faf8fd] rounded-2xl p-4 sm:p-5 ring-1 ring-purple-100/70 max-w-md">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Quote
+                      className="w-4 h-4 text-purple-300 shrink-0"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    />
+                    <div
+                      className="flex items-center gap-0.5"
+                      aria-label="5 out of 5 stars"
+                    >
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-gray-800 text-[13.5px] sm:text-[14px] leading-relaxed mb-2">
+                    &ldquo;Professional, careful and easy to book.&rdquo;
+                  </p>
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <p className="text-[12px] text-gray-500">
+                      — London customer
+                    </p>
+                    <a
+                      href={googleReviewsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[12.5px] font-medium text-purple-700 hover:text-purple-800 underline underline-offset-2"
+                      data-testid="see-all-google-reviews"
+                    >
+                      See all reviews on Google
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -499,26 +530,13 @@ export default function HouseMovingPage() {
               </p>
             </div>
 
-            {/* Van rates */}
+            {/* Van rates — light pricing cards, all weighted equally */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-5 items-stretch">
               {vans.map((v) => (
                 <div
                   key={v.id}
-                  className={`relative bg-white rounded-2xl p-5 ring-1 text-center transition-all ${
-                    v.popular
-                      ? "ring-purple-300 shadow-[0_10px_24px_-10px_rgba(74,49,156,0.25),_0_30px_60px_-22px_rgba(74,49,156,0.35)] sm:-translate-y-1"
-                      : "ring-purple-100/70 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.08),_0_18px_40px_-22px_rgba(74,49,156,0.18)]"
-                  }`}
+                  className="relative bg-white rounded-2xl p-5 ring-1 ring-purple-100/70 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.06),_0_18px_40px_-22px_rgba(74,49,156,0.14)] text-center transition-all"
                 >
-                  {v.popular && (
-                    <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 bg-purple-700 text-white text-[10.5px] font-semibold tracking-wide uppercase px-2.5 py-1 rounded-full shadow-[0_8px_18px_-8px_rgba(74,49,156,0.6)]">
-                      <Star
-                        className="w-3 h-3 fill-white"
-                        strokeWidth={2.5}
-                      />
-                      Most popular
-                    </span>
-                  )}
                   <p className="text-[12px] font-semibold tracking-wide text-purple-700 mb-1.5 uppercase">
                     {v.name}
                   </p>
@@ -534,47 +552,36 @@ export default function HouseMovingPage() {
               ))}
             </div>
 
-            {/* Help options + minimum note */}
-            <div className="bg-white rounded-2xl ring-1 ring-purple-100/60 p-4 sm:p-5 mb-7">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#faf8fd] ring-1 ring-purple-100 flex items-center justify-center shrink-0">
-                    <HandHelping
-                      className="w-4 h-4 text-purple-700"
-                      strokeWidth={2.25}
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold text-gray-900 text-[13.5px]">
-                      Driver help
-                    </p>
-                    <p className="text-gray-500 text-[12.5px]">
-                      +£{driverHelpDelta}/hr — driver helps with loading
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#faf8fd] ring-1 ring-purple-100 flex items-center justify-center shrink-0">
-                    <HandHelping
-                      className="w-4 h-4 text-purple-700"
-                      strokeWidth={2.25}
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold text-gray-900 text-[13.5px]">
-                      Driver + helper
-                    </p>
-                    <p className="text-gray-500 text-[12.5px]">
-                      from +£{driverPlusHelperFromDelta}/hr — extra hands for
-                      bigger moves
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <p className="text-gray-400 text-[12px] mt-4 text-center sm:text-left">
-                Minimum booking: 2 hours.
-              </p>
-            </div>
+            {/* Help options + minimum note — kept compact and clean */}
+            <ul className="bg-white rounded-2xl ring-1 ring-purple-100/60 p-4 sm:p-5 mb-7 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 text-center sm:text-left">
+              <li className="flex items-center justify-center sm:justify-start gap-2.5 text-[13.5px]">
+                <HandHelping
+                  className="w-4 h-4 text-purple-700 shrink-0"
+                  strokeWidth={2.25}
+                />
+                <span className="text-gray-700">
+                  <span className="font-semibold text-gray-900">
+                    Driver help
+                  </span>{" "}
+                  +£{driverHelpDelta}/hr
+                </span>
+              </li>
+              <li className="flex items-center justify-center sm:justify-start gap-2.5 text-[13.5px]">
+                <HandHelping
+                  className="w-4 h-4 text-purple-700 shrink-0"
+                  strokeWidth={2.25}
+                />
+                <span className="text-gray-700">
+                  <span className="font-semibold text-gray-900">
+                    Driver + helper
+                  </span>{" "}
+                  +£{driverPlusHelperFromDelta}/hr
+                </span>
+              </li>
+              <li className="flex items-center justify-center sm:justify-end gap-2.5 text-[13px] text-gray-500">
+                Minimum booking: 2 hours
+              </li>
+            </ul>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
@@ -597,142 +604,69 @@ export default function HouseMovingPage() {
         </section>
 
         {/* ============================================================
-            REVIEWS — light & clean, just two cards + Google CTA
+            FINAL CTA — soft purple gradient banner, moderate height
+            (intentionally lighter than a full hero — this is a closer,
+            not another hero)
             ============================================================ */}
-        <section className="py-14 sm:py-20 bg-white">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-9 sm:mb-12">
-              <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2.5">
-                REVIEWS
-              </p>
-              <h2 className="text-[26px] sm:text-4xl font-bold text-gray-900 tracking-tight">
-                What our customers say
+        <section className="py-10 sm:py-14 px-4 sm:px-6">
+          <div
+            className="relative max-w-5xl mx-auto rounded-3xl px-6 sm:px-10 py-10 sm:py-12 text-center overflow-hidden ring-1 ring-purple-200/60"
+            style={{
+              backgroundImage:
+                "linear-gradient(135deg, #f4ecff 0%, #e9dcff 55%, #dccaf8 100%)",
+            }}
+          >
+            {/* Soft accent glow — kept very subtle for the lighter look */}
+            <div
+              aria-hidden="true"
+              className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/40 blur-3xl pointer-events-none"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute -bottom-20 -left-12 w-60 h-60 rounded-full bg-purple-200/40 blur-3xl pointer-events-none"
+            />
+
+            <div className="relative">
+              <h2 className="text-[24px] sm:text-[32px] font-bold text-gray-900 tracking-tight mb-2.5">
+                Ready to move without stress?
               </h2>
-            </div>
-
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8">
-              {featuredReviews.map((r) => (
-                <li
-                  key={r.id}
-                  className="bg-white rounded-2xl p-5 sm:p-6 ring-1 ring-purple-100/70 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.08),_0_18px_40px_-22px_rgba(74,49,156,0.18)]"
-                  data-testid={`featured-review-${r.id}`}
+              <p className="text-gray-600 text-[14px] sm:text-[15px] leading-relaxed max-w-xl mx-auto mb-6">
+                Get your quote in seconds and book your move today.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mb-5">
+                <button
+                  onClick={() => setLocation("/book")}
+                  className="btn-purple inline-flex items-center justify-center gap-2 font-semibold px-7 py-3 rounded-full text-[14px] sm:text-[15px]"
+                  data-testid="final-get-quote"
                 >
-                  <Quote
-                    className="w-6 h-6 text-purple-200 mb-2.5"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  />
-                  <div className="flex items-center gap-0.5 mb-3">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${
-                          i < r.rating
-                            ? "text-yellow-400 fill-yellow-400"
-                            : "text-gray-200 fill-gray-200"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <blockquote className="text-gray-800 text-[14.5px] sm:text-[15px] leading-[1.6] mb-5">
-                    &ldquo;{r.text}&rdquo;
-                  </blockquote>
-                  <footer className="flex items-center gap-2.5 pt-3 border-t border-gray-100">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-100 to-purple-200/70 text-purple-700 flex items-center justify-center font-semibold text-[13px] ring-1 ring-purple-200/40 shrink-0">
-                      {r.name.charAt(0)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-gray-900 text-[13.5px] leading-tight truncate">
-                        {r.name}
-                      </p>
-                      <p className="text-gray-400 text-[12px] mt-0.5 truncate">
-                        {r.location}
-                      </p>
-                    </div>
-                  </footer>
-                </li>
-              ))}
-            </ul>
+                  Get a Quote
+                  <ArrowRight className="w-4 h-4" strokeWidth={2.25} />
+                </button>
+                <button
+                  onClick={() => setLocation("/book/house-move")}
+                  className="bg-white text-purple-800 font-semibold px-7 py-3 rounded-full inline-flex items-center justify-center gap-2 hover:bg-purple-50 hover:-translate-y-0.5 ring-1 ring-purple-200 transition-all text-[14px] sm:text-[15px]"
+                  data-testid="final-book-house-move"
+                >
+                  Book House Moving
+                  <ArrowRight className="w-4 h-4" strokeWidth={2.25} />
+                </button>
+              </div>
 
-            <div className="text-center">
-              <a
-                href={googleReviewsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 border border-gray-200 bg-white text-gray-800 font-semibold px-6 py-3 rounded-full hover:bg-gray-50 hover:-translate-y-0.5 transition-all text-[14px]"
-                data-testid="see-all-google-reviews"
-              >
-                See all reviews on Google
-                <ArrowRight className="w-4 h-4" strokeWidth={2.25} />
-              </a>
+              {/* Trust line — same wording as the trust strip for consistency.
+                  Uses text-gray-700 to keep AA contrast on the lighter
+                  purple gradient stops. */}
+              <p className="text-[12.5px] sm:text-[13px] text-gray-700">
+                No hidden fees{" "}
+                <span aria-hidden="true" className="text-gray-400 mx-1.5">
+                  •
+                </span>
+                Fast response{" "}
+                <span aria-hidden="true" className="text-gray-400 mx-1.5">
+                  •
+                </span>
+                Trusted across London
+              </p>
             </div>
-          </div>
-        </section>
-
-        {/* ============================================================
-            FINAL CTA — purple background + trust line
-            ============================================================ */}
-        <section
-          className="py-14 sm:py-20 text-white relative overflow-hidden"
-          style={{
-            backgroundImage:
-              "linear-gradient(135deg, #5b3fb8 0%, #4a319c 55%, #3a267f 100%)",
-          }}
-        >
-          <div
-            aria-hidden="true"
-            className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-white/5 blur-3xl pointer-events-none"
-          />
-          <div
-            aria-hidden="true"
-            className="absolute -bottom-32 -right-20 w-80 h-80 rounded-full bg-white/5 blur-3xl pointer-events-none"
-          />
-
-          <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/10 ring-1 ring-white/20 mb-5">
-              <ShieldCheck className="w-5 h-5 text-white" strokeWidth={2} />
-            </div>
-            <h2 className="text-[26px] sm:text-4xl font-bold text-white tracking-tight mb-3">
-              Ready to move without stress?
-            </h2>
-            <p className="text-purple-100/90 text-[14.5px] sm:text-base leading-relaxed max-w-xl mx-auto mb-7">
-              Get your quote in seconds and book your move today.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-7">
-              <button
-                onClick={() => setLocation("/book")}
-                className="bg-white text-purple-900 font-semibold px-7 py-3 rounded-full inline-flex items-center justify-center gap-2 hover:bg-purple-50 hover:-translate-y-0.5 transition-all text-[14px] sm:text-[15px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.45)]"
-                data-testid="final-get-quote"
-              >
-                Get a Quote
-                <ArrowRight className="w-4 h-4" strokeWidth={2.25} />
-              </button>
-              <button
-                onClick={() => setLocation("/book/house-move")}
-                className="bg-purple-900/40 hover:bg-purple-900/60 ring-1 ring-white/30 text-white font-semibold px-7 py-3 rounded-full inline-flex items-center justify-center gap-2 transition-all text-[14px] sm:text-[15px]"
-                data-testid="final-book-house-move"
-              >
-                Book House Moving
-                <ArrowRight className="w-4 h-4" strokeWidth={2.25} />
-              </button>
-            </div>
-
-            {/* Trust line */}
-            <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12.5px] sm:text-[13px] text-purple-100/95">
-              {[
-                { icon: ShieldCheck, label: "No hidden fees" },
-                { icon: Clock, label: "Fast response" },
-                { icon: MapPin, label: "Trusted across London" },
-              ].map(({ icon: Icon, label }) => (
-                <li key={label} className="flex items-center gap-1.5">
-                  <Icon
-                    className="w-3.5 h-3.5 text-emerald-300"
-                    strokeWidth={2.5}
-                  />
-                  <span>{label}</span>
-                </li>
-              ))}
-            </ul>
           </div>
         </section>
       </main>

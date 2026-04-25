@@ -1,0 +1,99 @@
+Please adjust the /house-moving page layout so it feels premium, balanced and less template-like.
+
+Main issue:
+Some sections look too repetitive and too much “in a row”. The page should use a mix of layouts.
+
+Use this structure:
+
+1. HERO
+Keep as 2 columns:
+- left: title, subtitle, buttons, trust points
+- right: quick quote box
+
+2. TRUST STRIP
+Keep as a small horizontal row under the hero:
+No hidden fees • Fast response • Trusted across London
+
+3. HOW IT WORKS
+Keep as 3 cards in one row:
+1. Enter your addresses
+2. Get your quote
+3. We handle your move
+
+4. EVERYTHING HANDLED
+Keep as 4 cards in one row:
+- Careful handling
+- Loading & unloading
+- Transport across London & UK
+- Help with heavy items
+
+5. WHY CHOOSE + REVIEW
+Do NOT make this a row of many cards.
+
+Make it a 2-column section:
+- left: large real moving image
+- right: text block
+
+Right side content:
+Title:
+Why customers choose Move4U
+
+Text:
+A small, dedicated London team focused on doing your move properly — not a faceless platform.
+
+Points:
+- We arrive on time
+- We handle items carefully
+- Clear pricing — no surprises
+- Same-day availability
+
+Under the points add one small review preview:
+★★★★★
+“Professional, careful and easy to book.”
+— London customer
+
+Add small link:
+See all reviews on Google
+
+6. PRICING
+Keep as light pricing cards, not a heavy table:
+- Small Van — from £35/hr
+- Medium Van — from £45/hr
+- Large Van — from £50/hr
+
+Remove any “Most popular” badge.
+
+Below pricing:
+- Driver help +£10/hr
+- Driver + helper +£30/hr
+- Minimum booking: 2 hours
+
+Buttons:
+- View full pricing → /pricing
+- Book now → /book/house-move
+
+7. FINAL CTA
+Make it lighter, not a huge heavy block.
+
+Use a soft purple gradient banner with moderate height.
+
+Text:
+Ready to move without stress?
+
+Subtitle:
+Get your quote in seconds and book your move today.
+
+Buttons:
+- Get a Quote → /book
+- Book House Moving → /book/house-move
+
+Trust line:
+No hidden fees • Fast response • Trusted across London
+
+Design rules:
+- Do not make every section look the same
+- Mix layouts: rows + 2 columns + centered CTA
+- Add enough white space
+- Keep the page clean and premium
+- Do not overload with too many cards
+- Make it look like a real service brand, not a generic template
