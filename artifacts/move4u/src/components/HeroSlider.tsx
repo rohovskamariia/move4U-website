@@ -128,7 +128,7 @@ export default function HeroSlider() {
     // stays anchored regardless of which slide is showing.
     <div
       ref={containerRef}
-      className="relative bg-gray-900 text-white overflow-hidden min-h-[460px] sm:min-h-[600px] md:min-h-[640px] lg:min-h-[660px] select-none"
+      className="relative bg-gray-900 text-white overflow-hidden min-h-[460px] sm:min-h-[500px] md:min-h-[540px] lg:min-h-[560px] select-none"
       // Let the browser own vertical scroll; we own horizontal swipe.
       // This both improves perceived smoothness and tells the browser it
       // does not need to wait for our handlers to decide on scroll.
@@ -234,7 +234,7 @@ export default function HeroSlider() {
       {/* Content. Desktop now uses min-h matching the outer container with
           flex centering, so text is vertically centered regardless of how
           many lines a slide's title/body wraps to. */}
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-12 sm:py-0 min-h-[460px] sm:min-h-[600px] md:min-h-[640px] lg:min-h-[660px] flex flex-col items-start justify-start sm:justify-center">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-12 sm:py-0 min-h-[460px] sm:min-h-[500px] md:min-h-[540px] lg:min-h-[560px] flex flex-col items-start justify-start sm:justify-center">
         <div className="max-w-2xl w-full text-left">
           <div key={slide.id} className="hero-stagger">
             {slide.subtitle ? (
@@ -253,13 +253,13 @@ export default function HeroSlider() {
               </p>
             )}
             <h1
-              className="text-[30px] sm:text-5xl md:text-6xl font-bold leading-[1.1] tracking-tight mb-3 sm:mb-5"
+              className="text-[30px] sm:text-[40px] md:text-[44px] lg:text-5xl font-bold leading-[1.1] tracking-tight mb-3 sm:mb-4"
               style={{ textShadow: "0 2px 14px rgba(0,0,0,0.55)" }}
             >
               {slide.title}
             </h1>
             <p
-              className="text-white/90 text-[14.5px] sm:text-lg md:text-xl mb-5 sm:mb-8 leading-snug sm:leading-relaxed max-w-xl"
+              className="text-white/90 text-[14.5px] sm:text-base md:text-lg mb-5 sm:mb-7 leading-snug sm:leading-relaxed max-w-xl"
               style={{ textShadow: "0 1px 8px rgba(0,0,0,0.5)" }}
             >
               {slide.text}

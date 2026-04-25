@@ -63,82 +63,99 @@ export default function HomePage() {
       {/* Services */}
       <ServicesSection />
 
-      {/* How It Works — refined editorial timeline.
-          Mobile: continuous left rail with numbered nodes.
-          Desktop: 4-column horizontal flow with subtle dotted connector. */}
+      {/* How It Works — clean horizontal timeline.
+          Desktop: small icon nodes in one row, joined by a thin solid line.
+          Mobile: horizontal scroll-snap carousel with the same compact node. */}
       <section
         id="how-it-works"
-        className="py-12 sm:py-16 bg-white"
+        className="py-10 sm:py-12 bg-white"
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-14">
-            <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2.5">
+          <div className="text-center mb-7 sm:mb-10">
+            <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2">
               PROCESS
             </p>
-            <h2 className="text-[26px] sm:text-4xl font-bold text-gray-900 tracking-tight mb-2.5">
+            <h2 className="text-[24px] sm:text-3xl font-bold text-gray-900 tracking-tight mb-2">
               How It Works
             </h2>
-            <p className="text-gray-500 text-[14px] sm:text-base max-w-xl mx-auto leading-relaxed">
+            <p className="text-gray-500 text-[13.5px] sm:text-[15px] max-w-xl mx-auto leading-relaxed">
               Booking with Move4U is simple — from first quote to job done.
             </p>
           </div>
 
-          {/* Mobile timeline (continuous purple rail) */}
-          <ol className="lg:hidden relative pl-12">
-            {/* Vertical rail */}
-            <div
-              className="absolute left-[19px] top-2 bottom-2 w-px bg-gradient-to-b from-purple-200 via-purple-200 to-transparent"
-              aria-hidden="true"
-            />
-            {steps.map(({ icon: Icon, title, text }, i) => (
-              <li key={title} className="relative pb-7 last:pb-0">
-                {/* Numbered node — sits on the rail */}
-                <div className="absolute -left-12 top-0 flex items-center justify-center">
-                  <div className="relative w-10 h-10 rounded-full bg-white ring-1 ring-purple-100 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.25)] flex items-center justify-center text-purple-700">
-                    <Icon className="w-[17px] h-[17px]" strokeWidth={2} />
-                  </div>
-                  <span className="absolute -top-1 -right-1 bg-purple-700 text-white w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold ring-2 ring-white">
-                    {i + 1}
-                  </span>
-                </div>
-                <h3 className="font-semibold text-gray-900 text-[15.5px] tracking-tight mb-0.5">
-                  {title}
-                </h3>
-                <p className="text-gray-500 text-[13.5px] leading-relaxed">
-                  {text}
-                </p>
-              </li>
-            ))}
-          </ol>
-
-          {/* Desktop horizontal flow */}
-          <div className="hidden lg:block relative">
-            <div
-              className="absolute top-[28px] left-[12.5%] right-[12.5%] border-t-2 border-dashed border-purple-200"
-              aria-hidden="true"
-            />
-            <div className="grid grid-cols-4 gap-6 relative">
+          {/* Mobile — horizontal scroll-snap timeline.
+              Native overflow scroll keeps it lightweight and doesn't conflict
+              with the page's vertical scroll. Each step is a snap target. */}
+          <div className="lg:hidden -mx-4 px-4 overflow-x-auto snap-x snap-mandatory hide-scrollbar">
+            <ol className="flex gap-3 pb-2 w-max">
               {steps.map(({ icon: Icon, title, text }, i) => (
-                <div key={title} className="relative flex flex-col items-center text-center">
-                  <div className="relative shrink-0">
-                    <div className="bg-white border-2 border-purple-100 shadow-[0_8px_20px_-8px_rgba(74,49,156,0.3)] w-14 h-14 rounded-full flex items-center justify-center text-purple-700">
-                      <Icon className="w-5 h-5" strokeWidth={2} />
+                <li
+                  key={title}
+                  className="snap-start shrink-0 w-[230px] flex flex-col"
+                >
+                  <div className="flex items-center gap-2 mb-2.5">
+                    <div className="relative shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-700">
+                        <Icon className="w-[17px] h-[17px]" strokeWidth={2} />
+                      </div>
+                      <span className="absolute -top-1 -right-1 bg-purple-700 text-white w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold ring-2 ring-white">
+                        {i + 1}
+                      </span>
                     </div>
-                    <div className="absolute -top-1 -right-1 bg-purple-700 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ring-2 ring-white">
+                    {/* Subtle connector tail — visually hints "swipe for more" */}
+                    {i < steps.length - 1 && (
+                      <div
+                        className="flex-1 h-px bg-purple-100"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </div>
+                  <h3 className="font-semibold text-gray-900 text-[14.5px] tracking-tight mb-1">
+                    {title}
+                  </h3>
+                  <p className="text-gray-500 text-[13px] leading-relaxed">
+                    {text}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* Desktop — horizontal timeline in one row, joined by a thin
+              solid line. Compact circular nodes, no boxes or shadows.
+              Semantic <ol>/<li> mirrors the mobile carousel above. */}
+          <div className="hidden lg:block relative">
+            {/* Thin solid connecting line — sits behind the nodes, anchored
+                to the centre of the icon row (icon h-11 ⇒ centre ≈ 22px). */}
+            <div
+              className="absolute top-[22px] left-[12.5%] right-[12.5%] h-px bg-purple-100"
+              aria-hidden="true"
+            />
+            <ol className="grid grid-cols-4 gap-6 relative">
+              {steps.map(({ icon: Icon, title, text }, i) => (
+                <li
+                  key={title}
+                  className="relative flex flex-col items-center text-center"
+                >
+                  <div className="relative shrink-0">
+                    <div className="bg-purple-50 w-11 h-11 rounded-full flex items-center justify-center text-purple-700">
+                      <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
+                    </div>
+                    <div className="absolute -top-1 -right-1 bg-purple-700 text-white w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold ring-2 ring-white">
                       {i + 1}
                     </div>
                   </div>
-                  <div className="mt-5">
-                    <h3 className="font-semibold text-gray-900 text-[16px] tracking-tight mb-1">
+                  <div className="mt-4">
+                    <h3 className="font-semibold text-gray-900 text-[15px] tracking-tight mb-1">
                       {title}
                     </h3>
-                    <p className="text-gray-500 text-[13.5px] leading-relaxed max-w-[14rem] mx-auto">
+                    <p className="text-gray-500 text-[13px] leading-relaxed max-w-[14rem] mx-auto">
                       {text}
                     </p>
                   </div>
-                </div>
+                </li>
               ))}
-            </div>
+            </ol>
           </div>
         </div>
       </section>

@@ -1,0 +1,143 @@
+Please fix the desktop homepage hero slider size.
+
+Current issue:
+The hero image and text are too zoomed in / too large on desktop. The whole hero feels oversized.
+
+Target:
+Make the hero look more like a professional moving website hero section:
+- balanced image size
+- text not too huge
+- form/CTA area visible without feeling zoomed
+- clean desktop layout
+
+Desktop hero fixes:
+
+1. Reduce hero height slightly
+The hero should not take too much vertical space.
+Keep it wide and cinematic, but not oversized.
+
+2. Reduce text size
+The main hero heading is too large.
+Make it smaller and more balanced on desktop.
+
+3. Image positioning
+The image can be cropped if needed, but it should not look zoomed in.
+Use object-fit: cover, but adjust position so the people/van are visible properly.
+
+4. Keep content inside safe area
+Text and buttons should sit comfortably inside the hero, not too close to edges.
+
+5. Slider stability
+All slides should have the same height and same image behaviour.
+No jumping, no zooming between slides.
+
+6. Reference style
+Use a similar proportion to modern moving service websites:
+large wide hero, but controlled height and balanced text.
+
+Goal:
+Desktop hero should look premium and professional, not zoomed in or oversized. Redesign the "How it works" section to match a clean horizontal timeline style (like modern service websites).
+
+Current problem:
+- The section uses large vertical cards (1, 2, 3)
+- It looks heavy, outdated, and takes too much space
+
+Goal:
+Transform it into a horizontal step timeline (like the reference design)
+
+---
+
+1. LAYOUT CHANGE
+
+Replace card layout with horizontal timeline:
+
+- Steps aligned in a single row
+- Connected with a thin line
+- Each step has:
+  - small icon
+  - step number (1, 2, 3)
+  - title
+  - short description
+
+Structure:
+
+[ Step 1 ] —— [ Step 2 ] —— [ Step 3 ]
+
+---
+
+2. STEP DESIGN
+
+Each step should include:
+
+- Small circular icon (light background)
+- Small number badge (top or near icon)
+- Title (medium weight)
+- Short description (smaller text)
+
+Keep everything compact.
+
+---
+
+3. CONNECTING LINE
+
+- Add a thin horizontal line between steps
+- Light grey or subtle purple
+- Line connects all steps visually
+
+---
+
+4. SPACING
+
+- Reduce vertical spacing significantly
+- Section should be compact and elegant
+- No big empty gaps
+
+---
+
+5. DESKTOP
+
+- Show all steps in one row
+- Center aligned
+- Equal spacing between steps
+
+---
+
+6. MOBILE
+
+- Either:
+  Option A: horizontal scroll (swipe left/right)
+  OR
+  Option B: stack vertically but MUCH smaller (not big cards)
+
+Preferred:
+→ Horizontal swipe (modern feel)
+
+---
+
+7. REMOVE OLD STYLE
+
+Remove completely:
+- Big cards
+- Large padding
+- Oversized numbers
+
+---
+
+8. STYLE
+
+Make it:
+- clean
+- modern
+- minimal
+- lightweight
+
+Similar to:
+process/timeline sections on modern SaaS or service websites
+
+---
+
+Final result should feel:
+✔ compact  
+✔ easy to scan  
+✔ premium  
+✔ not heavy like current cards just for the section “how it works” 

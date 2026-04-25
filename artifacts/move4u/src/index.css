@@ -628,6 +628,19 @@ body {
   .booking-mobile select { padding-top: 0.625rem; padding-bottom: 0.625rem; }
 }
 
+/* ----------------------------------------------------------------- */
+/* Hide native scrollbars on horizontal carousels (e.g. mobile        */
+/* "How it works" timeline) while keeping native scroll behaviour     */
+/* and scroll-snap. Visual affordance is provided by the row itself.  */
+/* ----------------------------------------------------------------- */
+.hide-scrollbar {
+  scrollbar-width: none;            /* Firefox */
+  -ms-overflow-style: none;         /* IE / old Edge */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;                    /* Chrome / Safari / Edge */
+}
+
 /* Services section — restore the original purple gradient on tablet
    and up. On mobile it stays white with rounded top to overlap the
    hero, per the modern "panel rides over banner" treatment. */
