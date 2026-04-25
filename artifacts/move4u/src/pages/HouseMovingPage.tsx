@@ -221,19 +221,20 @@ export default function HouseMovingPage() {
               </p>
 
               {/* RIGHT — quick quote card. On mobile this is the only
-                  thing in the hero so we make it noticeably more compact:
-                  narrower max-width, reduced padding, smaller title and
-                  labels, and shorter inputs (via the .quick-quote-mobile
-                  class which scopes the override to this card only — the
+                  thing in the hero so we keep it compact but not cramped:
+                  ~340px wide, centered, with comfortable internal padding
+                  and inputs sized to fit the longer "address or postcode"
+                  placeholders without truncation. The .quick-quote-mobile
+                  class scopes input overrides to this card only — the
                   AddressAutocomplete input height in the full booking
-                  flow stays untouched). */}
-              <div className="lg:col-span-5 mx-auto w-full max-w-[320px] lg:max-w-none px-3 lg:px-0">
-                <div className="quick-quote-mobile bg-white rounded-2xl lg:rounded-3xl p-3 lg:p-6 shadow-[0_30px_70px_-20px_rgba(20,12,46,0.55)] ring-1 ring-white/30">
-                  <div className="mb-2.5 lg:mb-4">
-                    <p className="text-[10px] lg:text-[10.5px] font-semibold tracking-[0.2em] text-purple-700 mb-0.5 lg:mb-1">
+                  flow stays untouched. */}
+              <div className="lg:col-span-5 mx-auto w-full max-w-[340px] lg:max-w-none px-2 lg:px-0">
+                <div className="quick-quote-mobile bg-white rounded-2xl lg:rounded-3xl p-4 lg:p-6 shadow-[0_30px_70px_-20px_rgba(20,12,46,0.55)] ring-1 ring-white/30">
+                  <div className="mb-3 lg:mb-4">
+                    <p className="text-[10px] lg:text-[10.5px] font-semibold tracking-[0.2em] text-purple-700 mb-1 lg:mb-1">
                       QUICK QUOTE
                     </p>
-                    <h2 className="text-[15.5px] lg:text-[22px] font-bold text-gray-900 tracking-tight leading-tight">
+                    <h2 className="text-[16.5px] lg:text-[22px] font-bold text-gray-900 tracking-tight leading-tight">
                       Get your quick quote
                     </h2>
                     {/* Helper subtitle — desktop only; mobile keeps it
@@ -249,12 +250,12 @@ export default function HouseMovingPage() {
                       e.preventDefault();
                       onQuickQuote();
                     }}
-                    className="space-y-2 lg:space-y-3"
+                    className="space-y-2.5 lg:space-y-3"
                   >
                     <div>
                       <label
                         htmlFor="quick-pickup"
-                        className="block text-[10.5px] lg:text-[12px] font-semibold text-gray-700 mb-0.5 lg:mb-1 uppercase tracking-wide lg:normal-case lg:tracking-normal"
+                        className="block text-[10.5px] lg:text-[12px] font-semibold text-gray-700 mb-1 lg:mb-1 uppercase tracking-wide lg:normal-case lg:tracking-normal"
                       >
                         Pickup address
                       </label>
@@ -262,14 +263,14 @@ export default function HouseMovingPage() {
                         id="quick-pickup"
                         value={pickup}
                         onChange={(v) => setPickup(v)}
-                        placeholder="Pickup postcode"
+                        placeholder="Pickup address or postcode"
                         testId="quick-quote-pickup"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor="quick-dropoff"
-                        className="block text-[10.5px] lg:text-[12px] font-semibold text-gray-700 mb-0.5 lg:mb-1 uppercase tracking-wide lg:normal-case lg:tracking-normal"
+                        className="block text-[10.5px] lg:text-[12px] font-semibold text-gray-700 mb-1 lg:mb-1 uppercase tracking-wide lg:normal-case lg:tracking-normal"
                       >
                         Drop-off address
                       </label>
@@ -277,13 +278,13 @@ export default function HouseMovingPage() {
                         id="quick-dropoff"
                         value={dropoff}
                         onChange={(v) => setDropoff(v)}
-                        placeholder="Drop-off postcode"
+                        placeholder="Drop-off address or postcode"
                         testId="quick-quote-dropoff"
                       />
                     </div>
                     <button
                       type="submit"
-                      className="btn-purple w-full inline-flex items-center justify-center gap-1.5 lg:gap-2 font-semibold px-4 lg:px-6 py-2 lg:py-3 rounded-full text-[13px] lg:text-[14px] mt-1"
+                      className="btn-purple w-full inline-flex items-center justify-center gap-1.5 lg:gap-2 font-semibold px-4 lg:px-6 py-2.5 lg:py-3 rounded-full text-[13.5px] lg:text-[14px] mt-1.5"
                       data-testid="quick-quote-submit"
                     >
                       {/* "Check price" on mobile, "Get Quote" on desktop —
@@ -488,12 +489,62 @@ export default function HouseMovingPage() {
             bullet list) — no separate reviews section.
             Mobile: tighter vertical rhythm + smaller image.
             ============================================================ */}
-        <section className="py-6 sm:py-20 bg-white">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <section className="relative isolate overflow-hidden py-9 sm:py-20 bg-white">
+          {/* MOBILE-only photo background — opens up to the right.
+              We layer two copies of the same team photo:
+                1. A sharp copy fills the section (object-position: right
+                   center) so the right edge of the photo is what shows
+                   through on the right side of the screen.
+                2. A heavily-blurred copy sits on top, masked to FADE OUT
+                   toward the right so the LEFT half is blurred and the
+                   right half remains crisp.
+              Then a white-to-transparent veil keeps text legible without
+              hiding the image. The whole layer is hidden on lg+ so the
+              desktop split layout (image card + copy) is unchanged. */}
+          <div
+            className="lg:hidden absolute inset-0 z-0 pointer-events-none"
+            aria-hidden="true"
+          >
+            <img
+              src={teamImg}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ objectPosition: "right center" }}
+              loading="lazy"
+              decoding="async"
+            />
+            <img
+              src={teamImg}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                objectPosition: "right center",
+                filter: "blur(16px) saturate(1.05)",
+                /* Slight scale prevents blur-edge halos along the borders */
+                transform: "scale(1.06)",
+                WebkitMaskImage:
+                  "linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 92%)",
+                maskImage:
+                  "linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 92%)",
+              }}
+            />
+            {/* White readability veil — opaque on the left where the
+                copy sits, fading to transparent on the right where we
+                want the photo to come through. */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(to right, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.90) 32%, rgba(255,255,255,0.62) 62%, rgba(255,255,255,0.20) 88%, rgba(255,255,255,0) 100%)",
+              }}
+            />
+          </div>
+
+          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-center">
-              {/* IMAGE — hidden on mobile so the merged Why Choose +
-                  Reviews section reads as one compact block (per brief).
-                  Returns at lg+ as the left half of the split layout. */}
+              {/* IMAGE — desktop only. On mobile the same photo lives in
+                  the section background layer above (with the blur-to-
+                  clear treatment), so we don't render this card at all. */}
               <div className="hidden lg:block lg:col-span-6 order-2 lg:order-1">
                 <div className="relative">
                   <div
@@ -530,15 +581,16 @@ export default function HouseMovingPage() {
                 </div>
               </div>
 
-              {/* COPY */}
-              <div className="lg:col-span-6 order-1 lg:order-2">
+              {/* COPY — on mobile, constrained to ~62% so the right side
+                  of the screen reveals the unblurred photo. */}
+              <div className="lg:col-span-6 order-1 lg:order-2 max-w-[62%] lg:max-w-none">
                 <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-1.5 sm:mb-2.5">
                   WHY CHOOSE MOVE4U
                 </p>
                 <h2 className="text-[20px] sm:text-4xl font-bold text-gray-900 tracking-tight leading-snug mb-2 sm:mb-5">
                   Why customers choose Move4U
                 </h2>
-                <p className="text-gray-500 text-[13px] sm:text-[15px] leading-relaxed mb-4 sm:mb-6 max-w-md">
+                <p className="text-gray-600 text-[13px] sm:text-[15px] leading-relaxed mb-4 sm:mb-6 max-w-md">
                   A small, dedicated London team focused on doing your move
                   properly — not a faceless platform.
                 </p>
@@ -561,8 +613,10 @@ export default function HouseMovingPage() {
 
                 {/* Small inline review preview — keeps social proof in the
                     same 2-column block instead of needing a full carousel
-                    section below. */}
-                <div className="bg-[#faf8fd] rounded-2xl p-4 sm:p-5 ring-1 ring-purple-100/70 max-w-md">
+                    section below. On mobile the card sits over the photo
+                    background, so we use a near-opaque white surface so it
+                    reads cleanly without hiding the image to its right. */}
+                <div className="bg-white/95 lg:bg-[#faf8fd] backdrop-blur-sm rounded-2xl p-4 sm:p-5 ring-1 ring-purple-100/70 shadow-[0_12px_30px_-18px_rgba(20,12,46,0.25)] lg:shadow-none max-w-md">
                   <div className="flex items-center gap-1.5 mb-2">
                     <Quote
                       className="w-4 h-4 text-purple-300 shrink-0"
