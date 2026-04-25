@@ -31,6 +31,15 @@ interface StandardBookingFlowProps {
   serviceLabel: string;
   serviceId: string;
   onBack: () => void;
+  /**
+   * Optional one-time seed values for the pickup / drop-off addresses.
+   * Used so external entry points (e.g. the /house-moving quick-quote
+   * card) can hand off addresses into the booking flow without the user
+   * having to retype them. After mount the form owns the state — these
+   * are NOT a live binding.
+   */
+  initialPickup?: string;
+  initialDropoff?: string;
 }
 
 type Step =
@@ -83,7 +92,13 @@ const getFloorCharge = getFloorChargeFromValue;
 
 // Standard booking flow — used for House Move, Commercial Move, Single Item, Small Move
 // Edit steps and flow logic here
-export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }: StandardBookingFlowProps) {
+export default function StandardBookingFlow({
+  serviceLabel,
+  serviceId,
+  onBack,
+  initialPickup,
+  initialDropoff,
+}: StandardBookingFlowProps) {
   const [step, setStep] = useState<Step>("pickup");
   // Once set, the flow is LOCKED. The form, back arrow, progress bar and
   // step header are all hidden — only the success view is shown. The user
@@ -114,13 +129,13 @@ export default function StandardBookingFlow({ serviceLabel, serviceId, onBack }:
     return () => window.removeEventListener("popstate", onPopState);
   }, [submittedRef, setLocation]);
 
-  // Pickup state
-  const [pickupAddress, setPickupAddress] = useState("");
+  // Pickup state — seeded once from props (e.g. quick-quote handoff).
+  const [pickupAddress, setPickupAddress] = useState(initialPickup ?? "");
   const [pickupLift, setPickupLift] = useState("");
   const [pickupFloor, setPickupFloor] = useState("none");
 
-  // Drop-off state
-  const [dropoffAddress, setDropoffAddress] = useState("");
+  // Drop-off state — seeded once from props (e.g. quick-quote handoff).
+  const [dropoffAddress, setDropoffAddress] = useState(initialDropoff ?? "");
   const [dropoffLift, setDropoffLift] = useState("");
   const [dropoffFloor, setDropoffFloor] = useState("none");
 

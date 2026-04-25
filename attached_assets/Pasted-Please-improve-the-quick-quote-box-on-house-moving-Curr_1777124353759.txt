@@ -1,0 +1,244 @@
+Please improve the quick quote box on /house-moving.
+
+Current issue:
+The user can enter pickup and drop-off address in the quick quote box, but after clicking Get Quote they are sent to the booking form and may need to enter the same addresses again.
+
+Required logic:
+When the user enters pickup and drop-off address in the quick quote box and clicks “Get Quote”, pass those values into the booking flow automatically.
+
+Expected behaviour:
+- User enters pickup address
+- User enters drop-off address
+- User clicks “Get Quote”
+- Redirect to /book/house-move
+- The booking form should open with pickup and drop-off already pre-filled
+
+If possible, pass the values through URL query parameters, for example:
+/book/house-move?pickup=...&dropoff=...
+
+Then the booking form should read these values and populate the address fields automatically.
+
+If the user leaves the quick quote fields empty:
+- still allow redirect to /book/house-move
+- booking form remains empty as normal
+
+Important:
+- Do not change pricing logic
+- Do not break the existing booking form
+- This should only improve user experience
+- Make sure it works on mobile and desktop
+
+Goal:
+User should not need to enter the same address twice. Redesign the /house-moving page to look premium, clean, modern and conversion-focused.
+
+IMPORTANT:
+- Do NOT make it look like a template
+- Do NOT overload with too many sections
+- Keep it simple, stylish and professional
+- Focus on trust and booking
+- Keep existing booking logic (/book) unchanged
+
+STYLE:
+- White background with soft purple accents
+- Clean spacing (lots of whitespace)
+- Rounded cards, soft shadows
+- Mix layouts (not all sections одинакові)
+- Desktop-first but mobile friendly
+
+---
+
+PAGE STRUCTURE (VERY IMPORTANT):
+
+1. HERO SECTION
+
+Layout:
+Split layout (left text, right quote box)
+
+LEFT:
+Small label:
+HOUSE MOVING SERVICE
+
+Main title:
+Move without stress — we handle everything
+
+Subtitle:
+Reliable house moving service across London. Fast, careful and simple from start to finish.
+
+Buttons:
+- Get a Quote → /book
+- Book Now → /book/house-move
+
+Small trust line:
+✔ Fully insured  
+✔ No hidden fees  
+✔ Fast response  
+
+RIGHT:
+Floating quote box:
+
+Title:
+Get your quick quote
+
+Fields:
+- Pickup address
+- Drop-off address
+
+Button:
+Get Quote → redirect to /book/house-move with pre-filled addresses if possible
+
+Background:
+Real moving photo with soft overlay
+
+---
+
+2. TRUST STRIP (small but powerful)
+
+Directly under hero:
+
+★★★★★ 4.9 rating  
+Trusted by customers across London  
+Same-day moves • Professional team • Transparent pricing  
+
+Keep this minimal and clean
+
+---
+
+3. HOW IT WORKS (IMPORTANT FOR LOGIC)
+
+Title:
+How it works
+
+3 simple steps:
+
+1. Enter your addresses  
+2. Get your quote  
+3. We handle your move  
+
+Use icons or numbers, keep it very simple
+
+---
+
+4. WHAT WE HANDLE FOR YOU (instead of “What’s included”)
+
+Title:
+Everything handled — so you don’t have to
+
+4 clean cards:
+
+- Careful handling  
+We move your furniture safely and securely  
+
+- Loading & unloading  
+Fast and efficient service  
+
+- Transport across London & UK  
+Reliable vans for any job  
+
+- Help with heavy items  
+Sofas, appliances and large furniture  
+
+IMPORTANT:
+Do NOT include packing (not offered)
+
+---
+
+5. WHY CHOOSE MOVE4U (make it more real)
+
+Split layout:
+
+LEFT:
+Real image (moving team / van)
+
+RIGHT:
+Title:
+Why customers choose Move4U
+
+Points:
+- We arrive on time  
+- We handle items carefully  
+- Clear pricing — no surprises  
+- Same-day availability  
+
+Keep tone natural, not corporate
+
+---
+
+6. PRICING (clean and simple, not heavy)
+
+Title:
+Simple, transparent pricing
+
+3 cards:
+
+Small Van — from £35/hr  
+Medium Van — from £45/hr (Most popular)  
+Large Van — from £50/hr  
+
+Below:
+
+Driver help +£10/hr  
+Driver + helper +£30/hr  
+
+Note:
+Minimum booking: 2 hours
+
+Buttons:
+- View full pricing → /pricing  
+- Book now → /book/house-move  
+
+---
+
+7. REVIEWS (light and clean)
+
+Title:
+What our customers say
+
+Show 2 reviews only:
+
+★★★★★  
+Short text  
+Name + London  
+
+Add:
+Button:
+See all reviews on Google (placeholder for now)
+
+---
+
+8. FINAL CTA (important)
+
+Full width purple section
+
+Title:
+Ready to move without stress?
+
+Subtitle:
+Get your quote in seconds and book your move today.
+
+Buttons:
+- Get a Quote → /book  
+- Book House Moving → /book/house-move  
+
+Add small trust line:
+✔ No hidden fees  
+✔ Fast response  
+✔ Trusted across London  
+
+---
+
+DESIGN RULES:
+
+- Keep it shorter than typical landing pages
+- Avoid repetitive sections
+- Use different layouts (not all centered)
+- Add more spacing between blocks
+- Avoid “icon overload”
+- Focus on clarity and trust
+
+---
+
+GOAL:
+
+User lands → trusts → understands → sees price → clicks → books
+
+This should feel like a real service business, not a template website.

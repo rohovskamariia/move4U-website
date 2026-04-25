@@ -59,10 +59,15 @@ Pricing rules:
 - **`artifacts/move4u/src/data/constants.ts`** — CONTACT object
 
 ### Booking flow logic
-- **`artifacts/move4u/src/components/booking/StandardBookingFlow.tsx`** — main booking steps
+- **`artifacts/move4u/src/components/booking/StandardBookingFlow.tsx`** — main booking steps. Accepts optional `initialPickup` / `initialDropoff` props that seed the pickup / drop-off `useState` ONCE. Validation, pricing and step logic are unchanged.
 - **`artifacts/move4u/src/components/booking/WasteRemovalFlow.tsx`** — waste booking
 - **`artifacts/move4u/src/components/booking/InternationalFlow.tsx`** — international enquiry
 - **`artifacts/move4u/src/components/booking/SomethingElseFlow.tsx`** — custom enquiry
+
+### Quick-quote → booking prefill
+- `/house-moving` Quick Quote card builds `/book/house-move?pickup=...&dropoff=...` (URL-encoded, only non-empty params appended) and navigates via wouter `setLocation`.
+- `BookingPage` reads the params once on mount via `URLSearchParams` (capped at 250 chars per field), forwards them to `StandardBookingFlow` as `initialPickup` / `initialDropoff`, then strips the params from the URL via `history.replaceState` so a refresh / share link doesn't re-seed stale addresses.
+- Returning to the service selector (back chevron all the way back, or `Back to home`) clears the in-memory prefill so the next flow starts empty.
 
 ### Service cards + descriptions
 - **`artifacts/move4u/src/data/constants.ts`** — SERVICES array

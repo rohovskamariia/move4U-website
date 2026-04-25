@@ -18,6 +18,57 @@ function getServiceLabel(id: string): string {
   return SERVICES.find((s) => s.id === id)?.title || "Booking";
 }
 
+/** Defensive cap on prefill values to avoid pathological URL inputs. */
+const PREFILL_MAX_LEN = 250;
+
+/**
+ * Read `?pickup=` and `?dropoff=` from the current URL so external entry
+ * points (e.g. the /house-moving quick-quote card) can hand off addresses
+ * straight into the booking flow without the user retyping them.
+ *
+ * Captured ONCE on mount — these are seed values, not a live binding.
+ * The booking form remains the single source of truth from then on.
+ */
+function readAddressPrefill(): { pickup: string; dropoff: string } {
+  if (typeof window === "undefined") return { pickup: "", dropoff: "" };
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const pickup = (params.get("pickup") ?? "").trim().slice(0, PREFILL_MAX_LEN);
+    const dropoff = (params.get("dropoff") ?? "").trim().slice(0, PREFILL_MAX_LEN);
+    return { pickup, dropoff };
+  } catch {
+    return { pickup: "", dropoff: "" };
+  }
+}
+
+/**
+ * Remove the prefill query params from the URL once we've consumed them so
+ * a refresh / share doesn't re-seed stale addresses. Preserves any other
+ * query params and keeps the same path (no navigation).
+ */
+function stripPrefillQueryParams(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const url = new URL(window.location.href);
+    let changed = false;
+    if (url.searchParams.has("pickup")) {
+      url.searchParams.delete("pickup");
+      changed = true;
+    }
+    if (url.searchParams.has("dropoff")) {
+      url.searchParams.delete("dropoff");
+      changed = true;
+    }
+    if (changed) {
+      const qs = url.searchParams.toString();
+      const newUrl = `${url.pathname}${qs ? `?${qs}` : ""}${url.hash}`;
+      window.history.replaceState(window.history.state, "", newUrl);
+    }
+  } catch {
+    /* no-op — URL hygiene is best-effort */
+  }
+}
+
 export default function BookingPage() {
   usePageMeta({
     title: "Book a Removal — London Moving Service | Move4U",
@@ -29,6 +80,21 @@ export default function BookingPage() {
   const [location] = useLocation();
   const [selectedService, setSelectedService] = useState<string | null>(params?.service || null);
 
+  // Capture any address prefill from the URL ONCE so the booking form
+  // can seed itself. Stable across re-renders — once the user is in the
+  // form, the form owns the state. The prefill is also cleared whenever
+  // the user goes back to the service selector (see `resetService`) so
+  // starting a new flow never re-seeds stale addresses.
+  const [addressPrefill, setAddressPrefill] = useState(() =>
+    readAddressPrefill(),
+  );
+
+  // Strip the prefill query params from the URL on mount so a refresh
+  // or share link doesn't re-seed the form with stale addresses.
+  useEffect(() => {
+    stripPrefillQueryParams();
+  }, []);
+
   // If URL has a service param, set it
   useEffect(() => {
     if (params?.service) {
@@ -36,7 +102,12 @@ export default function BookingPage() {
     }
   }, [params?.service]);
 
-  const resetService = () => setSelectedService(null);
+  const resetService = () => {
+    // Returning to the service picker means the user is starting over —
+    // clear the one-time prefill so the next flow opens with empty fields.
+    setAddressPrefill({ pickup: "", dropoff: "" });
+    setSelectedService(null);
+  };
 
   const renderFlow = () => {
     if (!selectedService) {
@@ -49,6 +120,8 @@ export default function BookingPage() {
           serviceId={selectedService}
           serviceLabel={getServiceLabel(selectedService)}
           onBack={resetService}
+          initialPickup={addressPrefill.pickup}
+          initialDropoff={addressPrefill.dropoff}
         />
       );
     }
