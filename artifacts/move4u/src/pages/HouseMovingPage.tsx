@@ -4,20 +4,24 @@ import { usePageMeta } from "@/lib/usePageMeta";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
+import HouseMovingHowItWorks from "@/components/HouseMovingHowItWorks";
 import { CONTACT, HELP_PRICING, VAN_SIZES } from "@/data/constants";
 import {
   ArrowRight,
+  BadgePoundSterling,
   Boxes,
   CheckCircle2,
+  Clock,
   HandHelping,
   Phone,
   Quote,
+  ShieldCheck,
   Sofa,
   Star,
   Truck,
+  Zap,
 } from "lucide-react";
 import heroImg from "@/assets/hero/move4u_hero_v3.webp";
-import teamImg from "@/assets/reviews/move4u_real_move.webp";
 import vanSmallImg from "@/assets/vans/van_small.webp";
 import vanMediumImg from "@/assets/vans/van_medium.webp";
 import vanLargeImg from "@/assets/vans/van_large.webp";
@@ -87,11 +91,13 @@ export default function HouseMovingPage() {
     },
   ];
 
-  const whyPoints = [
-    "On-time arrival",
-    "Careful handling",
-    "Clear pricing",
-    "Same-day availability",
+  /* Feature pills shown in the redesigned "Why Move4U" section.
+     Pairing each promise with a small icon keeps the cards scannable. */
+  const whyFeatures = [
+    { icon: Clock, title: "On-time arrival" },
+    { icon: ShieldCheck, title: "Careful handling" },
+    { icon: BadgePoundSterling, title: "Clear pricing" },
+    { icon: Zap, title: "Same-day availability" },
   ];
 
   // Pricing is sourced from HELP_PRICING / VAN_SIZES (single source of truth
@@ -335,106 +341,12 @@ export default function HouseMovingPage() {
         </section>
 
         {/* ============================================================
-            HOW IT WORKS — 3 simple numbered steps.
-            Mobile: ultra-compact vertical 1-2-3 list with a thin
-            connecting rail (per redesign brief — no oversized cards).
-            Desktop: original 3-card grid, untouched.
+            HOW IT WORKS — step slider/carousel.
+            Lives in its own component (HouseMovingHowItWorks) so this
+            section is fully isolated from the homepage's "How It Works"
+            timeline. Auto-advances, swipeable, with arrows + dots.
             ============================================================ */}
-        <section className="py-6 sm:py-14 bg-white">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-4 sm:mb-8">
-              <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-1.5 sm:mb-2">
-                HOW IT WORKS
-              </p>
-              <h2 className="text-[20px] sm:text-[28px] font-bold text-gray-900 tracking-tight">
-                How it works
-              </h2>
-            </div>
-
-            {(() => {
-              const steps = [
-                {
-                  n: 1,
-                  title: "Enter your addresses",
-                  text: "Tell us where you're moving from and to.",
-                },
-                {
-                  n: 2,
-                  title: "Get your quote",
-                  text: "See your van size, help and hourly rate.",
-                },
-                {
-                  n: 3,
-                  title: "We handle your move",
-                  text: "Our team arrives on time and takes care of it.",
-                },
-              ];
-              return (
-                <>
-                  {/* MOBILE: thin vertical rail with small numbered
-                      circles + short titles. No card chrome. */}
-                  <ol
-                    className="sm:hidden relative pl-9 space-y-3"
-                    aria-label="How it works"
-                  >
-                    {/* Vertical connecting line behind the circles. */}
-                    <span
-                      aria-hidden="true"
-                      className="absolute left-3 top-2 bottom-2 w-px bg-purple-200"
-                    />
-                    {steps.map((s) => (
-                      <li key={s.n} className="relative">
-                        <div
-                          className="absolute -left-9 top-0.5 w-6 h-6 rounded-full text-white flex items-center justify-center font-bold text-[12px] shadow-[0_4px_10px_-3px_rgba(74,49,156,0.5)]"
-                          style={{
-                            backgroundImage:
-                              "linear-gradient(135deg, #6d4ed3 0%, #5b3fb8 55%, #4a319c 100%)",
-                          }}
-                          aria-hidden="true"
-                        >
-                          {s.n}
-                        </div>
-                        <p className="font-semibold text-gray-900 text-[14px] leading-tight">
-                          {s.title}
-                        </p>
-                        <p className="text-gray-500 text-[12.5px] leading-snug mt-0.5">
-                          {s.text}
-                        </p>
-                      </li>
-                    ))}
-                  </ol>
-
-                  {/* DESKTOP: original 3-card grid. */}
-                  <ol className="hidden sm:grid sm:grid-cols-3 gap-3 sm:gap-4">
-                    {steps.map((s) => (
-                      <li
-                        key={s.n}
-                        className="relative bg-white rounded-2xl p-4 sm:p-5 ring-1 ring-purple-100/70 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.06),_0_18px_40px_-22px_rgba(74,49,156,0.16)]"
-                      >
-                        <div
-                          className="w-8 h-8 rounded-lg text-white flex items-center justify-center font-bold text-[14px] mb-3 shadow-[0_6px_16px_-6px_rgba(74,49,156,0.55)]"
-                          style={{
-                            backgroundImage:
-                              "linear-gradient(135deg, #6d4ed3 0%, #5b3fb8 55%, #4a319c 100%)",
-                          }}
-                          aria-hidden="true"
-                        >
-                          {s.n}
-                        </div>
-                        <h3 className="font-semibold text-gray-900 text-[14.5px] tracking-tight mb-1">
-                          {s.title}
-                        </h3>
-                        <p className="text-gray-500 text-[13px] leading-relaxed">
-                          {s.text}
-                        </p>
-                      </li>
-                    ))}
-                  </ol>
-                </>
-              );
-            })()}
-          </div>
-        </section>
+        <HouseMovingHowItWorks />
 
         {/* ============================================================
             WHAT WE HANDLE — 4 clean light cards (no packing).
@@ -484,175 +396,84 @@ export default function HouseMovingPage() {
         </section>
 
         {/* ============================================================
-            WHY CHOOSE MOVE4U — split layout: photo left, points right.
-            Reviews are merged inline (small testimonial card under the
-            bullet list) — no separate reviews section.
-            Mobile: tighter vertical rhythm + smaller image.
+            WHY MOVE4U — clean, premium card layout (no background image).
+            Stacked on mobile (heading → 2x2 feature cards → review card),
+            row of 4 cards + review card on desktop. Soft very-light-purple
+            section background distinguishes it from neighbouring blocks.
             ============================================================ */}
-        <section className="relative isolate overflow-hidden py-9 sm:py-20 bg-white">
-          {/* MOBILE-only photo background — opens up to the right.
-              We layer two copies of the same team photo:
-                1. A sharp copy fills the section (object-position: right
-                   center) so the right edge of the photo is what shows
-                   through on the right side of the screen.
-                2. A heavily-blurred copy sits on top, masked to FADE OUT
-                   toward the right so the LEFT half is blurred and the
-                   right half remains crisp.
-              Then a white-to-transparent veil keeps text legible without
-              hiding the image. The whole layer is hidden on lg+ so the
-              desktop split layout (image card + copy) is unchanged. */}
-          <div
-            className="lg:hidden absolute inset-0 z-0 pointer-events-none"
-            aria-hidden="true"
-          >
-            <img
-              src={teamImg}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ objectPosition: "right center" }}
-              loading="lazy"
-              decoding="async"
-            />
-            <img
-              src={teamImg}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{
-                objectPosition: "right center",
-                filter: "blur(16px) saturate(1.05)",
-                /* Slight scale prevents blur-edge halos along the borders */
-                transform: "scale(1.06)",
-                WebkitMaskImage:
-                  "linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 92%)",
-                maskImage:
-                  "linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 92%)",
-              }}
-            />
-            {/* White readability veil — opaque on the left where the
-                copy sits, fading to transparent on the right where we
-                want the photo to come through. */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to right, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.90) 32%, rgba(255,255,255,0.62) 62%, rgba(255,255,255,0.20) 88%, rgba(255,255,255,0) 100%)",
-              }}
-            />
-          </div>
+        <section className="py-10 sm:py-16 bg-[#faf8fd]" aria-labelledby="why-move4u-heading">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            {/* Heading block */}
+            <div className="text-center mb-7 sm:mb-10 max-w-2xl mx-auto">
+              <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-1.5 sm:mb-2.5">
+                WHY MOVE4U
+              </p>
+              <h2
+                id="why-move4u-heading"
+                className="text-[22px] sm:text-4xl font-bold text-gray-900 tracking-tight mb-2 sm:mb-3"
+              >
+                Why customers choose Move4U
+              </h2>
+              <p className="text-gray-600 text-[13.5px] sm:text-[15px] leading-relaxed">
+                A small, dedicated London team focused on doing your move
+                properly — not a faceless platform.
+              </p>
+            </div>
 
-          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="grid lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-center">
-              {/* IMAGE — desktop only. On mobile the same photo lives in
-                  the section background layer above (with the blur-to-
-                  clear treatment), so we don't render this card at all. */}
-              <div className="hidden lg:block lg:col-span-6 order-2 lg:order-1">
-                <div className="relative">
-                  <div
-                    aria-hidden="true"
-                    className="absolute -inset-5 -z-10 rounded-[2rem] blur-2xl opacity-50"
-                    style={{
-                      background:
-                        "radial-gradient(circle at 30% 40%, rgba(74,49,156,0.30), transparent 70%)",
-                    }}
-                  />
-                  <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden ring-1 ring-purple-100/70 shadow-[0_30px_70px_-30px_rgba(74,49,156,0.45)]">
-                    <img
-                      src={teamImg}
-                      alt="Move4U removals team loading the van during a real London house move"
-                      className="w-full h-[220px] sm:h-[420px] object-cover"
-                      loading="lazy"
+            {/* Feature cards — 2 cols on mobile, 4 cols on desktop. */}
+            <ul className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-7 sm:mb-10">
+              {whyFeatures.map(({ icon: Icon, title }) => (
+                <li
+                  key={title}
+                  className="bg-white rounded-2xl p-4 sm:p-5 ring-1 ring-purple-100 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.06)] hover:shadow-[0_18px_40px_-22px_rgba(74,49,156,0.18)] transition-shadow text-center sm:text-left"
+                >
+                  <div className="inline-flex w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-purple-50 text-purple-700 items-center justify-center mb-2.5 sm:mb-3">
+                    <Icon className="w-5 h-5" strokeWidth={2} />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 text-[13.5px] sm:text-[15px] tracking-tight leading-snug">
+                    {title}
+                  </h3>
+                </li>
+              ))}
+            </ul>
+
+            {/* Separate review card — centred, full-width on mobile,
+                comfortably sized on desktop. */}
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 ring-1 ring-purple-100 shadow-[0_18px_40px_-22px_rgba(74,49,156,0.18)] max-w-2xl mx-auto">
+              <div className="flex items-center gap-2 mb-2.5">
+                <Quote
+                  className="w-4 h-4 text-purple-300 shrink-0"
+                  fill="currentColor"
+                  aria-hidden="true"
+                />
+                <div
+                  className="flex items-center gap-0.5"
+                  aria-label="5 out of 5 stars"
+                >
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400"
                     />
-                  </div>
-                  {/* Floating rating badge */}
-                  <div className="absolute -bottom-4 left-4 sm:left-6 bg-white rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-3 shadow-[0_18px_40px_-18px_rgba(17,12,46,0.25)] ring-1 ring-gray-100 flex items-center gap-2 sm:gap-3">
-                    <div className="flex items-center gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-yellow-400 fill-yellow-400"
-                        />
-                      ))}
-                    </div>
-                    <div className="text-[11px] sm:text-[12px] leading-tight">
-                      <p className="font-semibold text-gray-900">4.9 / 5</p>
-                      <p className="text-gray-500">Real London moves</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
-
-              {/* COPY — on mobile, constrained to ~62% so the right side
-                  of the screen reveals the unblurred photo. */}
-              <div className="lg:col-span-6 order-1 lg:order-2 max-w-[62%] lg:max-w-none">
-                <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-1.5 sm:mb-2.5">
-                  WHY CHOOSE MOVE4U
+              <p className="text-gray-800 text-[14px] sm:text-[15px] leading-relaxed mb-3">
+                &ldquo;Professional, careful and easy to book.&rdquo;
+              </p>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <p className="text-[12.5px] text-gray-500">
+                  — London customer
                 </p>
-                <h2 className="text-[20px] sm:text-4xl font-bold text-gray-900 tracking-tight leading-snug mb-2 sm:mb-5">
-                  Why customers choose Move4U
-                </h2>
-                <p className="text-gray-600 text-[13px] sm:text-[15px] leading-relaxed mb-4 sm:mb-6 max-w-md">
-                  A small, dedicated London team focused on doing your move
-                  properly — not a faceless platform.
-                </p>
-                <ul className="space-y-2 sm:space-y-3 mb-5 sm:mb-7">
-                  {whyPoints.map((point) => (
-                    <li
-                      key={point}
-                      className="flex items-start gap-3 text-gray-800 text-[14.5px] sm:text-[15px]"
-                    >
-                      <span className="mt-0.5 inline-flex w-6 h-6 rounded-full bg-purple-100 text-purple-700 items-center justify-center shrink-0">
-                        <CheckCircle2
-                          className="w-3.5 h-3.5"
-                          strokeWidth={2.5}
-                        />
-                      </span>
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Small inline review preview — keeps social proof in the
-                    same 2-column block instead of needing a full carousel
-                    section below. On mobile the card sits over the photo
-                    background, so we use a near-opaque white surface so it
-                    reads cleanly without hiding the image to its right. */}
-                <div className="bg-white/95 lg:bg-[#faf8fd] backdrop-blur-sm rounded-2xl p-4 sm:p-5 ring-1 ring-purple-100/70 shadow-[0_12px_30px_-18px_rgba(20,12,46,0.25)] lg:shadow-none max-w-md">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <Quote
-                      className="w-4 h-4 text-purple-300 shrink-0"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    />
-                    <div
-                      className="flex items-center gap-0.5"
-                      aria-label="5 out of 5 stars"
-                    >
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <p className="text-gray-800 text-[13.5px] sm:text-[14px] leading-relaxed mb-2">
-                    &ldquo;Professional, careful and easy to book.&rdquo;
-                  </p>
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <p className="text-[12px] text-gray-500">
-                      — London customer
-                    </p>
-                    <a
-                      href={googleReviewsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[12.5px] font-medium text-purple-700 hover:text-purple-800 underline underline-offset-2"
-                      data-testid="see-all-google-reviews"
-                    >
-                      See all reviews on Google
-                    </a>
-                  </div>
-                </div>
+                <a
+                  href={googleReviewsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[12.5px] font-medium text-purple-700 hover:text-purple-800 underline underline-offset-2"
+                  data-testid="see-all-google-reviews"
+                >
+                  See all reviews on Google
+                </a>
               </div>
             </div>
           </div>

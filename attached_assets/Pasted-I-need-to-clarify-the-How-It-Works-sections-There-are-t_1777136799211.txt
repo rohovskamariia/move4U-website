@@ -1,0 +1,60 @@
+I need to clarify the “How It Works” sections.
+
+There are two different “How It Works” sections:
+1. On the Home page
+2. On the House Moving page
+
+Please do NOT use the same design for both.
+
+For the Home page:
+Please restore the “How It Works” section back to the previous original version/code.
+You changed it by mistake, but I did not want the Home page “How It Works” changed.
+The Home page should look like it did before.
+
+For the House Moving page:
+Create a separate “How It Works” section only for the House Moving page.
+
+For the House Moving page design:
+- Make it like a step slider/carousel.
+- Show one step at a time or a compact slide layout.
+- Step 1, Step 2, Step 3.
+- It should auto-slide automatically.
+- The user should also be able to manually swipe or click arrows/dots to change steps.
+- It must be mobile-friendly.
+- Keep it clean, modern, compact and premium.
+- Do not affect the Home page section.
+
+Important:
+Please separate the Home page How It Works code from the House Moving page How It Works code, so changes on the House Moving page do not change the Home page. Please redesign ONLY the “Why Move4U” section on the House Moving page.
+
+Do not change the Home page.
+
+Current problem:
+The section looks messy and heavy. The background image, text, bullet points and review card are all mixed together.
+
+Please make it cleaner and more premium.
+
+New design idea:
+- Use a clean white or very light purple background.
+- Do not use a full background image behind the text.
+- Put content into a clear layout:
+  1. Top: small label “WHY MOVE4U”
+  2. Main title: “Why customers choose Move4U”
+  3. Short text under the title
+  4. Four feature cards or pills:
+     - On-time arrival
+     - Careful handling
+     - Clear pricing
+     - Same-day availability
+  5. A separate review card below or on the right side.
+
+Mobile:
+- Everything should be stacked neatly.
+- Text must be easy to read.
+- No image behind the text.
+- No overlapping.
+- Keep spacing clean and compact.
+
+Important:
+Make this change only on the House Moving page.
+Do not edit the Home page “Why Choose” section or Home page “How It Works”.
