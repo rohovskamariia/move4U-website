@@ -5,7 +5,6 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 /**
  * HouseMovingHowItWorks
@@ -17,8 +16,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
  * Behaviour:
  *   - Shows ONE step at a time (Step 1 → 2 → 3).
  *   - Auto-advances every AUTOPLAY_MS while idle.
- *   - User can swipe left/right (touch + mouse drag), use the chevron
- *     arrows, or tap the dots to jump to a specific step.
+ *   - User can swipe left/right (touch + mouse drag) or tap the dots
+ *     to jump to a specific step. No arrow buttons by design — kept
+ *     intentionally minimal/mobile-first. Keyboard arrow keys still
+ *     work because the slide viewport is focusable.
  *   - Auto-play pauses while the user is interacting (pointer down,
  *     keyboard focus, hover) and resumes ~6s after the last interaction.
  *   - Respects prefers-reduced-motion (no auto-play, no slide animation).
@@ -240,27 +241,10 @@ export default function HouseMovingHowItWorks() {
               ))}
             </div>
 
-            {/* Arrows — overlaid, anchored vertically centred. Hidden on
-                very narrow screens to leave the slide breathing room; the
-                user can still swipe + tap dots there. */}
-            <button
-              type="button"
-              onClick={prev}
-              aria-label="Previous step"
-              className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 items-center justify-center rounded-full bg-white/95 ring-1 ring-purple-100 text-purple-700 shadow-[0_6px_16px_-6px_rgba(74,49,156,0.35)] hover:bg-white hover:text-purple-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-              data-testid="house-moving-steps-prev"
-            >
-              <ChevronLeft className="w-4 h-4" strokeWidth={2.5} />
-            </button>
-            <button
-              type="button"
-              onClick={next}
-              aria-label="Next step"
-              className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 items-center justify-center rounded-full bg-white/95 ring-1 ring-purple-100 text-purple-700 shadow-[0_6px_16px_-6px_rgba(74,49,156,0.35)] hover:bg-white hover:text-purple-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-              data-testid="house-moving-steps-next"
-            >
-              <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
-            </button>
+            {/* No arrow buttons by design — autoplay + swipe + dot taps
+                are the only ways to advance. Keeps the section minimal
+                and mobile-first. Keyboard arrow keys still work because
+                the slide viewport is focusable and listens for them. */}
           </div>
 
           {/* Dots */}
@@ -291,28 +275,6 @@ export default function HouseMovingHowItWorks() {
             })}
           </div>
 
-          {/* Mobile-only arrow row — keeps tap targets accessible on small
-              screens where the overlaid arrows are hidden. */}
-          <div className="sm:hidden mt-3 flex items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={prev}
-              aria-label="Previous step"
-              className="w-10 h-10 inline-flex items-center justify-center rounded-full bg-white ring-1 ring-purple-100 text-purple-700 shadow-[0_6px_16px_-6px_rgba(74,49,156,0.25)] active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-              data-testid="house-moving-steps-prev-mobile"
-            >
-              <ChevronLeft className="w-4 h-4" strokeWidth={2.5} />
-            </button>
-            <button
-              type="button"
-              onClick={next}
-              aria-label="Next step"
-              className="w-10 h-10 inline-flex items-center justify-center rounded-full bg-white ring-1 ring-purple-100 text-purple-700 shadow-[0_6px_16px_-6px_rgba(74,49,156,0.25)] active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-              data-testid="house-moving-steps-next-mobile"
-            >
-              <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
-            </button>
-          </div>
         </div>
       </div>
     </section>
