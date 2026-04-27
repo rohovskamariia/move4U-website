@@ -4,6 +4,7 @@ import { usePageMeta } from "@/lib/usePageMeta";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
+import WasteRemovalHowItWorks from "@/components/WasteRemovalHowItWorks";
 import { CONTACT, WASTE_LOADS } from "@/data/constants";
 import {
   ArrowRight,
@@ -11,13 +12,13 @@ import {
   Briefcase,
   CheckCircle2,
   Hammer,
+  MessageCircle,
   Phone,
   Quote,
   Recycle,
   Refrigerator,
   ShieldCheck,
   Sofa,
-  Sparkles,
   Star,
   Trash2,
   TreePine,
@@ -25,10 +26,11 @@ import {
   Zap,
 } from "lucide-react";
 
-// Hero photo — homepage slide 1 (movers carrying boxes/rug by the van).
-// Distinct from /house-moving's interior hero, and reads naturally as a
-// "we collect & remove" visual for the waste service.
-import heroImg from "@assets/IMG_3267_1776604323710.webp";
+// Hero photo — generated waste-removal scene (Move4U team in purple polos
+// loading bin bags, an old armchair, microwave and garden offcuts into a
+// white panel van on a sunny suburban London street). Distinct from the
+// /house-moving hero so the two service pages read as different services.
+import heroImg from "@/assets/hero/waste_hero_v1.png";
 
 // Real load illustrations from the waste size guide — single source of
 // truth for waste imagery so the pricing block here matches /waste-guide.
@@ -85,63 +87,58 @@ export default function WasteRemovalPage() {
 
   /* ---------- Section data ---------- */
 
-  // What we handle — 7 categories. Last card ("Almost anything") gets
-  // emphasis by spanning the trailing row on every breakpoint so it
-  // reads as a soft "ask us" CTA.
+  // What we handle — 6 service categories + 1 final card that's a
+  // soft "ask us" CTA pointing to WhatsApp. Equal-height cards via
+  // h-full + flex layout so the grid never staircases on desktop.
   const handled = [
-    { icon: Trash2, title: "Household waste", text: "Bags, boxes and general rubbish." },
+    { icon: Trash2, title: "Household waste", text: "Bin bags, boxes and general rubbish." },
     { icon: Sofa, title: "Furniture removal", text: "Sofas, beds, wardrobes, tables." },
     { icon: TreePine, title: "Garden waste", text: "Soil, branches and clippings." },
     { icon: Refrigerator, title: "Appliances", text: "Fridges, washers, white goods." },
     { icon: Briefcase, title: "Office clearance", text: "Desks, chairs and IT equipment." },
     { icon: Hammer, title: "Builders waste", text: "Rubble, plasterboard, offcuts." },
-    { icon: Sparkles, title: "Almost anything — just ask", text: "Not sure? Send a photo and we'll quote." },
   ];
 
+  // WhatsApp CTA — replaces the last "what we handle" card per the brief.
+  // Uses CONTACT.whatsapp (single source of truth) and a pre-filled
+  // message so the user lands in a ready-to-send chat.
+  const whatsAppHref = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(
+    "Hi, I need help with waste removal",
+  )}`;
+
+  // Why Move4U feature pills — design mirrors /house-moving exactly:
+  // small purple-50 bubble + icon + title only (no description), 2x2
+  // on mobile, 4x1 on desktop. Content is waste-flavoured.
   const whyFeatures = [
     { icon: ShieldCheck, title: "Licensed waste carriers" },
     { icon: Truck, title: "We do the heavy lifting" },
-    { icon: BadgePoundSterling, title: "Clear pricing" },
+    { icon: BadgePoundSterling, title: "Clear, fixed pricing" },
     { icon: Zap, title: "Same-day availability" },
   ];
 
-  const steps = [
-    {
-      n: 1,
-      title: "Enter your address",
-      text: "Tell us where the collection is and what needs to go.",
-      icon: Recycle,
-    },
-    {
-      n: 2,
-      title: "Get a fixed quote",
-      text: "We estimate based on size and type of waste — no surprises.",
-      icon: BadgePoundSterling,
-    },
-    {
-      n: 3,
-      title: "We collect and remove",
-      text: "Our team arrives, loads everything and clears the space.",
-      icon: Truck,
-    },
-  ];
-
-  // Page-local annotations for each load size — keeps the pricing cards
-  // scannable. Numeric prices stay sourced from WASTE_LOADS.
+  // Page-local annotations for each load size — kept in sync with the
+  // brief copy. Numeric prices stay sourced from WASTE_LOADS so the
+  // booking flow and this page can never drift apart.
   const loadNotes: Record<string, string> = {
-    minimum: "~8 bin bags · up to 150kg",
-    quarter: "~20 bin bags · up to 250kg",
-    third: "~30 bin bags · up to 300kg",
-    half: "~40 bin bags · up to 500kg",
-    three_quarter: "~60 bin bags · up to 650kg",
+    minimum: "~8 bags · up to 150kg",
+    quarter: "~20 bags · up to 250kg",
+    third: "~30 bags",
+    half: "~40 bags",
+    three_quarter: "~60 bags",
     full: "Full van · up to 1000kg",
-    extra_large: "On request · up to 2000kg",
+    extra_large: "Large jobs · on request",
   };
 
-  // Placeholder Google reviews link — defaults to a Google search for the
-  // brand until a real Google Business profile URL is wired in.
+  // Placeholder Google reviews link — defaults to a Google search for
+  // the brand until a real Google Business profile URL is wired in.
   const googleReviewsUrl =
     "https://www.google.com/search?q=Move4U+London+removals+reviews";
+
+  // Split pricing into "first six" + "last one" so the desktop grid
+  // can render 3 cards on row 1, 3 on row 2, and the seventh centered
+  // wider on row 3 (per the brief).
+  const firstSixLoads = WASTE_LOADS.slice(0, 6);
+  const lastLoad = WASTE_LOADS[WASTE_LOADS.length - 1];
 
   return (
     <div className="min-h-screen bg-white">
@@ -159,7 +156,7 @@ export default function WasteRemovalPage() {
           <div className="absolute inset-0 z-0">
             <img
               src={heroImg}
-              alt="Move4U team loading items into the van during a London waste collection"
+              alt="Move4U team loading bags and an old armchair into a white panel van during a London waste collection"
               className="house-hero-img w-full h-full object-cover"
               loading="eager"
               fetchPriority="high"
@@ -183,9 +180,7 @@ export default function WasteRemovalPage() {
           <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-7 lg:pt-20 pb-7 lg:pb-24">
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 items-center">
               {/* LEFT — full marketing copy. Hidden on mobile/tablet to
-                  keep the hero focused on the conversion form. The light
-                  overlay above + a soft text-shadow keep the white copy
-                  comfortably readable on the photo. */}
+                  keep the hero focused on the conversion form. */}
               <div
                 className="hidden lg:block lg:col-span-7 text-white"
                 style={{
@@ -241,8 +236,7 @@ export default function WasteRemovalPage() {
                 </ul>
               </div>
 
-              {/* MOBILE-only eyebrow above the form. Centered and softly
-                  shadowed so it stays legible over the photo. */}
+              {/* MOBILE-only eyebrow above the form. */}
               <p
                 className="lg:hidden text-center text-[11px] font-semibold tracking-[0.22em] text-white -mb-2"
                 style={{
@@ -253,9 +247,8 @@ export default function WasteRemovalPage() {
                 WASTE REMOVAL SERVICE
               </p>
 
-              {/* RIGHT — quick quote card. Slightly narrower than the
-                  House Moving card (max-w-[380px] vs none on desktop)
-                  per the brief. Single field — collection address only. */}
+              {/* RIGHT — quick quote card. Single field — collection
+                  address only (waste removal has no drop-off). */}
               <div className="lg:col-span-5 mx-auto w-full max-w-[340px] lg:max-w-[380px] px-2 lg:px-0 lg:ml-auto">
                 <div className="quick-quote-mobile bg-white rounded-2xl lg:rounded-3xl p-4 lg:p-6 shadow-[0_30px_70px_-20px_rgba(20,12,46,0.55)] ring-1 ring-white/30">
                   <div className="mb-3 lg:mb-4">
@@ -342,109 +335,19 @@ export default function WasteRemovalPage() {
         </section>
 
         {/* ============================================================
-            HOW IT WORKS — clean editorial timeline.
-            Mobile: vertical rail with numbered chips on the left.
-            Desktop: horizontal row with dashed connectors.
-            Minimal, not big cards — per brief.
+            HOW IT WORKS — extracted to its own component so we can give
+            mobile a one-step-at-a-time auto-advancing carousel (matching
+            /house-moving's mobile UX exactly) while desktop keeps the
+            editorial horizontal timeline. Behaviour and code stay
+            isolated from the homepage "How It Works" section.
             ============================================================ */}
-        <section
-          id="waste-how-it-works"
-          className="py-10 sm:py-16 bg-white"
-          aria-label="How it works"
-        >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-7 sm:mb-12">
-              <p className="text-[10.5px] sm:text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2">
-                HOW IT WORKS
-              </p>
-              <h2 className="text-[22px] sm:text-4xl font-bold text-gray-900 tracking-tight mb-1.5 sm:mb-2.5">
-                Three simple steps
-              </h2>
-              <p className="text-gray-500 max-w-xl mx-auto text-[13px] sm:text-base leading-relaxed">
-                From your address to a clear space — quick, transparent,
-                stress-free.
-              </p>
-            </div>
-
-            {/* MOBILE: vertical timeline with a continuous left rail.
-                Compact and scannable — no large cards. */}
-            <ol className="sm:hidden relative pl-10">
-              <span
-                aria-hidden="true"
-                className="absolute left-[15px] top-2 bottom-2 w-[2px] bg-gradient-to-b from-purple-200 via-purple-300 to-purple-200"
-              />
-              {steps.map((s) => {
-                const Icon = s.icon;
-                return (
-                  <li
-                    key={s.n}
-                    className="relative pb-5 last:pb-0"
-                    data-testid={`waste-step-${s.n}`}
-                  >
-                    <span
-                      className="absolute -left-10 top-0 w-8 h-8 rounded-full bg-white ring-2 ring-purple-200 shadow-[0_4px_10px_-4px_rgba(74,49,156,0.35)] flex items-center justify-center text-purple-700 font-bold text-[12.5px]"
-                      aria-hidden="true"
-                    >
-                      {s.n}
-                    </span>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Icon
-                        className="w-4 h-4 text-purple-600"
-                        strokeWidth={2.25}
-                      />
-                      <h3 className="font-semibold text-gray-900 text-[14.5px] tracking-tight">
-                        {s.title}
-                      </h3>
-                    </div>
-                    <p className="text-gray-500 text-[13px] leading-relaxed">
-                      {s.text}
-                    </p>
-                  </li>
-                );
-              })}
-            </ol>
-
-            {/* DESKTOP: horizontal row with dashed connectors between
-                numbered chips. Minimal, not card-heavy. */}
-            <ol className="hidden sm:grid sm:grid-cols-3 gap-6 lg:gap-10 relative">
-              <span
-                aria-hidden="true"
-                className="absolute top-[27px] left-[16.6%] right-[16.6%] border-t-2 border-dashed border-purple-200"
-              />
-              {steps.map((s) => {
-                const Icon = s.icon;
-                return (
-                  <li
-                    key={s.n}
-                    className="relative text-center px-2"
-                    data-testid={`waste-step-${s.n}`}
-                  >
-                    <div className="relative z-10 mx-auto w-[54px] h-[54px] rounded-full bg-white ring-2 ring-purple-200 shadow-[0_8px_22px_-8px_rgba(74,49,156,0.45)] flex items-center justify-center mb-4">
-                      <span className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-purple-700 text-white text-[11px] font-bold flex items-center justify-center shadow-[0_3px_8px_-2px_rgba(74,49,156,0.55)]">
-                        {s.n}
-                      </span>
-                      <Icon
-                        className="w-6 h-6 text-purple-700"
-                        strokeWidth={2.25}
-                      />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 text-[15.5px] tracking-tight mb-1">
-                      {s.title}
-                    </h3>
-                    <p className="text-gray-500 text-[13.5px] leading-relaxed max-w-[260px] mx-auto">
-                      {s.text}
-                    </p>
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
-        </section>
+        <WasteRemovalHowItWorks />
 
         {/* ============================================================
-            WHAT WE HANDLE — 2-col mobile / 3-col tablet / 4-col desktop.
-            Last card ("Almost anything") spans the trailing row to read
-            as a soft "ask us" CTA.
+            WHAT WE HANDLE — 6 service categories + 1 WhatsApp CTA card
+            on row 4. Equal-height grid (h-full + flex-col) so cards
+            never staircase on desktop. 2-col mobile, 3-col tablet+
+            (clean 3x3 grid where the WhatsApp CTA tops & tails row 3).
             ============================================================ */}
         <section
           className="py-9 sm:py-14 bg-[#faf8fd]"
@@ -464,95 +367,15 @@ export default function WasteRemovalPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
-              {handled.map(({ icon: Icon, title, text }, i) => {
-                const isLast = i === handled.length - 1;
-                return (
-                  <div
-                    key={title}
-                    className={[
-                      "bg-white rounded-2xl ring-1 ring-purple-100/70 p-3.5 sm:p-5 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.08),_0_18px_40px_-22px_rgba(74,49,156,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_-6px_rgba(74,49,156,0.18),_0_30px_60px_-24px_rgba(74,49,156,0.30)]",
-                      isLast ? "col-span-2 sm:col-span-3 lg:col-span-4" : "",
-                    ].join(" ")}
-                    data-testid={`waste-handle-${i}`}
-                  >
-                    <div
-                      className={[
-                        "flex",
-                        isLast
-                          ? "flex-col sm:flex-row sm:items-center sm:justify-center gap-2 sm:gap-4 text-center"
-                          : "flex-col gap-2",
-                      ].join(" ")}
-                    >
-                      <div
-                        className={[
-                          "text-white rounded-xl flex items-center justify-center shadow-[0_6px_16px_-6px_rgba(74,49,156,0.55)]",
-                          isLast
-                            ? "w-10 h-10 sm:w-11 sm:h-11 mx-auto sm:mx-0"
-                            : "w-10 h-10",
-                        ].join(" ")}
-                        style={{
-                          backgroundImage:
-                            "linear-gradient(135deg, #6d4ed3 0%, #5b3fb8 55%, #4a319c 100%)",
-                        }}
-                      >
-                        <Icon
-                          className="w-[18px] h-[18px]"
-                          strokeWidth={2.25}
-                        />
-                      </div>
-                      <div
-                        className={
-                          isLast ? "sm:text-left" : ""
-                        }
-                      >
-                        <h3 className="font-semibold text-gray-900 text-[13.5px] sm:text-[14.5px] tracking-tight leading-tight mb-0.5 sm:mb-1">
-                          {title}
-                        </h3>
-                        <p className="text-gray-500 text-[12px] sm:text-[13px] leading-relaxed">
-                          {text}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* ============================================================
-            WHY MOVE4U — feature pills + integrated review block.
-            Mirrors the /house-moving "Why" section visually so both
-            service pages feel like one product family.
-            ============================================================ */}
-        <section
-          className="py-10 sm:py-16 bg-white"
-          aria-label="Why choose Move4U"
-        >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-6 sm:mb-10">
-              <p className="text-[10.5px] sm:text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2">
-                WHY MOVE4U
-              </p>
-              <h2 className="text-[22px] sm:text-4xl font-bold text-gray-900 tracking-tight mb-1.5 sm:mb-2.5">
-                Simple, stress-free clearance
-              </h2>
-              <p className="text-gray-500 max-w-xl mx-auto text-[13px] sm:text-base leading-relaxed">
-                We make waste removal easy — licensed carriers, fair
-                pricing and friendly teams across London.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-7 sm:mb-10">
-              {whyFeatures.map(({ icon: Icon, title }) => (
-                <div
+            <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 items-stretch">
+              {handled.map(({ icon: Icon, title, text }, i) => (
+                <li
                   key={title}
-                  className="bg-white rounded-2xl ring-1 ring-purple-100/70 p-3.5 sm:p-5 flex items-center gap-3 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.08)]"
-                  data-testid={`waste-why-${title.toLowerCase().replace(/[^a-z]+/g, "-")}`}
+                  className="h-full bg-white rounded-2xl ring-1 ring-purple-100/70 p-3.5 sm:p-5 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.08),_0_18px_40px_-22px_rgba(74,49,156,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_-6px_rgba(74,49,156,0.18),_0_30px_60px_-24px_rgba(74,49,156,0.30)] flex flex-col"
+                  data-testid={`waste-handle-${i}`}
                 >
                   <div
-                    className="text-white w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-[0_6px_16px_-6px_rgba(74,49,156,0.55)]"
+                    className="text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-[0_6px_16px_-6px_rgba(74,49,156,0.55)] mb-2 sm:mb-2.5"
                     style={{
                       backgroundImage:
                         "linear-gradient(135deg, #6d4ed3 0%, #5b3fb8 55%, #4a319c 100%)",
@@ -563,58 +386,159 @@ export default function WasteRemovalPage() {
                       strokeWidth={2.25}
                     />
                   </div>
-                  <p className="font-semibold text-gray-900 text-[13px] sm:text-[14px] tracking-tight leading-tight">
+                  <h3 className="font-semibold text-gray-900 text-[13.5px] sm:text-[14.5px] tracking-tight leading-tight mb-0.5 sm:mb-1">
                     {title}
+                  </h3>
+                  <p className="text-gray-500 text-[12px] sm:text-[13px] leading-relaxed">
+                    {text}
+                  </p>
+                </li>
+              ))}
+
+            </ul>
+
+            {/* WhatsApp CTA — replaces the old "Almost anything" card.
+                Lives BELOW the service grid as a full-width banner so
+                row 3 of the 3-col desktop grid never staircases. On
+                mobile it stacks (icon+copy on top, CTA below). On
+                desktop it lays out horizontally (icon+copy left, CTA
+                button right). Visually distinct (subtle emerald glow)
+                so it reads as "ask us" rather than another category. */}
+            <div
+              className="mt-2.5 sm:mt-4 bg-gradient-to-br from-emerald-50 to-white rounded-2xl ring-1 ring-emerald-200/70 p-3.5 sm:p-5 shadow-[0_4px_12px_-4px_rgba(16,185,129,0.10),_0_18px_40px_-22px_rgba(16,185,129,0.20)] transition-all duration-300 hover:shadow-[0_8px_18px_-6px_rgba(16,185,129,0.18),_0_30px_60px_-24px_rgba(16,185,129,0.30)] flex flex-col sm:flex-row sm:items-center sm:gap-5"
+              data-testid="waste-handle-whatsapp"
+            >
+              <div className="flex items-start sm:items-center gap-3 sm:flex-1">
+                <div className="text-white w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#25D366] flex items-center justify-center shrink-0 shadow-[0_6px_16px_-6px_rgba(16,185,129,0.55)]">
+                  <MessageCircle
+                    className="w-[18px] h-[18px] sm:w-5 sm:h-5"
+                    strokeWidth={2.25}
+                  />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-gray-900 text-[14px] sm:text-[15.5px] tracking-tight leading-tight mb-0.5">
+                    Not sure? Just ask
+                  </h3>
+                  <p className="text-gray-500 text-[12.5px] sm:text-[13.5px] leading-relaxed">
+                    Send us a photo on WhatsApp and we'll confirm
+                    instantly.
                   </p>
                 </div>
-              ))}
-            </div>
-
-            {/* Review card — single hero quote with stars + Google CTA. */}
-            <div className="max-w-3xl mx-auto bg-white rounded-2xl sm:rounded-3xl ring-1 ring-purple-100/80 p-5 sm:p-8 shadow-[0_6px_18px_-8px_rgba(74,49,156,0.12),_0_30px_60px_-24px_rgba(74,49,156,0.22)] text-center">
-              <Quote
-                className="w-7 h-7 sm:w-8 sm:h-8 text-purple-300 mx-auto mb-2 sm:mb-3"
-                strokeWidth={2}
-              />
-              <div
-                className="flex justify-center gap-0.5 mb-3 sm:mb-4"
-                aria-label="5 out of 5 stars"
-              >
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-yellow-400"
-                  />
-                ))}
               </div>
-              <p className="text-gray-700 text-[14px] sm:text-[16px] leading-relaxed mb-3 sm:mb-4 italic">
-                "Booked a same-day clearance after a flat refurb — the
-                Move4U team turned up on time, loaded everything quickly
-                and the price matched the quote exactly. Genuinely
-                stress-free."
-              </p>
-              <p className="text-gray-500 text-[12.5px] sm:text-[13.5px] mb-4 sm:mb-5">
-                — Daniel R., Camden
-              </p>
               <a
-                href={googleReviewsUrl}
+                href={whatsAppHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-purple-700 hover:text-purple-900 font-semibold text-[13px] sm:text-[14px]"
-                data-testid="see-google-reviews"
+                className="mt-3 sm:mt-0 inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1fbf5b] text-white font-semibold px-4 sm:px-5 py-2.5 rounded-full text-[13px] sm:text-[13.5px] transition-colors shrink-0 self-stretch sm:self-auto"
+                data-testid="waste-handle-whatsapp-cta"
               >
-                See all reviews on Google
-                <ArrowRight className="w-4 h-4" strokeWidth={2.25} />
+                Chat on WhatsApp
+                <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.5} />
               </a>
             </div>
           </div>
         </section>
 
         {/* ============================================================
-            PRICING PREVIEW — premium centered brand block.
-            Same purple gradient card pattern as /house-moving.
-            Inside: 7 white load cards in a responsive grid using the
-            real load illustrations from the waste size guide.
+            WHY MOVE4U — DESIGN MIRRORS /house-moving EXACTLY.
+            Heading block → 4 small "feature pill" cards (icon-in-purple-
+            bubble + title only) → SEPARATE small review card with quote
+            mark, 5 stars, italic line, customer attribution and a
+            "See all reviews on Google" link. Same spacing, same
+            typography, same layout so both service pages feel like one
+            product family.
+            ============================================================ */}
+        <section
+          className="py-10 sm:py-16 bg-[#faf8fd]"
+          aria-labelledby="waste-why-move4u-heading"
+        >
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            {/* Heading block */}
+            <div className="text-center mb-7 sm:mb-10 max-w-2xl mx-auto">
+              <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-1.5 sm:mb-2.5">
+                WHY MOVE4U
+              </p>
+              <h2
+                id="waste-why-move4u-heading"
+                className="text-[22px] sm:text-4xl font-bold text-gray-900 tracking-tight mb-2 sm:mb-3"
+              >
+                Why customers choose Move4U
+              </h2>
+              <p className="text-gray-600 text-[13.5px] sm:text-[15px] leading-relaxed">
+                A small, dedicated London team focused on doing your
+                clearance properly — not a faceless platform.
+              </p>
+            </div>
+
+            {/* Feature cards — 2 cols on mobile, 4 cols on desktop. */}
+            <ul className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-7 sm:mb-10">
+              {whyFeatures.map(({ icon: Icon, title }) => (
+                <li
+                  key={title}
+                  className="bg-white rounded-2xl p-4 sm:p-5 ring-1 ring-purple-100 shadow-[0_4px_12px_-4px_rgba(74,49,156,0.06)] hover:shadow-[0_18px_40px_-22px_rgba(74,49,156,0.18)] transition-shadow text-center sm:text-left"
+                  data-testid={`waste-why-${title.toLowerCase().replace(/[^a-z]+/g, "-")}`}
+                >
+                  <div className="inline-flex w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-purple-50 text-purple-700 items-center justify-center mb-2.5 sm:mb-3">
+                    <Icon className="w-5 h-5" strokeWidth={2} />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 text-[13.5px] sm:text-[15px] tracking-tight leading-snug">
+                    {title}
+                  </h3>
+                </li>
+              ))}
+            </ul>
+
+            {/* Separate review card — centred, full-width on mobile,
+                comfortably sized on desktop. Mirrors house-moving. */}
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 ring-1 ring-purple-100 shadow-[0_18px_40px_-22px_rgba(74,49,156,0.18)] max-w-2xl mx-auto">
+              <div className="flex items-center gap-2 mb-2.5">
+                <Quote
+                  className="w-4 h-4 text-purple-300 shrink-0"
+                  fill="currentColor"
+                  aria-hidden="true"
+                />
+                <div
+                  className="flex items-center gap-0.5"
+                  aria-label="5 out of 5 stars"
+                >
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400"
+                    />
+                  ))}
+                </div>
+              </div>
+              <p className="text-gray-800 text-[14px] sm:text-[15px] leading-relaxed mb-3">
+                &ldquo;Same-day collection, fair price, gone in twenty
+                minutes.&rdquo;
+              </p>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <p className="text-[12.5px] text-gray-500">
+                  — London customer
+                </p>
+                <a
+                  href={googleReviewsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[12.5px] font-medium text-purple-700 hover:text-purple-800 underline underline-offset-2"
+                  data-testid="see-all-google-reviews"
+                >
+                  See all reviews on Google
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================
+            PRICING — premium centered brand block.
+            Layout per brief:
+              - Mobile: 2-col grid (compact), last card spans full width.
+              - Desktop: 3 cards row 1, 3 cards row 2, last card centered
+                wider on row 3 (NOT stretched to full grid width).
+            Bottom info strip: ✔ Minimum charge £60 / ✔ Extra items
+            from £15 / ✔ We load everything for you.
             ============================================================ */}
         <section
           className="relative bg-white py-6 sm:py-16"
@@ -643,101 +567,107 @@ export default function WasteRemovalPage() {
                   <p className="text-[10.5px] sm:text-[11px] font-semibold tracking-[0.22em] text-purple-200 mb-1.5 sm:mb-2">
                     PRICING
                   </p>
-                  <h2 className="text-[18px] sm:text-[28px] font-bold text-white tracking-tight mb-1.5 sm:mb-2">
-                    Pay by the load — no hidden fees
+                  <h2 className="text-[20px] sm:text-[28px] font-bold text-white tracking-tight mb-1.5 sm:mb-2 leading-snug">
+                    Clear pricing. Pay only for what we remove
                   </h2>
                   <p className="text-purple-100/85 text-[12.5px] sm:text-[14.5px] max-w-xl mx-auto leading-snug sm:leading-relaxed">
-                    Pick the size that matches your waste — we'll
-                    confirm the final price on site before we load.
+                    Choose the load size that fits your waste. We
+                    confirm everything on arrival — no surprises.
                   </p>
                 </div>
 
-                {/* Load cards — 2 col mobile, 3 col tablet, 4 col desktop.
-                    Last card spans trailing row on every breakpoint so
-                    the grid never has an awkward orphan. */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3.5 mb-4 sm:mb-6">
-                  {WASTE_LOADS.map((load, i) => {
-                    const isLast = i === WASTE_LOADS.length - 1;
-                    return (
-                      <div
-                        key={load.id}
-                        className={[
-                          "relative bg-white rounded-xl sm:rounded-2xl p-2.5 sm:p-4 ring-1 ring-white/30 shadow-[0_6px_18px_-8px_rgba(0,0,0,0.3)] sm:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.35)] text-center transition-all sm:hover:-translate-y-0.5 flex flex-col",
-                          isLast
-                            ? "col-span-2 sm:col-span-3 lg:col-span-4 sm:flex-row sm:items-center sm:justify-between sm:text-left sm:gap-4"
-                            : "",
-                        ].join(" ")}
-                        data-testid={`waste-price-${load.id}`}
-                      >
-                        <div
-                          className={[
-                            "flex items-center justify-center",
-                            isLast
-                              ? "h-10 sm:h-14 sm:w-20 sm:shrink-0 mb-1 sm:mb-0"
-                              : "h-12 sm:h-20 mb-1.5 sm:mb-2.5",
-                          ].join(" ")}
-                        >
-                          <img
-                            src={LOAD_IMAGES[load.id]}
-                            alt={`${load.label} — Move4U waste removal`}
-                            className="max-h-full max-w-full object-contain select-none"
-                            loading="lazy"
-                            decoding="async"
-                            draggable={false}
-                          />
-                        </div>
-                        <div
-                          className={
-                            isLast ? "flex-1 text-center sm:text-left" : ""
-                          }
-                        >
-                          <p className="text-[10px] sm:text-[11.5px] font-semibold tracking-wide text-purple-700 mb-0.5 sm:mb-1 uppercase leading-tight">
-                            {load.label}
-                          </p>
-                          <p className="text-[15px] sm:text-[22px] font-bold text-gray-900 tracking-tight leading-none">
-                            <span className="text-gray-400 text-[10px] sm:text-[12px] font-medium mr-1">
-                              from
-                            </span>
-                            {load.displayPrice}
-                          </p>
-                          <p className="text-gray-500 text-[10.5px] sm:text-[11.5px] mt-1 leading-snug">
-                            {loadNotes[load.id]}
-                          </p>
-                        </div>
+                {/* First six cards — 2 col mobile, 3 col desktop. */}
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3.5 mb-2 sm:mb-3.5">
+                  {firstSixLoads.map((load) => (
+                    <div
+                      key={load.id}
+                      className="relative bg-white rounded-xl sm:rounded-2xl p-2.5 sm:p-4 ring-1 ring-white/30 shadow-[0_6px_18px_-8px_rgba(0,0,0,0.3)] sm:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.35)] text-center transition-all sm:hover:-translate-y-0.5 flex flex-col h-full"
+                      data-testid={`waste-price-${load.id}`}
+                    >
+                      <div className="flex items-center justify-center h-12 sm:h-20 mb-1.5 sm:mb-2.5">
+                        <img
+                          src={LOAD_IMAGES[load.id]}
+                          alt={`${load.label} — Move4U waste removal`}
+                          className="max-h-full max-w-full object-contain select-none"
+                          loading="lazy"
+                          decoding="async"
+                          draggable={false}
+                        />
                       </div>
-                    );
-                  })}
+                      <p className="text-[10px] sm:text-[11.5px] font-semibold tracking-wide text-purple-700 mb-0.5 sm:mb-1 uppercase leading-tight">
+                        {load.label}
+                      </p>
+                      <p className="text-[15px] sm:text-[22px] font-bold text-gray-900 tracking-tight leading-none">
+                        <span className="text-gray-400 text-[10px] sm:text-[12px] font-medium mr-1">
+                          from
+                        </span>
+                        {load.displayPrice}
+                      </p>
+                      <p className="text-gray-500 text-[10.5px] sm:text-[11.5px] mt-1 leading-snug">
+                        {loadNotes[load.id]}
+                      </p>
+                    </div>
+                  ))}
                 </div>
 
-                {/* Helper strip — minimum + add-ons line. Kept compact. */}
-                <ul className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl ring-1 ring-white/20 p-2.5 sm:p-4 mb-4 sm:mb-6 grid grid-cols-1 sm:grid-cols-3 gap-1.5 sm:gap-3 text-center sm:text-left">
-                  <li className="flex items-center justify-center sm:justify-start gap-2 text-[12px] sm:text-[13px]">
-                    <BadgePoundSterling
-                      className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-200 shrink-0"
-                      strokeWidth={2.25}
-                    />
-                    <span className="text-purple-100/90">
-                      <span className="font-semibold text-white">
-                        Minimum charge
-                      </span>{" "}
-                      £60
-                    </span>
-                  </li>
-                  <li className="flex items-center justify-center sm:justify-start gap-2 text-[12px] sm:text-[13px]">
-                    <Sofa
-                      className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-200 shrink-0"
-                      strokeWidth={2.25}
-                    />
-                    <span className="text-purple-100/90">
-                      <span className="font-semibold text-white">
-                        Extra items
-                      </span>{" "}
-                      from £15
-                    </span>
-                  </li>
-                  <li className="flex items-center justify-center sm:justify-end gap-2 text-[11.5px] sm:text-[12.5px] text-purple-100/80">
-                    All loaded, swept and disposed
-                  </li>
+                {/* Seventh card — centered wider on its own row.
+                    Mobile: full width (2-col grid would orphan it).
+                    Desktop: max-w-md, mx-auto, horizontal layout
+                    (image left, text right) so it reads as a "wider"
+                    card without stretching across the entire grid. */}
+                <div className="flex justify-center mb-4 sm:mb-6">
+                  <div
+                    className="w-full sm:max-w-md bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 ring-1 ring-white/30 shadow-[0_6px_18px_-8px_rgba(0,0,0,0.3)] sm:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.35)] transition-all sm:hover:-translate-y-0.5 flex items-center gap-3 sm:gap-4 text-left"
+                    data-testid={`waste-price-${lastLoad.id}`}
+                  >
+                    <div className="flex items-center justify-center h-14 w-20 shrink-0">
+                      <img
+                        src={LOAD_IMAGES[lastLoad.id]}
+                        alt={`${lastLoad.label} — Move4U waste removal`}
+                        className="max-h-full max-w-full object-contain select-none"
+                        loading="lazy"
+                        decoding="async"
+                        draggable={false}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10.5px] sm:text-[11.5px] font-semibold tracking-wide text-purple-700 mb-0.5 uppercase leading-tight">
+                        {lastLoad.label}
+                      </p>
+                      <p className="text-[18px] sm:text-[22px] font-bold text-gray-900 tracking-tight leading-none">
+                        <span className="text-gray-400 text-[11px] sm:text-[12px] font-medium mr-1">
+                          from
+                        </span>
+                        {lastLoad.displayPrice}
+                      </p>
+                      <p className="text-gray-500 text-[11.5px] sm:text-[12.5px] mt-1 leading-snug">
+                        {loadNotes[lastLoad.id]}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom info strip — three reassurance ticks per the
+                    brief. Centered, brand-toned, compact. */}
+                <ul className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl ring-1 ring-white/20 p-2.5 sm:p-4 mb-4 sm:mb-6 grid grid-cols-1 sm:grid-cols-3 gap-1.5 sm:gap-3 text-center">
+                  {[
+                    "Minimum charge £60",
+                    "Extra items from £15",
+                    "We load everything for you",
+                  ].map((label) => (
+                    <li
+                      key={label}
+                      className="flex items-center justify-center gap-2 text-[12px] sm:text-[13px] text-purple-100/95"
+                    >
+                      <CheckCircle2
+                        className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-300 shrink-0"
+                        strokeWidth={2.5}
+                      />
+                      <span className="font-medium text-white/95">
+                        {label}
+                      </span>
+                    </li>
+                  ))}
                 </ul>
 
                 <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-center items-stretch sm:items-center">
@@ -764,35 +694,6 @@ export default function WasteRemovalPage() {
                 </div>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* ============================================================
-            FINAL CTA — short, confident close-out per the brief.
-            ============================================================ */}
-        <section
-          className="bg-[#faf8fd] py-10 sm:py-16"
-          aria-label="Ready to book"
-        >
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-            <h2 className="text-[22px] sm:text-3xl font-bold text-gray-900 tracking-tight mb-2 sm:mb-3">
-              Ready to clear your space?
-            </h2>
-            <p className="text-gray-500 text-[13.5px] sm:text-base leading-relaxed max-w-xl mx-auto mb-5 sm:mb-7">
-              Get an instant estimate and book your waste collection in
-              minutes. Same-day slots often available.
-            </p>
-            <button
-              onClick={() => setLocation("/book/waste-removal")}
-              className="btn-purple inline-flex items-center justify-center gap-2 font-semibold px-7 sm:px-8 py-3 sm:py-3.5 rounded-full text-[15px] sm:text-[16px] shadow-[0_18px_40px_-16px_rgba(74,49,156,0.55)]"
-              data-testid="final-get-quote"
-            >
-              Get a Quote
-              <ArrowRight
-                className="w-4 h-4 sm:w-5 sm:h-5"
-                strokeWidth={2.5}
-              />
-            </button>
           </div>
         </section>
       </main>

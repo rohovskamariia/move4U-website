@@ -1,0 +1,210 @@
+Fix and improve the Waste Removal page (/waste-removal) to match the SAME structure, UX, and visual quality as /house-moving.
+
+This is NOT a redesign — this is alignment and polishing.
+
+-------------------------------------
+GLOBAL GOAL
+-------------------------------------
+
+Page must feel:
+- premium
+- clean
+- structured
+- consistent with house-moving
+
+NOT:
+- messy
+- stretched
+- misaligned
+- different style
+
+-------------------------------------
+1. HERO SECTION (CRITICAL FIX)
+-------------------------------------
+
+IMAGE:
+- Replace current image (DO NOT reuse homepage)
+- Use new waste-related image:
+  (workers + van + rubbish / lifting items)
+
+- Keep SAME height as house-moving
+- NO heavy purple overlay
+- Only very light overlay if needed
+
+LAYOUT:
+- Desktop: text left, form right
+- Mobile: form centered over image
+
+DO NOT change structure.
+
+-------------------------------------
+2. HOW IT WORKS (SLIDER FIX)
+-------------------------------------
+
+Problem:
+Waste Removal slider ≠ House Moving
+
+Fix:
+
+MOBILE:
+- Enable auto-slide (every 3–4 seconds)
+- Keep swipe gesture
+- Keep dots indicator (active state updates)
+
+DESKTOP:
+Don't change on the desktop nothing 
+
+Behavior must feel IDENTICAL to house-moving mobile 
+
+-------------------------------------
+3. WHAT WE HANDLE (IMPROVE)
+-------------------------------------
+
+Fix layout:
+- Equal card heights
+- Proper spacing
+- Balanced grid
+
+Replace last card:
+
+Title:
+Not sure? Just ask
+
+Text:
+Send us a photo on WhatsApp and we’ll confirm instantly.
+
+Button:
+Chat on WhatsApp →
+
+Link:
+https://wa.me/447XXXXXXXXX?text=Hi%20I%20need%20help%20with%20waste%20removal
+
+-------------------------------------
+4. Why move4u and REVIEW SECTION (FIX DESIGN)
+-------------------------------------
+
+Problem:
+Does NOT match house-moving
+
+Fix:
+- Copy EXACT design from house-moving
+- Same spacing
+- Same typography
+- Same layout
+
+-------------------------------------
+5. PRICING SECTION (FULL FIX)
+-------------------------------------
+
+GOAL:
+Clean, premium, easy to scan
+
+-------------------------------------
+HEADER (REPLACE TEXT)
+-------------------------------------
+
+Title:
+Clear pricing. Pay only for what we remove
+
+Subtitle:
+Choose the load size that fits your waste.  
+We confirm everything on arrival — no surprises.
+
+-------------------------------------
+CARDS CONTENT (REWRITE)
+-------------------------------------
+
+Minimum Load  
+From £60  
+~8 bags · up to 150kg  
+
+1/4 Load  
+From £120  
+~20 bags · up to 250kg  
+
+1/3 Load  
+From £150  
+~30 bags  
+
+1/2 Load 
+From £200  
+~40 bags  
+
+3/4 Load  
+From £250  
+~60 bags  
+
+Full Load  
+From £350+  
+Full van · up to 1000kg  
+
+Extra Large Load  
+From £400+  
+Large jobs · on request  
+
+-------------------------------------
+DESKTOP LAYOUT FIX
+-------------------------------------
+
+Use grid:
+
+Row 1: 3 cards  
+Row 2: 3 cards  
+Row 3: 1 centered wide card  
+
+- Center last card
+- Keep equal spacing
+- Cards must NOT stretch too wide
+
+-------------------------------------
+MOBILE LAYOUT FIX
+-------------------------------------
+
+- 2 columns grid
+- Reduce card height
+- Reduce padding slightly
+- Keep compact spacing
+
+-------------------------------------
+
+-------------------------------------
+BOTTOM INFO BLOCK (REWRITE)
+-------------------------------------
+
+✔ Minimum charge £60  
+✔ Extra items from £15  
+✔ We load everything for you  
+
+-------------------------------------
+6. REMOVE SECTION
+-------------------------------------
+
+Delete completely:
+
+"Ready to clear your space"
+
+-------------------------------------
+7. GENERAL UI FIXES
+-------------------------------------
+
+- Align everything to same grid
+- Fix spacing between sections
+- Avoid oversized blocks
+- Keep compact layout like house-moving
+
+-------------------------------------
+FINAL RESULT
+-------------------------------------
+
+Page must feel:
+- identical to house-moving
+- professional
+- clean
+- easy to scan
+- conversion-focused
+
+NOT:
+- inconsistent
+- stretched
+- text-heavy
+- unbalanced
