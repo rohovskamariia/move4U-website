@@ -127,7 +127,12 @@ export default function BookingPage() {
     }
 
     if (selectedService === "waste-removal") {
-      return <WasteRemovalFlow onBack={resetService} />;
+      return (
+        <WasteRemovalFlow
+          onBack={resetService}
+          initialPickup={addressPrefill.pickup}
+        />
+      );
     }
 
     if (selectedService === "international") {

@@ -24,21 +24,32 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 interface WasteRemovalFlowProps {
   onBack: () => void;
+  /**
+   * Optional one-time seed for the collection address. Used by entry
+   * points like /waste-removal that capture the address up-front and
+   * hand it off via ?pickup=... so the user doesn't retype it. The
+   * form remains the single source of truth from then on — this is
+   * NOT a live binding.
+   */
+  initialPickup?: string;
 }
 
 // Waste removal booking flow
 // Edit load prices in src/data/constants.ts (WASTE_LOADS)
 // Edit extra item prices in src/data/constants.ts (WASTE_EXTRA_ITEMS)
-export default function WasteRemovalFlow({ onBack }: WasteRemovalFlowProps) {
+export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRemovalFlowProps) {
   const [selectedLoad, setSelectedLoad] = useState("");
   /** Map of extra-item id → quantity. Quantity 0 = not selected. */
   const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const [pickup, setPickup] = useState("");
+  // Seeded once from `initialPickup` (if provided) so external entry
+  // points like /waste-removal can pre-fill the collection address.
+  // No other behaviour changes — the form owns the state from then on.
+  const [pickup, setPickup] = useState(initialPickup);
   // House / flat / unit follow-up — shown when Google returned a street
   // without a number (e.g. route- or postcode-only result).
   const [needsUnit, setNeedsUnit] = useState(false);
   const [unitNumber, setUnitNumber] = useState("");
-  const corePickupRef = useRef<string>("");
+  const corePickupRef = useRef<string>(initialPickup);
 
   const commitPickup = (core: string, unit: string) => {
     const u = unit.trim();

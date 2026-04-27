@@ -68,6 +68,8 @@ export default function ServicesSection() {
                   setLocation(
                     service.id === "house-move"
                       ? "/house-moving"
+                      : service.id === "waste-removal"
+                      ? "/waste-removal"
                       : `/book/${service.id}`,
                   )
                 }
@@ -130,13 +132,18 @@ export default function ServicesSection() {
                       setLocation(
                         service.id === "house-move"
                           ? "/house-moving"
+                          : service.id === "waste-removal"
+                          ? "/waste-removal"
                           : `/book/${service.id}`,
                       )
                     }
                     className="btn-purple flex-1 inline-flex items-center justify-center gap-1.5 text-[12.5px] font-semibold py-2.5 px-3 rounded-full"
                     data-testid={`book-service-${service.id}`}
                   >
-                    {service.id === "house-move" ? "Learn More" : "Book"}
+                    {service.id === "house-move" ||
+                    service.id === "waste-removal"
+                      ? "Learn More"
+                      : "Book"}
                     <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.25} />
                   </button>
                   <button

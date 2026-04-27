@@ -1,0 +1,217 @@
+Create a professional Waste Removal service page: /waste-removal
+
+Use the SAME structure, layout and visual quality as /house-moving.
+
+IMPORTANT:
+- Page must feel premium, clean and conversion-focused
+- Do NOT create a simple list page
+- Keep the same Move4U style as House Moving
+
+---
+
+GLOBAL STYLE
+
+Use clean, natural photos like the homepage.
+
+For BOTH /house-moving and /waste-removal:
+- keep only a very light overlay on hero images
+- overlay should be subtle, not heavy
+- photos should still look clean and natural
+- keep brightness and contrast consistent
+
+For /waste-removal:
+- use a different photo from House Moving
+- image should show workers, van, or waste removal context
+
+---
+
+1. HERO SECTION
+
+Desktop:
+- Left: text content
+- Right: Quick Quote form
+
+Mobile:
+- Form centered over image, same style as House Moving mobile
+
+Text:
+
+Title:
+Waste Removal Service
+
+Subtitle:
+Fast, reliable rubbish removal across London — same-day available.
+
+Buttons:
+- Get a Quote
+- Book Now
+
+Behaviour:
+- Use Waste Removal quote/booking flow
+- No scroll animation
+- No anchor jump
+
+---
+
+2. QUICK QUOTE FORM
+
+This is NOT the same as House Moving.
+
+Waste Removal form should be a collection form.
+
+Fields:
+- Collection address only
+
+Button:
+Get Quote
+
+Important logic:
+When user enters collection address and clicks Get Quote:
+- redirect/open the Waste Removal booking form
+- automatically pre-fill the collection address in the booking form
+
+Keep form:
+- compact
+- clean
+- slightly narrower on desktop
+- not too wide
+- same visual style as House Moving form
+
+---
+
+3. HOW IT WORKS
+
+Use clean timeline style.
+
+Steps:
+
+1. Enter your address  
+Tell us what needs to be removed.
+
+2. Get a fixed quote  
+We estimate based on size and type of waste.
+
+3. We collect and remove  
+Our team arrives and clears everything quickly.
+
+Design:
+- horizontal timeline on desktop
+- compact stacked version on mobile
+- minimal, not big cards
+
+---
+
+4. WHAT WE HANDLE
+
+Title:
+What we handle for you
+
+Cards:
+- Household waste
+- Furniture removal
+- Garden waste
+- Appliances
+- Office clearance
+- Builders waste
+- Almost anything — just ask
+
+Design:
+- same style as House Moving cards
+- compact spacing
+- 2 columns on mobile
+- clean icons
+
+---
+
+5. WHY CHOOSE MOVE4U
+
+Same style as House Moving.
+
+Intro:
+We make waste removal simple and stress-free.
+
+Points:
+- Licensed waste carriers
+- We do all the heavy lifting
+- Clear pricing
+- Same-day availability
+
+---
+
+6. REVIEW BLOCK
+
+Same as House Moving:
+- stars
+- short testimonial
+- “See all reviews on Google”
+
+---
+
+7. PRICING SECTION
+
+Use the SAME purple pricing block style as House Moving.
+
+Replace van sizes with waste load sizes:
+
+Minimum Load — from £60  
+~8 bags | up to 150kg
+
+1/4 Load — from £120  
+~20 bags | up to 250kg
+
+1/3 Load — from £150  
+~30 bags
+
+1/2 Load — from £200  
+~40 bags
+
+3/4 Load — from £250  
+~60 bags
+
+Full Load — from £350+
+
+Extra Large — from £400+
+
+Design:
+- use waste van/load illustrations from existing pricing page if available
+- clean white cards
+- 2–3 columns desktop
+- compact mobile layout
+- do not make cards oversized
+
+---
+
+8. FINAL CTA
+
+Text:
+Ready to clear your space?
+
+Button:
+Get a Quote
+
+---
+
+9. BEHAVIOUR RULES
+
+Fix navigation globally if needed:
+- remove anchor links (#)
+- remove scroll animations
+- remove scrollIntoView
+- use normal page links
+- clicking /waste-removal should open page normally, not slide or scroll
+
+Goal:
+Click → instant page open, no sliding, no bottom-to-top animation.
+
+---
+
+FINAL GOAL
+
+Waste Removal page should feel:
+- premium
+- clean
+- structured
+- same quality as House Moving
+- not basic
+- not messy
+- not overloaded

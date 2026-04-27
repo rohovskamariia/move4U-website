@@ -40,7 +40,7 @@ interface DrawerLinkRow {
 
 const SERVICE_LINKS: DrawerLinkRow[] = [
   { href: "/book/house-move", label: "House Moving", Icon: HomeIcon },
-  { href: "/book/waste-removal", label: "Waste Removal", Icon: Recycle },
+  { href: "/waste-removal", label: "Waste Removal", Icon: Recycle },
   { href: "/book/single-item", label: "Single Item Delivery", Icon: Package },
   { href: "/book/commercial-move", label: "Commercial Moving", Icon: Building2 },
   { href: "/book/international", label: "International Moving", Icon: Globe },

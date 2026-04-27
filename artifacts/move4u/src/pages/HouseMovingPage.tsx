@@ -142,11 +142,11 @@ export default function HouseMovingPage() {
 
       <main>
         {/* ============================================================
-            HERO — clean image background, no purple overlay.
+            HERO — clean photo + a very light diagonal overlay so the
+            image stays natural-looking while keeping white headline
+            copy comfortably legible.
             Left column: title, subtitle, CTAs, trust line.
             Right column: quick-quote conversion card.
-            Desktop white headline copy stays legible thanks to a soft
-            text-shadow (added inline below) — no heavy gradient veil.
             ============================================================ */}
         <section className="relative overflow-hidden isolate">
           {/* Background image */}
@@ -159,6 +159,19 @@ export default function HouseMovingPage() {
               fetchPriority="high"
               decoding="async"
             />
+            {/* Very light diagonal overlay — subtle, not heavy. Keeps
+                the photo natural-looking while giving the white hero
+                copy enough contrast to read comfortably. Stronger on
+                the left where the headline sits, fading to almost
+                nothing on the right behind the white quote card. */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(115deg, rgba(20,12,46,0.42) 0%, rgba(20,12,46,0.26) 55%, rgba(20,12,46,0.12) 100%)",
+              }}
+            />
           </div>
 
           <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-7 lg:pt-20 pb-7 lg:pb-24">
@@ -166,9 +179,8 @@ export default function HouseMovingPage() {
               {/* LEFT — full marketing copy. Hidden on mobile/tablet to
                   keep the hero focused on the conversion form (per
                   mobile redesign brief). Re-appears at lg+.
-                  Soft text-shadow keeps the white copy readable now that
-                  the purple overlay has been removed — no visible veil
-                  over the photo, just a subtle halo behind the text. */}
+                  The light overlay above + a soft text-shadow keep the
+                  white copy comfortably readable on the photo. */}
               <div
                 className="hidden lg:block lg:col-span-7 text-white"
                 style={{
@@ -223,8 +235,8 @@ export default function HouseMovingPage() {
               </div>
 
               {/* MOBILE-only eyebrow above the form. Centered for visual
-                  balance on the smaller layout. Text-shadow keeps it
-                  readable now that the hero has no purple overlay. */}
+                  balance on the smaller layout. The light overlay +
+                  text-shadow keep it legible on the photo. */}
               <p
                 className="lg:hidden text-center text-[11px] font-semibold tracking-[0.22em] text-white -mb-2"
                 style={{
