@@ -232,9 +232,12 @@
   }
 }
 
-/* Smooth scrolling */
+/* Disable smooth scrolling globally — clicks should feel instant.
+   Avoids the "scroll from bottom to top" animation when navigating
+   between pages (route change triggers a scroll-to-top, and a smooth
+   scroll-behavior here would animate that distance visibly). */
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 /* Carousel slide transitions */

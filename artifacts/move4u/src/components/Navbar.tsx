@@ -31,13 +31,15 @@ export default function Navbar() {
       return;
     }
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    // Instant jump (no smooth animation) so navigation feels direct —
+    // no visible "scrolling" between sections.
+    if (el) el.scrollIntoView({ behavior: "auto", block: "start" });
   };
 
   const goHome = () => {
     setMenuOpen(false);
     if (location === "/") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: "auto" });
     } else {
       // Ensure no stale section target — clear before navigating home.
       sessionStorage.removeItem(SCROLL_TARGET_KEY);

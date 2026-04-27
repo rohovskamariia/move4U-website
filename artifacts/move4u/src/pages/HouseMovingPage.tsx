@@ -142,9 +142,11 @@ export default function HouseMovingPage() {
 
       <main>
         {/* ============================================================
-            HERO — image background with dark overlay.
+            HERO — clean image background, no purple overlay.
             Left column: title, subtitle, CTAs, trust line.
             Right column: quick-quote conversion card.
+            Desktop white headline copy stays legible thanks to a soft
+            text-shadow (added inline below) — no heavy gradient veil.
             ============================================================ */}
         <section className="relative overflow-hidden isolate">
           {/* Background image */}
@@ -157,23 +159,23 @@ export default function HouseMovingPage() {
               fetchPriority="high"
               decoding="async"
             />
-            {/* Soft dark overlay for legibility */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(120deg, rgba(20,12,46,0.82) 0%, rgba(58,38,127,0.70) 55%, rgba(91,63,184,0.50) 100%)",
-              }}
-            />
           </div>
 
           <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-7 lg:pt-20 pb-7 lg:pb-24">
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 items-center">
               {/* LEFT — full marketing copy. Hidden on mobile/tablet to
                   keep the hero focused on the conversion form (per
-                  mobile redesign brief). Re-appears at lg+. */}
-              <div className="hidden lg:block lg:col-span-7 text-white">
+                  mobile redesign brief). Re-appears at lg+.
+                  Soft text-shadow keeps the white copy readable now that
+                  the purple overlay has been removed — no visible veil
+                  over the photo, just a subtle halo behind the text. */}
+              <div
+                className="hidden lg:block lg:col-span-7 text-white"
+                style={{
+                  textShadow:
+                    "0 2px 12px rgba(15,10,40,0.55), 0 1px 2px rgba(15,10,40,0.45)",
+                }}
+              >
                 <p className="text-[12px] font-semibold tracking-[0.22em] text-purple-200 mb-3">
                   HOUSE MOVING SERVICE
                 </p>
@@ -221,8 +223,15 @@ export default function HouseMovingPage() {
               </div>
 
               {/* MOBILE-only eyebrow above the form. Centered for visual
-                  balance on the smaller layout. */}
-              <p className="lg:hidden text-center text-[11px] font-semibold tracking-[0.22em] text-purple-200 -mb-2">
+                  balance on the smaller layout. Text-shadow keeps it
+                  readable now that the hero has no purple overlay. */}
+              <p
+                className="lg:hidden text-center text-[11px] font-semibold tracking-[0.22em] text-white -mb-2"
+                style={{
+                  textShadow:
+                    "0 2px 10px rgba(15,10,40,0.55), 0 1px 2px rgba(15,10,40,0.45)",
+                }}
+              >
                 HOUSE MOVING SERVICE
               </p>
 
@@ -301,7 +310,7 @@ export default function HouseMovingPage() {
                       <ArrowRight className="w-3.5 h-3.5 lg:w-4 lg:h-4" strokeWidth={2.25} />
                     </button>
                     <p className="hidden lg:block text-[11.5px] text-gray-400 text-center pt-1">
-                      No payment required to get a quote.
+                      Instant estimate in seconds
                     </p>
                   </form>
                 </div>
