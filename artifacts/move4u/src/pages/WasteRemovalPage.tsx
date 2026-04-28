@@ -27,11 +27,16 @@ import {
   Zap,
 } from "lucide-react";
 
-// Hero photo — generated waste-removal scene (Move4U team in purple polos
-// loading bin bags, an old armchair, microwave and garden offcuts into a
-// white panel van on a sunny suburban London street). Distinct from the
-// /house-moving hero so the two service pages read as different services.
-import heroImg from "@/assets/hero/waste_hero_v2.webp";
+// Hero photo — photorealistic waste-removal scene (Move4U two-person crew
+// in dark purple polos working a real London terraced street: one worker
+// inside the open white panel van placing a black bin bag onto a stack
+// of already-loaded bags + a folded carpet roll + a wooden chair; the
+// second worker on the kerb is bent forward, gloved hands gripping the
+// next full black bin bag he is about to lift in. Workers + van sit in
+// the right two-thirds of the frame so the LEFT third is clean negative
+// space for the headline overlay. Distinct from the /house-moving hero
+// so the two service pages read as different services at a glance.
+import heroImg from "@/assets/hero/waste_hero_v4.webp";
 
 // Real load illustrations from the waste size guide — single source of
 // truth for waste imagery so the pricing block here matches /waste-guide.
@@ -187,7 +192,7 @@ export default function WasteRemovalPage() {
           <div className="absolute inset-0 z-0">
             <img
               src={heroImg}
-              alt="Move4U team loading bags and an old armchair into a white panel van during a London waste collection"
+              alt="Move4U two-person crew in purple polos loading black rubbish bags into a white van on a London street during a waste collection"
               className="waste-hero-img w-full h-full object-cover"
               loading="eager"
               fetchPriority="high"

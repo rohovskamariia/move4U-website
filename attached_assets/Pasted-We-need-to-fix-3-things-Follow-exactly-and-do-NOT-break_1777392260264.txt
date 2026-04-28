@@ -1,0 +1,124 @@
+We need to fix 3 things. Follow exactly and do NOT break existing layout.
+
+-------------------------------------
+1. FIX BROKEN PROCESS (IMPORTANT)
+-------------------------------------
+
+The process was interrupted while updating:
+- hero image
+- additional stop feature
+
+Please:
+
+- Check all recent changes
+- Fix any broken or incomplete code
+- Ensure the booking flow works correctly
+- Ensure the "Add additional stop" button works properly
+
+For "Additional stop":
+- Always show: "+ Add another stop"
+- Remove long description text
+- Keep it clean and minimal
+
+-------------------------------------
+2. DO NOT CHANGE WORKING PARTS
+-------------------------------------
+
+Do NOT:
+- change layout
+- change spacing
+- change components
+- refactor unrelated code
+
+Only fix what is broken.
+
+-------------------------------------
+3. GENERATE NEW HERO IMAGE (WASTE REMOVAL)
+-------------------------------------
+
+The current image is not acceptable.
+
+Create a NEW image using this prompt:
+
+Create a highly realistic, professional photo for a UK waste removal service website.
+
+Scene:
+A real residential London street (terraced houses, pavement, parked cars).
+Daylight, natural lighting (no filters, no artificial glow).
+
+People:
+2 workers wearing matching dark purple uniforms (Move4U style, but no big visible logos).
+They must look natural and realistic (NOT AI-looking, NOT perfect models).
+
+Action:
+- One worker is inside the van, placing a heavy black rubbish bag into the van.
+- The second worker is outside the van, slightly bent, preparing or lifting another rubbish bag from the ground.
+
+IMPORTANT:
+- The action must look natural and dynamic (like a real job, not posing)
+- Bags should look realistically heavy (slightly stretched, not perfect shape)
+
+Van:
+- White moving van, back doors open
+- Inside: visible loaded rubbish bags and a few small furniture items (chair, wood pieces, carpet roll)
+
+Composition (VERY IMPORTANT):
+- Workers and van positioned to the RIGHT side of the image
+- LEFT side must be clean and empty (for website text overlay)
+- No clutter on the left side
+
+Style:
+- Photorealistic (like taken with a DSLR camera)
+- Natural skin, natural shadows
+- No extra fingers, no distorted hands
+- No blur, no over-sharpening
+
+Avoid:
+- AI artifacts (extra fingers, broken hands, weird faces)
+- Fake lighting or cinematic filters
+- Overly perfect or staged look
+
+Goal:
+The image must look like a real UK waste removal company photo used on a professional website.
+
+-------------------------------------
+IMAGE RULES (CRITICAL)
+-------------------------------------
+
+- Must be photorealistic (NOT AI-looking)
+- 2 workers only
+- One loading into van
+- One preparing next bag
+- Natural movement (not posing)
+- Correct hands (5 fingers only)
+- No distortions
+- No fake faces
+
+-------------------------------------
+POSITIONING
+-------------------------------------
+
+- Move people + van to RIGHT side
+- Keep LEFT side clean for text
+- Do NOT change hero layout or size
+
+-------------------------------------
+PERFORMANCE (IMPORTANT)
+-------------------------------------
+
+Fix loading issue:
+
+- Image must load instantly
+- No glitch / no white flash
+- Use proper image loading (preload or priority)
+- Optimize image size (fast loading)
+
+-------------------------------------
+FINAL RESULT
+-------------------------------------
+
+- Clean
+- Professional
+- Realistic
+- Same layout
+- No bugs
