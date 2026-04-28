@@ -333,7 +333,70 @@ export interface BookingAdminUpdate {
   preferredTime?:     string; // column X — customer's chosen time window
 }
 
+// Builds the batchUpdate ranges for a known sheet row. Shared by the
+// ref-based and row-based update entry points so the column mapping
+// stays in exactly one place.
+function buildAdminWriteRanges(
+  sheetRow: number,
+  fields: BookingAdminUpdate,
+): Array<{ range: string; values: string[][] }> {
+  const c = (col: string) => `Bookings!${col}${sheetRow}`;
+  const updates: Array<{ range: string; values: string[][] }> = [];
+
+  if (fields.bookingStatus  !== undefined) updates.push({ range: c("M"), values: [[fields.bookingStatus]] });
+  if (fields.paymentStatus  !== undefined) updates.push({ range: c("N"), values: [[fields.paymentStatus]] });
+  if (fields.agreedQuote    !== undefined) updates.push({ range: c("P"), values: [[fields.agreedQuote]] });
+  if (fields.depositAmount  !== undefined) updates.push({ range: c("Q"), values: [[fields.depositAmount]] });
+  if (fields.confirmedDate  !== undefined) updates.push({ range: c("R"), values: [[fields.confirmedDate]] });
+  if (fields.confirmedTime  !== undefined) updates.push({ range: c("S"), values: [[fields.confirmedTime]] });
+  if (fields.driverNotes    !== undefined) updates.push({ range: c("T"), values: [[fields.driverNotes]] });
+  if (fields.paymentLink        !== undefined) updates.push({ range: c("U"), values: [[fields.paymentLink]] });
+  if (fields.telegramMessageId  !== undefined) updates.push({ range: c("V"), values: [[fields.telegramMessageId]] });
+  if (fields.photoUrls          !== undefined) updates.push({ range: c("W"), values: [[fields.photoUrls]] });
+  if (fields.preferredTime      !== undefined) updates.push({ range: c("X"), values: [[fields.preferredTime]] });
+
+  return updates;
+}
+
+// Updates admin-editable fields for a booking when the EXACT sheet row is
+// already known (e.g. the row number returned by appendBooking). This is
+// the safest entry point because it does NO ref→row lookup, so it cannot
+// possibly write to the wrong booking even if two rows ever shared a ref
+// during a brief race window. Use this for follow-up writes immediately
+// after an append (photos, timeWindow, telegramMessageId).
+export async function updateBookingByRow(
+  sheetRow: number,
+  fields: BookingAdminUpdate,
+): Promise<boolean> {
+  if (!Number.isFinite(sheetRow) || sheetRow < 2) {
+    logger.warn({ sheetRow }, "updateBookingByRow called with invalid sheet row");
+    return false;
+  }
+  const updates = buildAdminWriteRanges(sheetRow, fields);
+  if (updates.length === 0) return true;
+  try {
+    const id = await ensureSheet();
+    await connectors.proxy(
+      "google-sheet",
+      `/v4/spreadsheets/${id}/values:batchUpdate`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ valueInputOption: "USER_ENTERED", data: updates }),
+      },
+    );
+    logger.info({ sheetRow, fields: Object.keys(fields) }, "Booking update saved to Sheets by row");
+    return true;
+  } catch (err) {
+    logger.error({ err, sheetRow }, "Failed to save booking update by row");
+    return false;
+  }
+}
+
 // Updates admin-editable fields for a booking identified by its reference.
+// Use this for admin-panel edits (where only the ref is known). For writes
+// immediately after an append, prefer updateBookingByRow which has no
+// race window.
 export async function updateBookingAdmin(
   bookingRef: string,
   fields: BookingAdminUpdate,
@@ -341,34 +404,34 @@ export async function updateBookingAdmin(
   try {
     const id = await ensureSheet();
 
-    // Locate row via column O
+    // Locate row via column O. If the same ref ever appears more than once
+    // (which should never happen, but is the exact failure mode the user
+    // reported), refuse to update rather than risk corrupting an unrelated
+    // booking. The duplicate is logged so the team can fix the sheet.
     const refRes = await connectors.proxy(
       "google-sheet",
       `/v4/spreadsheets/${id}/values/Bookings!O:O`,
     );
     const refData = (await refRes.json()) as { values?: string[][] };
-    const rowIndex = (refData.values ?? []).findIndex((r) => r[0] === bookingRef);
-    if (rowIndex === -1) {
+    const rows = refData.values ?? [];
+    const matches: number[] = [];
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i]?.[0] === bookingRef) matches.push(i + 1); // 1-based sheet row
+    }
+    if (matches.length === 0) {
       logger.warn({ bookingRef }, "Booking not found for admin update");
       return false;
     }
-    const sheetRow = rowIndex + 1;
+    if (matches.length > 1) {
+      logger.error(
+        { bookingRef, rows: matches },
+        "DUPLICATE booking reference detected in column O — refusing to update to avoid corrupting another booking. Manually deduplicate the sheet.",
+      );
+      return false;
+    }
+    const sheetRow = matches[0]!;
 
-    const c = (col: string) => `Bookings!${col}${sheetRow}`;
-    const updates: Array<{ range: string; values: string[][] }> = [];
-
-    if (fields.bookingStatus  !== undefined) updates.push({ range: c("M"), values: [[fields.bookingStatus]] });
-    if (fields.paymentStatus  !== undefined) updates.push({ range: c("N"), values: [[fields.paymentStatus]] });
-    if (fields.agreedQuote    !== undefined) updates.push({ range: c("P"), values: [[fields.agreedQuote]] });
-    if (fields.depositAmount  !== undefined) updates.push({ range: c("Q"), values: [[fields.depositAmount]] });
-    if (fields.confirmedDate  !== undefined) updates.push({ range: c("R"), values: [[fields.confirmedDate]] });
-    if (fields.confirmedTime  !== undefined) updates.push({ range: c("S"), values: [[fields.confirmedTime]] });
-    if (fields.driverNotes    !== undefined) updates.push({ range: c("T"), values: [[fields.driverNotes]] });
-    if (fields.paymentLink        !== undefined) updates.push({ range: c("U"), values: [[fields.paymentLink]] });
-    if (fields.telegramMessageId  !== undefined) updates.push({ range: c("V"), values: [[fields.telegramMessageId]] });
-    if (fields.photoUrls          !== undefined) updates.push({ range: c("W"), values: [[fields.photoUrls]] });
-    if (fields.preferredTime      !== undefined) updates.push({ range: c("X"), values: [[fields.preferredTime]] });
-
+    const updates = buildAdminWriteRanges(sheetRow, fields);
     if (updates.length === 0) return true;
 
     await connectors.proxy(
@@ -381,7 +444,7 @@ export async function updateBookingAdmin(
       },
     );
 
-    logger.info({ bookingRef, fields: Object.keys(fields) }, "Admin booking update saved to Sheets");
+    logger.info({ bookingRef, sheetRow, fields: Object.keys(fields) }, "Admin booking update saved to Sheets");
     return true;
   } catch (err) {
     logger.error({ err, bookingRef }, "Failed to save admin booking update");
@@ -395,8 +458,19 @@ export async function getBookingByRef(bookingRef: string): Promise<BookingRecord
   return all.find((b) => b.bookingReference === bookingRef) ?? null;
 }
 
-// Returns the generated booking reference so the route can send it to Telegram and the client.
-export async function appendBooking(row: BookingRow): Promise<string> {
+export interface AppendResult {
+  bookingRef: string;
+  sheetRow: number; // 1-based; the actual row Sheets assigned to this booking
+}
+
+// Appends a brand-new booking row. ALWAYS inserts (uses the Sheets `:append`
+// endpoint with insertDataOption=INSERT_ROWS) so an existing booking can
+// never be overwritten by a customer submission. Returns BOTH the generated
+// booking reference AND the exact 1-based sheet row that was assigned —
+// callers should pass that row number to updateBookingByRow for any
+// follow-up writes (photos, timeWindow, telegramMessageId) so the writes
+// land on this exact booking even if two bookings briefly share a ref.
+export async function appendBooking(row: BookingRow): Promise<AppendResult> {
   const id = await ensureSheet();
   await patchNewHeaders(id);
 
@@ -423,9 +497,13 @@ export async function appendBooking(row: BookingRow): Promise<string> {
     ],
   ];
 
-  await connectors.proxy(
+  // insertDataOption=INSERT_ROWS forces Sheets to push every existing row
+  // down and drop ours into a brand-new row, even when the table has
+  // trailing empty rows. This GUARANTEES we never overwrite an existing
+  // booking row, regardless of sheet shape.
+  const appendRes = await connectors.proxy(
     "google-sheet",
-    `/v4/spreadsheets/${id}/values/Bookings!A:O:append?valueInputOption=USER_ENTERED`,
+    `/v4/spreadsheets/${id}/values/Bookings!A:O:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -433,6 +511,24 @@ export async function appendBooking(row: BookingRow): Promise<string> {
     },
   );
 
-  logger.info({ name: row.name, service: row.service, bookingRef }, "Booking appended to Google Sheets");
-  return bookingRef;
+  // Pull the exact row number Sheets assigned. The response shape is
+  // { updates: { updatedRange: "Bookings!A1023:O1023", ... } } — we
+  // extract 1023 so subsequent writes target THIS booking by row, not by
+  // ref lookup (which would re-introduce a tiny race window).
+  let sheetRow = 0;
+  try {
+    const appendData = (await appendRes.json()) as {
+      updates?: { updatedRange?: string };
+    };
+    const m = appendData.updates?.updatedRange?.match(/!A(\d+):/);
+    if (m) sheetRow = parseInt(m[1]!, 10);
+  } catch (err) {
+    logger.warn({ err, bookingRef }, "Could not parse :append response — follow-up writes will fall back to ref lookup");
+  }
+
+  logger.info(
+    { name: row.name, service: row.service, bookingRef, sheetRow },
+    "Booking appended to Google Sheets",
+  );
+  return { bookingRef, sheetRow };
 }

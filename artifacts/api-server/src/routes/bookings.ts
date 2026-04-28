@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { appendBooking, updateBookingAdmin } from "../lib/sheets";
+import { appendBooking, updateBookingByRow, updateBookingAdmin } from "../lib/sheets";
 import { sendBookingNotification } from "../lib/telegram";
 import { logger } from "../lib/logger";
 
@@ -66,19 +66,25 @@ bookingsRouter.post("/bookings", async (req, res) => {
       return;
     }
 
-    // 1. Save to Google Sheets — returns the generated booking reference
-    const bookingReference = await appendBooking({
+    // 1. Save to Google Sheets — appends a new row and returns BOTH the
+    //    generated booking reference AND the exact 1-based sheet row that
+    //    was assigned. The sheetRow is critical: every follow-up write
+    //    below uses it directly, so photos / time-window / Telegram message
+    //    ID can never land on the wrong booking even if a second submission
+    //    arrived a millisecond later.
+    const { bookingRef: bookingReference, sheetRow } = await appendBooking({
       service, name, phone, contactMethod,
       pickup, dropoff, vanSize, helpOption,
       estimatedPrice, date, notes,
     });
 
     // Debug trace — explicitly tie this submission's payload to the new
-    // booking reference so any cross-booking data leakage is impossible to
-    // miss in the logs (photo URLs, agreed price, customer name).
+    // booking reference AND row so any cross-booking data leakage would
+    // be obvious in the logs.
     logger.info(
       {
         bookingReference,
+        sheetRow,
         name,
         phone,
         estimatedPrice,
@@ -87,7 +93,7 @@ bookingsRouter.post("/bookings", async (req, res) => {
           : 0,
         extraStopsCount: extraStops.length,
       },
-      "Booking received — data bound to this booking reference only",
+      "Booking received — data bound to this booking reference AND row only",
     );
 
     // 2. Respond immediately — don't block on photo storage or Telegram
@@ -97,14 +103,27 @@ bookingsRouter.post("/bookings", async (req, res) => {
     //    uploaded photo URLs to column W. Both are fire-and-forget — they
     //    must not block the customer's confirmation response. The append
     //    above only writes columns A:O, so anything outside that range is
-    //    written here as a follow-up update keyed by booking reference.
-    const followUp: Parameters<typeof updateBookingAdmin>[1] = {};
+    //    written here as a follow-up update.
+    //
+    //    We write BY ROW (not by ref lookup) so the photos/time-window
+    //    cannot possibly be attached to a different booking, even in the
+    //    extremely unlikely event of a duplicate ref.
+    const followUp: Parameters<typeof updateBookingByRow>[1] = {};
     if (timeWindow) followUp.preferredTime = timeWindow;
     if (uploadedFiles) followUp.photoUrls = uploadedFiles;
     if (Object.keys(followUp).length > 0) {
-      updateBookingAdmin(bookingReference, followUp).catch((err) =>
-        logger.error({ err, bookingReference }, "Failed to save follow-up booking fields to Sheets"),
-      );
+      if (sheetRow >= 2) {
+        updateBookingByRow(sheetRow, followUp).catch((err) =>
+          logger.error({ err, bookingReference, sheetRow }, "Failed to save follow-up booking fields to Sheets (by row)"),
+        );
+      } else {
+        // Fallback: append response didn't return a row — fall back to
+        // ref-based lookup so we still try to save photos/time-window.
+        logger.warn({ bookingReference }, "No sheetRow from append — falling back to ref lookup for follow-up");
+        updateBookingAdmin(bookingReference, followUp).catch((err) =>
+          logger.error({ err, bookingReference }, "Failed to save follow-up booking fields to Sheets (by ref)"),
+        );
+      }
     }
 
     // 4. Send Telegram notification, then store the returned message_id in Sheets
@@ -126,11 +145,18 @@ bookingsRouter.post("/bookings", async (req, res) => {
       .then(async (messageId) => {
         if (messageId !== null) {
           try {
-            await updateBookingAdmin(bookingReference, {
-              telegramMessageId: String(messageId),
-            });
+            // Write by row — same safety reasoning as photo URLs above.
+            if (sheetRow >= 2) {
+              await updateBookingByRow(sheetRow, {
+                telegramMessageId: String(messageId),
+              });
+            } else {
+              await updateBookingAdmin(bookingReference, {
+                telegramMessageId: String(messageId),
+              });
+            }
             logger.info(
-              { bookingReference, messageId },
+              { bookingReference, sheetRow, messageId },
               "Telegram message ID saved to Sheets",
             );
           } catch (err) {

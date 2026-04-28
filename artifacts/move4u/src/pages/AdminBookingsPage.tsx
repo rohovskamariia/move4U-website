@@ -916,8 +916,12 @@ export default function AdminBookingsPage() {
                       <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Personal Payment Link</h3>
 
                       {payLink ? (() => {
-                        // Short URL lives on our own domain — clean, booking-specific
-                        const shortPayUrl = `${window.location.origin}/pay/${booking.bookingReference}`;
+                        // Short URL must always show the canonical customer-facing
+                        // domain (move4u.uk), regardless of which host the admin
+                        // happens to be browsing on. Hard-coding this prevents the
+                        // copied / WhatsApp / SMS / email message from leaking a
+                        // *.replit.app preview URL to the customer.
+                        const shortPayUrl = `https://move4u.uk/pay/${booking.bookingReference}`;
                         const whatsappMsg = buildWhatsAppMessage(booking, shortPayUrl);
                         return (
                           <div className="space-y-3">

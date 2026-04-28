@@ -24,14 +24,15 @@ if (!process.env["ADMIN_PASSWORD"]) {
   logger.warn("ADMIN_PASSWORD env var not set — using default 'move4u-admin' (change this in production)");
 }
 
-// SITE_URL must be set to your deployed domain (e.g. https://yourdomain.replit.app).
-// DO NOT let this fall back to REPLIT_DEV_DOMAIN — that is the dev-preview URL and
-// will redirect Stripe customers to "Run this app to see the results here."
-const SITE_URL = process.env["SITE_URL"] ?? "https://move4u.replit.app";
+// SITE_URL is the production domain customers see. We default to the
+// canonical brand domain so payment-success / cancel redirects never leak
+// a *.replit.app URL to a customer. SITE_URL can still be overridden for
+// staging / preview deployments via the env var.
+const SITE_URL = process.env["SITE_URL"] ?? "https://move4u.uk";
 if (!process.env["SITE_URL"]) {
   logger.warn(
-    "SITE_URL env var is not set — Stripe redirect URLs will use the default 'https://move4u.replit.app'. " +
-    "Set SITE_URL to your exact deployed domain to avoid broken post-payment redirects."
+    "SITE_URL env var is not set — Stripe redirect URLs will use the default 'https://move4u.uk'. " +
+    "Override SITE_URL only for staging / preview deployments."
   );
 }
 
