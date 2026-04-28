@@ -1,0 +1,127 @@
+Fix the hero image on the Waste Removal page to match the visual style of House Moving.
+
+-------------------------------------
+PROBLEM
+-------------------------------------
+
+Current Waste Removal image uses different workers and different uniforms.
+
+This breaks brand consistency.
+
+-------------------------------------
+REQUIREMENTS
+-------------------------------------
+
+Replace ONLY the Waste Removal hero image.
+
+DO NOT change:
+- layout
+- hero height
+- form position
+- text position
+
+-------------------------------------
+IMAGE STYLE
+-------------------------------------
+
+New image must match House Moving:
+
+- workers wearing similar uniforms (purple/dark polo shirts)
+- similar lighting (natural daylight)
+- same professional UK removals style
+- van + action scene (waste removal)
+
+-------------------------------------
+IMPORTANT
+-------------------------------------
+
+- DO NOT use completely different style
+- DO NOT use random stock with different colors
+- DO NOT mix styles
+
+Goal:
+Both pages must feel like SAME TEAM.
+
+-------------------------------------
+COMPOSITION
+-------------------------------------
+
+- Keep people slightly to the RIGHT
+- Keep LEFT side clean for text
+- Keep readability overlay (gradient)
+
+-------------------------------------
+RESULT
+-------------------------------------
+
+Waste Removal must visually match House Moving:
+same tone, same uniforms, same brand feeling. Fix hero image loading on BOTH pages:
+- House Moving
+- Waste Removal
+
+-------------------------------------
+PROBLEM
+-------------------------------------
+
+Hero images load slowly and cause:
+- white flash / glitch
+- delayed appearance
+- bad user experience
+
+-------------------------------------
+REQUIREMENTS
+-------------------------------------
+
+1. Images must load instantly or smoothly
+2. No white screen or jump
+3. No layout shift
+
+-------------------------------------
+IMPLEMENT THESE FIXES
+-------------------------------------
+
+1. Use optimized images:
+- compress images (WebP format preferred)
+- max size ~300-500KB
+
+2. Add preload for hero images:
+
+<link rel="preload" as="image" href="PATH_TO_HERO_IMAGE">
+
+3. Add background fallback color:
+
+.hero {
+  background-color: #f5f5f5;
+}
+
+4. Use proper image loading:
+
+- For background images:
+  ensure they are loaded immediately (no lazy loading)
+
+- For <img>:
+  use loading="eager"
+
+5. Prevent layout shift:
+
+.hero {
+  min-height: 500px; /* same as current */
+}
+
+-------------------------------------
+IMPORTANT
+-------------------------------------
+
+- DO NOT change layout
+- DO NOT change hero height
+- DO NOT move elements
+
+-------------------------------------
+RESULT
+-------------------------------------
+
+Hero images should:
+- appear instantly
+- no white flash
+- smooth loading
+- professional feel

@@ -31,7 +31,7 @@ import {
 // loading bin bags, an old armchair, microwave and garden offcuts into a
 // white panel van on a sunny suburban London street). Distinct from the
 // /house-moving hero so the two service pages read as different services.
-import heroImg from "@/assets/hero/waste_hero_v1.png";
+import heroImg from "@/assets/hero/waste_hero_v2.webp";
 
 // Real load illustrations from the waste size guide — single source of
 // truth for waste imagery so the pricing block here matches /waste-guide.
@@ -167,7 +167,23 @@ export default function WasteRemovalPage() {
             viewport — the photo never reads taller on one page than
             the other regardless of how much content the right-column
             quote card has. ============================================================ */}
-        <section className="relative overflow-hidden isolate min-h-[460px] sm:min-h-[500px] md:min-h-[540px] lg:min-h-[560px]">
+        <section
+          className="relative overflow-hidden isolate min-h-[460px] sm:min-h-[500px] md:min-h-[540px] lg:min-h-[560px]"
+          style={{ backgroundColor: "#1f1b2e" }}
+        >
+          {/* React 19 hoists this <link> into <head> when the route mounts,
+              giving the browser an explicit high-priority hint for the hero
+              photo. Combined with the dark fallback background-color above
+              and the eager / fetchPriority / decoding attributes on the
+              <img> below, this eliminates the white-flash + late-paint
+              behaviour the old uncompressed PNG used to cause. */}
+          <link
+            rel="preload"
+            as="image"
+            href={heroImg}
+            // @ts-expect-error -- React typings lag the spec
+            fetchpriority="high"
+          />
           {/* Background image */}
           <div className="absolute inset-0 z-0">
             <img
@@ -178,17 +194,18 @@ export default function WasteRemovalPage() {
               fetchPriority="high"
               decoding="async"
             />
-            {/* Soft horizontal gradient — darker on the LEFT where the
-                headline sits, fading to fully transparent on the RIGHT
-                behind the white quick-quote card. Pure black (no purple
-                tint) keeps the photo's natural colour and matches
+            {/* Soft horizontal readability gradient — pure black, darker
+                on the LEFT where the headline sits and fading to a
+                whisper of darkness on the RIGHT so the white quote card
+                still gets a faint contrast lift without the photo ever
+                looking heavy or filtered. Identical treatment to
                 /house-moving so the two service heroes feel consistent. */}
             <div
               aria-hidden="true"
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(to right, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 70%)",
+                  "linear-gradient(to right, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 100%)",
               }}
             />
           </div>

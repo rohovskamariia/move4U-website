@@ -22,7 +22,7 @@ import {
   Truck,
   Zap,
 } from "lucide-react";
-import heroImg from "@/assets/hero/move4u_hero_v4.png";
+import heroImg from "@/assets/hero/move4u_hero_v4.webp";
 import vanSmallImg from "@/assets/vans/van_small.webp";
 import vanMediumImg from "@/assets/vans/van_medium.webp";
 import vanLargeImg from "@/assets/vans/van_large.webp";
@@ -164,7 +164,23 @@ export default function HouseMovingPage() {
             visual presence on every viewport — the photo never looks
             taller on one page than the other regardless of how much
             content the right-column quote card has. */}
-        <section className="relative overflow-hidden isolate min-h-[460px] sm:min-h-[500px] md:min-h-[540px] lg:min-h-[560px]">
+        <section
+          className="relative overflow-hidden isolate min-h-[460px] sm:min-h-[500px] md:min-h-[540px] lg:min-h-[560px]"
+          style={{ backgroundColor: "#1f1b2e" }}
+        >
+          {/* React 19 hoists this <link> into <head> when the route mounts,
+              giving the browser an explicit high-priority hint for the hero
+              photo. Combined with the dark fallback background-color above
+              and the eager / fetchPriority / decoding attributes on the
+              <img> below, this eliminates the white-flash + late-paint
+              behaviour the old uncompressed PNG used to cause. */}
+          <link
+            rel="preload"
+            as="image"
+            href={heroImg}
+            // @ts-expect-error -- React typings lag the spec
+            fetchpriority="high"
+          />
           {/* Background image */}
           <div className="absolute inset-0 z-0">
             <img
