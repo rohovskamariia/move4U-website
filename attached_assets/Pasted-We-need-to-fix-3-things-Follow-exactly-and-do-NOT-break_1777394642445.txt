@@ -1,0 +1,74 @@
+We need to fix 3 things. Follow exactly and do NOT break existing layout.
+
+-------------------------------------
+1. ADDITIONAL STOP — WASTE REMOVAL
+-------------------------------------
+
+You only updated "+ Add another stop" in House Moving.
+
+Please ALSO apply the SAME change to Waste Removal booking flow.
+
+Requirements:
+- Always show: "+ Add another stop"
+- Remove any long description text
+- Keep it clean and minimal, same as House Moving
+- Make sure the button adds another stop correctly
+
+Do NOT change anything else in booking flow.
+
+-------------------------------------
+2. IMPROVE WASTE REMOVAL HERO IMAGE QUALITY
+-------------------------------------
+
+The current image looks slightly soft/blurry on desktop.
+
+Please improve the existing Waste Removal hero image quality.
+
+Requirements:
+- Do NOT replace the image
+- Improve sharpness slightly
+- Improve clarity and contrast slightly
+- Keep it natural, not over-sharpened
+- Use proper image sizing, no stretching
+- Make sure it looks crisp on large desktop screens
+
+-------------------------------------
+3. FIX GOOGLE LOGO / FAVICON IMAGE
+-------------------------------------
+
+Current issue:
+The logo appears with an unwanted white background/border around it in Google/search/browser preview.
+
+Fix:
+- Use the proper clean logo file
+- Remove any white background around the logo
+- If using a square icon, make it a clean square icon with no white padding/border
+- Prefer transparent PNG or proper favicon/app icon
+- Ensure favicon, apple-touch-icon, and social preview logo use the correct clean version
+
+Important:
+The Move4U logo should look clean, without a white box or white circle around it.
+
+-------------------------------------
+IMPORTANT
+-------------------------------------
+
+Do NOT change layout.
+Do NOT change spacing.
+Do NOT move elements.
+Do NOT touch House Moving page except if needed for shared favicon/logo assets.
+
+Only fix:
+1. "+ Add another stop" in Waste Removal
+2. Waste Removal hero image clarity
+3. Logo/favicon image background issue
+
+-------------------------------------
+RESULT
+-------------------------------------
+
+- Clean UI
+- Waste booking flow consistent with House Moving
+- Sharper Waste Removal hero image
+- Logo displays cleanly with no unwanted white background
+- No bugs

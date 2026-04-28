@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, ChevronLeft, ChevronDown, Info, Plus, Minus, Route, Check, Hash, Sparkles } from "lucide-react";
-import { WASTE_LOADS, WASTE_EXTRA_ITEMS, CONGESTION_CHARGE, OUTSIDE_M25_RATE } from "@/data/constants";
+import { WASTE_LOADS, WASTE_EXTRA_ITEMS, CONGESTION_CHARGE, OUTSIDE_M25_RATE, EXTRA_STOP_CHARGE } from "@/data/constants";
 import { countCongestionEntries } from "@/lib/congestionZone";
 import { outsideM25MilesForRoute } from "@/lib/m25";
 import { submitBooking, uploadPhotos } from "@/lib/api";
@@ -11,6 +11,7 @@ import StairsAccessSection, {
   getFloorChargeFromValue,
   getFloorLabelFromValue,
 } from "./StairsAccessSection";
+import ExtraStopsSection, { type ExtraStop } from "./ExtraStopsSection";
 
 /** Flat surcharge for restricted-access pickups (long carry, narrow lane, etc). */
 const RESTRICTED_ACCESS_SURCHARGE = 10;
@@ -84,6 +85,11 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
   const [liftValue, setLiftValue] = useState<string>("");
   const [floorValue, setFloorValue] = useState<string>("lift");
   const [restrictedAccess, setRestrictedAccess] = useState(false);
+  // Additional collection stops — mirrors the House-Moving flow so a
+  // single waste booking can cover multiple pickup addresses on one route.
+  // Each stop carries its own address + stairs/lift/floor answers and is
+  // priced exactly the same way (per-stop fee + per-stop floor surcharge).
+  const [extraStops, setExtraStops] = useState<ExtraStop[]>([]);
   const [notes, setNotes] = useState("");
   const [photos, setPhotos] = useState<File[]>([]);
   const [step, setStep] = useState<"details" | "summary" | "final" | "submitted">("details");
@@ -131,16 +137,29 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
   const extrasTotal = selectedExtras.reduce((sum, e) => sum + e.price * e.qty, 0);
   const stairsCharge = getFloorChargeFromValue(floorValue);
   const accessCharge = restrictedAccess ? RESTRICTED_ACCESS_SURCHARGE : 0;
-  const surchargeTotal = stairsCharge + accessCharge;
-  // Congestion Charge — detected from the pickup postcode (waste flow has
-  // no customer drop-off — the load goes to a disposal site). Added on top
-  // of the calculated total but BEFORE the minimum-charge floor so a CCZ
-  // pickup never gets absorbed by the £60 minimum.
-  const congestionEntries = countCongestionEntries([pickup]);
+  // Per-stop floor surcharges — only count stops that actually have an
+  // address typed in, so an empty placeholder card never inflates the price.
+  const cleanExtraStops = extraStops.filter((s) => s.address.trim());
+  const extraStopsFloorCharge = cleanExtraStops.reduce(
+    (sum, s) => sum + getFloorChargeFromValue(s.floorValue),
+    0,
+  );
+  // Flat per-stop fee — each additional collection point costs an extra
+  // £EXTRA_STOP_CHARGE on top of any per-stop stairs surcharge. Same model
+  // and constant the House-Moving (StandardBookingFlow) uses.
+  const extraStopsFee = cleanExtraStops.length * EXTRA_STOP_CHARGE;
+  const surchargeTotal =
+    stairsCharge + accessCharge + extraStopsFloorCharge + extraStopsFee;
+  // Congestion Charge — counted across the pickup AND every additional
+  // collection address so multi-stop waste runs that touch the CCZ are
+  // priced correctly. Added on top of the calculated total but BEFORE the
+  // minimum-charge floor so a CCZ pickup never gets absorbed by the £60 min.
+  const allAddresses = [pickup, ...cleanExtraStops.map((s) => s.address)];
+  const congestionEntries = countCongestionEntries(allAddresses);
   const congestionCharge = congestionEntries * CONGESTION_CHARGE;
-  // Outside-M25 mileage estimate (one-way to/from disposal). Pickup outside
-  // the M25 means extra travel — billed at £1/mile on top of the base.
-  const outsideM25Miles = outsideM25MilesForRoute([pickup]);
+  // Outside-M25 mileage estimate — routed across pickup + every extra stop.
+  // Outside-M25 portions are billed at £1/mile on top of the base.
+  const outsideM25Miles = outsideM25MilesForRoute(allAddresses);
   const outsideM25Charge = outsideM25Miles * OUTSIDE_M25_RATE;
   const calculatedTotal = loadPrice + extrasTotal + surchargeTotal;
   // Minimum charge only kicks in once the user has actually picked something
@@ -230,6 +249,23 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
               .join(", ");
             // Upload photos first, then submit with their serving URLs
             const photoUrls = await uploadPhotos(photos);
+            // Pre-format every additional collection address with its
+            // own stairs/lift line so the team sees the full pickup
+            // route at a glance in Telegram + Sheets — same shape as
+            // the House-Moving formattedStops payload.
+            const formattedExtraStops = cleanExtraStops.map((s) => {
+              const stopFloor = getFloorChargeFromValue(s.floorValue);
+              const accessLabel = getFloorLabelFromValue(s.floorValue);
+              const parts: string[] = [];
+              if (accessLabel && accessLabel !== "—") parts.push(accessLabel);
+              if (stopFloor > 0) parts.push(`+£${stopFloor}`);
+              return parts.length
+                ? `${s.address.trim()} — ${parts.join(" ")}`
+                : s.address.trim();
+            });
+            const extraAddressFormatted = formattedExtraStops
+              .map((s, i) => `${i + 1}. ${s}`)
+              .join(" | ");
             return await submitBooking({
               service: "Waste Removal",
               name,
@@ -240,7 +276,7 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
               pickupDetails: accessNotes,
               dropoff: "",
               dropoffDetails: "",
-              extraAddress: "",
+              extraAddress: extraAddressFormatted,
               vanSize: "",
               helpOption: "",
               peopleCount: "",
@@ -253,6 +289,9 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
               notes: [
                 notes,
                 `Load: ${loadLabel}`,
+                extraStopsFee > 0
+                  ? `Additional stops: ${cleanExtraStops.length} × £${EXTRA_STOP_CHARGE} = +£${extraStopsFee}`
+                  : null,
                 minChargeApplied ? `Min charge applied (calc £${calculatedTotal} → £${baseTotal})` : null,
                 congestionCharge > 0
                   ? `Congestion Charge: ${congestionEntries} × £${CONGESTION_CHARGE} = +£${congestionCharge}`
@@ -405,6 +444,28 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
               ? { label: `${getFloorLabelFromValue(floorValue)} — no lift`, value: `+£${stairsCharge}` }
               : null,
             restrictedAccess ? { label: "Restricted access", value: `+£${RESTRICTED_ACCESS_SURCHARGE}` } : null,
+            // Additional collection stops — list each address, then the flat
+            // per-stop fee and any per-stop floor surcharge so the customer
+            // can see exactly what each extra pickup is adding to the total.
+            ...cleanExtraStops.flatMap((s, i) => {
+              const stopFloor = getFloorChargeFromValue(s.floorValue);
+              const rows: Array<{ label: string; value: string }> = [
+                { label: `Additional stop ${i + 1}`, value: s.address },
+              ];
+              if (stopFloor > 0) {
+                rows.push({
+                  label: `Stop ${i + 1} — ${getFloorLabelFromValue(s.floorValue)}, no lift`,
+                  value: `+£${stopFloor}`,
+                });
+              }
+              return rows;
+            }),
+            extraStopsFee > 0
+              ? {
+                  label: `Additional stops × ${cleanExtraStops.length}`,
+                  value: `+£${extraStopsFee}`,
+                }
+              : null,
             minChargeApplied
               ? { label: "Minimum charge adjustment", value: `+£${WASTE_MIN_CHARGE - calculatedTotal}` }
               : null,
@@ -508,6 +569,16 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
               These small surcharges cover the extra time and effort needed when items
               must be carried up stairs or over longer distances from the van.
             </p>
+          </div>
+
+          {/* Additional collection stops — same minimal UI as House-Moving:
+              one-line "Additional stop (optional)" header + "+ Add another
+              stop" button. Adding a stop reveals a card with the same
+              address autocomplete + stairs/lift/floor questions used for
+              the main pickup, and each extra stop is priced into the total
+              automatically (per-stop fee + per-stop floor surcharge). */}
+          <div className="mt-4">
+            <ExtraStopsSection stops={extraStops} setStops={setExtraStops} />
           </div>
         </div>
 
