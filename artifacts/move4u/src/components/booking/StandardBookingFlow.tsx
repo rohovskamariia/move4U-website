@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { CheckCircle, ChevronLeft, Home, Plus } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import {
-  CONTACT,
   EXTRA_STOP_CHARGE,
   CONGESTION_CHARGE,
   OUTSIDE_M25_RATE,
   VAN_SIZES,
 } from "@/data/constants";
+import BookingSuccess from "./BookingSuccess";
 import {
   getFloorChargeFromValue,
   getFloorLabelFromValue,
@@ -476,67 +476,14 @@ export default function StandardBookingFlow({
   // -----------------------------------------------------------------
   if (submittedRef) {
     return (
-      <div className="text-center py-6 sm:py-8" data-testid="booking-success">
-        <div className="bg-green-100 text-green-700 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-7 h-7" />
-        </div>
-        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">
-          Thank you — we received your request.
-        </h3>
-        <div
-          className="inline-block bg-gray-50 border border-gray-200 rounded-xl px-5 py-3 mb-4"
-          data-testid="booking-reference"
-        >
-          <p className="text-[11px] text-gray-500 font-medium uppercase tracking-wide mb-0.5">
-            Booking Reference
-          </p>
-          <p className="text-xl font-bold" style={{ color: "#3D1289" }}>
-            {submittedRef}
-          </p>
-        </div>
-        <p className="text-gray-600 text-sm leading-relaxed max-w-sm mx-auto mb-3">
-          We will contact you shortly to confirm availability, final price,
-          and booking details.
-        </p>
-        <p className="text-gray-500 text-[13px] leading-relaxed max-w-sm mx-auto mb-6">
-          If you need to change your booking, please contact us with your
-          booking reference at{" "}
-          <a
-            href={`tel:${CONTACT.driver.replace(/\s/g, "")}`}
-            className="font-semibold underline underline-offset-2"
-            style={{ color: "#3D1289" }}
-          >
-            {CONTACT.driverDisplay}
-          </a>
-          .
-        </p>
-        <div className="flex flex-col gap-2.5 max-w-xs mx-auto">
-          <button
-            type="button"
-            onClick={() => setLocation("/")}
-            className="btn-purple w-full py-2.5 sm:py-3 font-semibold rounded-xl text-sm inline-flex items-center justify-center gap-2"
-            data-testid="success-back-home"
-          >
-            <Home className="w-4 h-4" />
-            Back to Home
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              // Hand control back to the parent (BookingPage) which clears
-              // the selected service and renders ServiceSelector. When the
-              // user picks a service again, StandardBookingFlow remounts
-              // with completely fresh state — no pre-filled fields.
-              onBack();
-            }}
-            className="btn-outline-purple w-full py-2.5 sm:py-3 font-semibold rounded-xl text-sm inline-flex items-center justify-center gap-2"
-            data-testid="success-new-booking"
-          >
-            <Plus className="w-4 h-4" />
-            Create new booking
-          </button>
-        </div>
-      </div>
+      <BookingSuccess
+        bookingRef={submittedRef}
+        // Hand control back to the parent (BookingPage) which clears
+        // the selected service and renders ServiceSelector. When the
+        // user picks a service again, StandardBookingFlow remounts
+        // with completely fresh state — no pre-filled fields.
+        onCreateNew={onBack}
+      />
     );
   }
 

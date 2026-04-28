@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BedDouble, Refrigerator, Circle, Armchair, CheckCircle, ChevronLeft, ChevronDown, Info, Plus, Minus, Route, Check, Hash, Sparkles } from "lucide-react";
+import { BedDouble, Refrigerator, Circle, Armchair, ChevronLeft, ChevronDown, Info, Plus, Minus, Route, Check, Hash, Sparkles } from "lucide-react";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS, CONGESTION_CHARGE, OUTSIDE_M25_RATE, EXTRA_STOP_CHARGE } from "@/data/constants";
 import { countCongestionEntries } from "@/lib/congestionZone";
 import { outsideM25MilesForRoute } from "@/lib/m25";
@@ -7,6 +7,7 @@ import { submitBooking, uploadPhotos } from "@/lib/api";
 import WasteSizeModal from "@/components/WasteSizeModal";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import FinalDetailsStep from "./FinalDetailsStep";
+import BookingSuccess from "./BookingSuccess";
 import StairsAccessSection, {
   getFloorChargeFromValue,
   getFloorLabelFromValue,
@@ -203,26 +204,7 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
   );
 
   if (step === "submitted") {
-    return (
-      <div className="text-center py-8">
-        <div className="bg-green-100 text-green-700 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-7 h-7" />
-        </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-3">
-          Thank you — we received your request.
-        </h3>
-        <div className="inline-block bg-purple-50 border border-purple-200 rounded-xl px-5 py-3 mb-4">
-          <p className="text-xs text-purple-500 font-medium uppercase tracking-wide mb-0.5">Booking Reference</p>
-          <p className="text-xl font-bold text-purple-700">{bookingRef}</p>
-        </div>
-        <p className="text-gray-600 text-sm leading-relaxed max-w-sm mx-auto mb-3">
-          We will contact you shortly to confirm availability, final price, and booking details.
-        </p>
-        <p className="text-gray-500 text-sm leading-relaxed max-w-sm mx-auto">
-          Please keep your phone available. Our team will contact you shortly.
-        </p>
-      </div>
-    );
+    return <BookingSuccess bookingRef={bookingRef} onCreateNew={onBack} />;
   }
 
   if (step === "final") {

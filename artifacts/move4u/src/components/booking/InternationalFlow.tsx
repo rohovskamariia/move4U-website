@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle, Loader2, ChevronLeft, ChevronDown } from "lucide-react";
 import { submitBooking } from "@/lib/api";
 import { isValidPhone, isValidEmail, toE164 } from "@/lib/validators";
+import PhoneField from "./PhoneField";
 
 interface InternationalFlowProps {
   onBack: () => void;
@@ -131,21 +132,18 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Phone number <span className="text-purple-700">*</span>
           </label>
-          <input
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
+          <PhoneField
             value={form.phone}
-            onChange={(e) => handleChange("phone", e.target.value)}
+            onChange={(v) => handleChange("phone", v)}
             onBlur={() => setPhoneTouched(true)}
-            placeholder="+44 7123 456789"
+            invalid={showPhoneError}
             required
-            className={`w-full border rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 ${showPhoneError ? "border-red-300 focus:ring-red-400" : "border-gray-200 focus:ring-purple-500"}`}
+            testId="intl-phone"
           />
           {showPhoneError ? (
-            <p className="text-[11px] text-red-600 mt-1.5">Please enter a valid full phone number including country code (e.g. +44…).</p>
+            <p className="text-[11px] text-red-600 mt-1.5">Please enter a valid phone number for the selected country.</p>
           ) : (
-            <p className="text-[11px] text-gray-500 mt-1.5">Please enter your full phone number including country code (e.g. +44…).</p>
+            <p className="text-[11px] text-gray-500 mt-1.5">Pick your country code, then your number — no leading 0 needed.</p>
           )}
         </div>
         <div>

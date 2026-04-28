@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, ChevronDown } from "lucide-react";
 import BookingTermsNotice from "./BookingTermsNotice";
+import PhoneField from "./PhoneField";
 import { isValidPhone, isValidEmail, toE164 } from "@/lib/validators";
 
 interface FinalDetailsStepProps {
@@ -243,29 +244,21 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Phone number <span className="text-purple-700">*</span>
             </label>
-            <input
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
+            <PhoneField
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={setPhone}
               onBlur={() => setPhoneTouched(true)}
-              placeholder="+44 7123 456789"
+              invalid={showPhoneError}
               required
-              className={`w-full border rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                showPhoneError
-                  ? "border-red-300 focus:ring-red-400"
-                  : "border-gray-200 focus:ring-purple-500"
-              }`}
-              data-testid="final-phone"
+              testId="final-phone"
             />
             {showPhoneError ? (
               <p className="text-[11px] text-red-600 mt-1.5" data-testid="phone-error">
-                Please enter a valid full phone number including country code (e.g. +44…).
+                Please enter a valid phone number for the selected country.
               </p>
             ) : (
               <p className="text-[11px] text-gray-500 mt-1.5">
-                Please enter your full phone number including country code (e.g. +44…).
+                Pick your country code, then your number — no leading 0 needed.
               </p>
             )}
           </div>
