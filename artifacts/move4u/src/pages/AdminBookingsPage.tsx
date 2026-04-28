@@ -542,14 +542,14 @@ export default function AdminBookingsPage() {
     return (
       `Hi ${name},\n\n` +
       `Your booking is confirmed ✅\n\n` +
-      `📅 Date: ${date}\n` +
-      `⏰ Time: ${time}\n\n` +
-      `📍 From: ${from}\n` +
-      `📍 To: ${to}\n\n` +
+      `Date: ${date}\n` +
+      `Time: ${time}\n\n` +
+      `From: ${from}\n` +
+      `To: ${to}\n\n` +
       `Booking reference: ${booking.bookingReference}\n` +
       `Deposit required: ${deposit}\n\n` +
-      `Please complete your payment using the secure payment link below.\n\n` +
-      `If you experience any issues with the payment, please contact us.\n\n` +
+      `Please complete your payment using the secure link below.\n\n` +
+      `If you experience any issues, please contact us.\n\n` +
       `Thank you,\n` +
       `Move4U\n\n` +
       `Secure payment link:\n` +
