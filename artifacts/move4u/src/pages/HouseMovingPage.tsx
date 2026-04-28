@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { usePageMeta } from "@/lib/usePageMeta";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BackToHome from "@/components/BackToHome";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import HouseMovingHowItWorks from "@/components/HouseMovingHowItWorks";
 import { CONTACT, HELP_PRICING, VAN_SIZES } from "@/data/constants";
@@ -141,14 +142,29 @@ export default function HouseMovingPage() {
       <Navbar />
 
       <main>
+        {/* Mobile-only "← Back to home" strip — sits between the navbar
+            and the hero so the user always has an obvious one-tap way
+            back to the homepage. Desktop has full nav, so we hide it
+            there to keep the hero edge-to-edge. */}
+        <div className="md:hidden bg-white">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2">
+            <BackToHome />
+          </div>
+        </div>
+
         {/* ============================================================
             HERO — clean photo + a very light diagonal overlay so the
             image stays natural-looking while keeping white headline
             copy comfortably legible.
             Left column: title, subtitle, CTAs, trust line.
             Right column: quick-quote conversion card.
-            ============================================================ */}
-        <section className="relative overflow-hidden isolate">
+
+            min-h is intentionally set here AND on /waste-removal with
+            the SAME values so both service heroes have an identical
+            visual presence on every viewport — the photo never looks
+            taller on one page than the other regardless of how much
+            content the right-column quote card has. */}
+        <section className="relative overflow-hidden isolate min-h-[460px] lg:min-h-[600px]">
           {/* Background image */}
           <div className="absolute inset-0 z-0">
             <img

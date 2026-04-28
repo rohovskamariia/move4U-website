@@ -17,10 +17,6 @@ import {
   Briefcase,
   BookOpen,
   Home as HomeIcon,
-  Package,
-  Building2,
-  Globe,
-  Sparkles,
 } from "lucide-react";
 
 interface MobileDrawerProps {
@@ -38,13 +34,20 @@ interface DrawerLinkRow {
   Icon: React.ComponentType<{ className?: string }>;
 }
 
+/**
+ * Services group in the side drawer is for SERVICE PAGE NAVIGATION ONLY
+ * — it must NEVER open the booking flow directly. Booking is reached via
+ * the pinned "Get a Quote" / "Book Now" CTAs at the bottom of the drawer
+ * (or the service-card CTAs in the homepage Services section).
+ *
+ * Only services with a dedicated landing page are listed here. Single
+ * Item / Commercial / International / Custom remain reachable via the
+ * homepage Services section (the "View all services" row below jumps
+ * straight there).
+ */
 const SERVICE_LINKS: DrawerLinkRow[] = [
-  { href: "/book/house-move", label: "House Moving", Icon: HomeIcon },
+  { href: "/house-moving", label: "House Moving", Icon: HomeIcon },
   { href: "/waste-removal", label: "Waste Removal", Icon: Recycle },
-  { href: "/book/single-item", label: "Single Item Delivery", Icon: Package },
-  { href: "/book/commercial-move", label: "Commercial Moving", Icon: Building2 },
-  { href: "/book/international", label: "International Moving", Icon: Globe },
-  { href: "/book/something-else", label: "Custom Request", Icon: Sparkles },
 ];
 
 const POLICY_LINKS: DrawerLinkRow[] = [
@@ -184,6 +187,19 @@ export default function MobileDrawer({
                 onClick={onClose}
               />
             ))}
+            {/* Catch-all entry — jumps to the homepage Services section
+                so users can still reach Single Item / Commercial /
+                International / Custom requests without the drawer
+                opening any booking form directly. */}
+            <button
+              type="button"
+              onClick={() => handleSection("services")}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] text-purple-700 font-medium hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              data-testid="drawer-services-view-all"
+            >
+              <Briefcase className="w-[15px] h-[15px] text-purple-400 shrink-0" />
+              <span>View all services</span>
+            </button>
           </Group>
           <NavRow
             icon={<Compass className="w-[18px] h-[18px] text-gray-500" />}

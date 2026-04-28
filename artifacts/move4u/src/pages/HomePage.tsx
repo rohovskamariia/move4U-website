@@ -146,10 +146,17 @@ export default function HomePage() {
       {/* Why Choose Us — full-width branded purple highlight (desktop + mobile).
           Single bold brand surface using the same violet gradient as the logo
           and primary CTAs. White text, transparent circular icon chips, no
-          inner boxes. Compact list-style layout. */}
+          inner boxes. Compact list-style layout.
+          NOTE: id is intentionally "why-choose-us" — the navbar's "About"
+          link must land on the actual About strip below, not on this
+          section. (Fixed: id="about" used to live here, which made the
+          About link jump between the two sections.) */}
+      {/* scroll-mt uses calc() + env(safe-area-inset-top) so anchor
+          jumps land cleanly under the fixed Navbar on iOS notched
+          devices (iPhone X+ / Dynamic Island) at every breakpoint. */}
       <section
-        id="about"
-        className="py-10 sm:py-16 text-white relative overflow-hidden"
+        id="why-choose-us"
+        className="py-10 sm:py-16 text-white relative overflow-hidden scroll-mt-[calc(84px+env(safe-area-inset-top,0px))] md:scroll-mt-[calc(100px+env(safe-area-inset-top,0px))]"
         style={{
           backgroundImage:
             "linear-gradient(135deg, #5b3fb8 0%, #4a319c 55%, #3a267f 100%)",
@@ -203,8 +210,14 @@ export default function HomePage() {
       </section>
 
       {/* About strip — clean, light call-out. Brand purple lives in the
-          CTA button only, not as a heavy background block. */}
-      <section className="py-14 sm:py-18 bg-white border-y border-gray-100 relative overflow-hidden">
+          CTA button only, not as a heavy background block.
+          The About nav link targets THIS section (id="about"). The
+          scroll-margin-top compensates for the fixed Navbar so the
+          eyebrow + heading aren't tucked under the header on landing. */}
+      <section
+        id="about"
+        className="py-14 sm:py-18 bg-white border-y border-gray-100 relative overflow-hidden scroll-mt-[calc(84px+env(safe-area-inset-top,0px))] md:scroll-mt-[calc(100px+env(safe-area-inset-top,0px))]"
+      >
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <p className="text-[11px] font-semibold tracking-[0.22em] text-purple-700 mb-2.5">
             ABOUT MOVE4U
