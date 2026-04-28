@@ -36,6 +36,12 @@ uri = "file://artifacts/move4u/src/assets/hero/waste_hero_v1.png"
 type = "image"
 title = "waste removal hero workers van"
 
+[[generated]]
+id = "jH1aOvgug0qR9k-onuj7C"
+uri = "file://attached_assets/generated_images/move4u_hero_v4.png"
+type = "image"
+title = "house moving hero v4"
+
 [[outputs]]
 id = "TLaqR2zwqYo7bZyQ2hYHo"
 uri = "file://artifacts/move4u/src/assets/hero/move4u_hero_v1.png"

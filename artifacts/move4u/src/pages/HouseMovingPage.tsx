@@ -22,7 +22,7 @@ import {
   Truck,
   Zap,
 } from "lucide-react";
-import heroImg from "@/assets/hero/move4u_hero_v3.webp";
+import heroImg from "@/assets/hero/move4u_hero_v4.png";
 import vanSmallImg from "@/assets/vans/van_small.webp";
 import vanMediumImg from "@/assets/vans/van_medium.webp";
 import vanLargeImg from "@/assets/vans/van_large.webp";
@@ -164,7 +164,7 @@ export default function HouseMovingPage() {
             visual presence on every viewport — the photo never looks
             taller on one page than the other regardless of how much
             content the right-column quote card has. */}
-        <section className="relative overflow-hidden isolate min-h-[460px] lg:min-h-[600px]">
+        <section className="relative overflow-hidden isolate min-h-[460px] sm:min-h-[500px] md:min-h-[540px] lg:min-h-[560px]">
           {/* Background image */}
           <div className="absolute inset-0 z-0">
             <img
@@ -175,19 +175,17 @@ export default function HouseMovingPage() {
               fetchPriority="high"
               decoding="async"
             />
-            {/* Soft horizontal gradient — darker on the LEFT where the
-                headline sits, fading to fully transparent on the RIGHT
-                behind the white quick-quote card. Pure black (no purple
-                tint) keeps the photo's natural colour and feels more
-                premium than a heavy brand wash. Identical treatment is
-                applied on /waste-removal so the two service heroes
-                feel consistent. */}
+            {/* Soft horizontal readability gradient — pure black, darker
+                on the LEFT where the headline sits and fading to a
+                whisper of darkness on the RIGHT so the white quote card
+                still gets a faint contrast lift without the photo ever
+                looking heavy or filtered. */}
             <div
               aria-hidden="true"
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(to right, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 70%)",
+                  "linear-gradient(to right, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 100%)",
               }}
             />
           </div>

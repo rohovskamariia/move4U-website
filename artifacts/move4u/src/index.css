@@ -567,15 +567,19 @@ body {
 }
 
 /* ----------------------------------------------------------------- */
-/* House Moving hero — keep the action in frame on mobile (where the  */
-/* hero crops a tall portrait window out of a wide landscape photo).  */
-/* "60% 30%" lifts the focus toward the upper-right of the source so  */
-/* both workers and the van's rear stay visible behind the form.      */
-/* Desktop uses default centre alignment — composition is balanced.   */
+/* House Moving hero — anchor the displayed frame to the RIGHT side   */
+/* of the source so the workers + van (composed on the right of the  */
+/* photo) stay in view, leaving the LEFT side as a clean uncluttered */
+/* backdrop for the white headline copy. The same value is used at   */
+/* every breakpoint for consistent cropping; mobile gets a small Y   */
+/* lift so faces don't drop off the bottom in the tall mobile crop.  */
 /* ----------------------------------------------------------------- */
+.house-hero-img {
+  object-position: center right;
+}
 @media (max-width: 1023px) {
   .house-hero-img {
-    object-position: 60% 30%;
+    object-position: 100% 35%;
   }
 }
 

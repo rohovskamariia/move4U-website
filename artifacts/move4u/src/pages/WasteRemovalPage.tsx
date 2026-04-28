@@ -167,7 +167,7 @@ export default function WasteRemovalPage() {
             viewport — the photo never reads taller on one page than
             the other regardless of how much content the right-column
             quote card has. ============================================================ */}
-        <section className="relative overflow-hidden isolate min-h-[460px] lg:min-h-[600px]">
+        <section className="relative overflow-hidden isolate min-h-[460px] sm:min-h-[500px] md:min-h-[540px] lg:min-h-[560px]">
           {/* Background image */}
           <div className="absolute inset-0 z-0">
             <img
