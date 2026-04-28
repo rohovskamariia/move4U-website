@@ -175,17 +175,19 @@ export default function HouseMovingPage() {
               fetchPriority="high"
               decoding="async"
             />
-            {/* Very light diagonal overlay — subtle, not heavy. Keeps
-                the photo natural-looking while giving the white hero
-                copy enough contrast to read comfortably. Stronger on
-                the left where the headline sits, fading to almost
-                nothing on the right behind the white quote card. */}
+            {/* Soft horizontal gradient — darker on the LEFT where the
+                headline sits, fading to fully transparent on the RIGHT
+                behind the white quick-quote card. Pure black (no purple
+                tint) keeps the photo's natural colour and feels more
+                premium than a heavy brand wash. Identical treatment is
+                applied on /waste-removal so the two service heroes
+                feel consistent. */}
             <div
               aria-hidden="true"
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(115deg, rgba(20,12,46,0.42) 0%, rgba(20,12,46,0.26) 55%, rgba(20,12,46,0.12) 100%)",
+                  "linear-gradient(to right, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 70%)",
               }}
             />
           </div>

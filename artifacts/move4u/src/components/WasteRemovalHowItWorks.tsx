@@ -280,10 +280,12 @@ export default function WasteRemovalHowItWorks() {
             return (
               <li
                 key={s.n}
-                className="relative text-center px-2"
+                className="relative text-center px-2 group"
                 data-testid={`waste-step-${s.n}`}
               >
-                <div className="relative z-10 mx-auto w-[54px] h-[54px] rounded-full bg-white ring-2 ring-purple-200 shadow-[0_8px_22px_-8px_rgba(74,49,156,0.45)] flex items-center justify-center mb-4">
+                {/* Hover lift kept identical to HouseMovingHowItWorks
+                    so the two pages share the exact same micro-interaction. */}
+                <div className="relative z-10 mx-auto w-[54px] h-[54px] rounded-full bg-white ring-2 ring-purple-200 shadow-[0_8px_22px_-8px_rgba(74,49,156,0.45)] flex items-center justify-center mb-4 transition-transform transition-shadow duration-200 ease-out group-hover:-translate-y-0.5 group-hover:ring-purple-300 group-hover:shadow-[0_14px_30px_-10px_rgba(74,49,156,0.55)]">
                   <span className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-purple-700 text-white text-[11px] font-bold flex items-center justify-center shadow-[0_3px_8px_-2px_rgba(74,49,156,0.55)]">
                     {s.n}
                   </span>

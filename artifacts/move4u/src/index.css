@@ -567,14 +567,35 @@ body {
 }
 
 /* ----------------------------------------------------------------- */
-/* House Moving hero — on mobile, anchor the photo near the upper     */
-/* portion so the workers/van stay visible instead of being cropped.  */
-/* The hero image is wide-landscape; in a tall mobile container with  */
-/* object-cover, anchoring at "center 30%" keeps the action in frame. */
+/* House Moving hero — keep the action in frame on mobile (where the  */
+/* hero crops a tall portrait window out of a wide landscape photo).  */
+/* "60% 30%" lifts the focus toward the upper-right of the source so  */
+/* both workers and the van's rear stay visible behind the form.      */
+/* Desktop uses default centre alignment — composition is balanced.   */
 /* ----------------------------------------------------------------- */
 @media (max-width: 1023px) {
   .house-hero-img {
     object-position: 60% 30%;
+  }
+}
+
+/* ----------------------------------------------------------------- */
+/* Waste Removal hero — the source photo has 3 workers spread across  */
+/* the full width, with the leftmost worker sitting directly behind   */
+/* the headline copy. Push the visible window to the right so the     */
+/* leftmost worker is partially cropped, leaving the LEFT side mostly */
+/* van + dark interior — a much cleaner backdrop for the white text.  */
+/*                                                                    */
+/* `object-position: 70% center` shows the right ~70% of the source   */
+/* (cropping the leftmost worker), while `70% 30%` on mobile also     */
+/* lifts the focal point so faces stay visible behind the form.       */
+/* ----------------------------------------------------------------- */
+.waste-hero-img {
+  object-position: 70% center;
+}
+@media (max-width: 1023px) {
+  .waste-hero-img {
+    object-position: 70% 30%;
   }
 }
 

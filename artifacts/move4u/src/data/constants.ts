@@ -118,7 +118,9 @@ export const SERVICES = [
   {
     id: "commercial-move",
     title: "Commercial Moving",
-    price: "From £45/hour",
+    // Aligned with the House Moving rate (small van / no helper) so the
+    // hourly rate is consistent everywhere it appears on the site.
+    price: "From £35/hour",
     description: "Professional office and business relocation with flexible scheduling.",
     icon: "Building2",
   },

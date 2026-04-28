@@ -1,0 +1,203 @@
+"}
+Update "How It Works" section on House Moving page.
+
+-------------------------------------
+GOAL
+-------------------------------------
+
+Make desktop version match Waste Removal style.
+
+-------------------------------------
+CHANGES
+-------------------------------------
+
+1. REMOVE slider on desktop
+
+- no auto-slide
+- no animation switching
+- no carousel behavior
+
+-------------------------------------
+
+2. USE static 3-step layout
+
+Display all steps at once:
+
+Step 1 — Step 2 — Step 3
+
+- connected with a horizontal line
+- centered layout
+- equal spacing
+
+-------------------------------------
+
+3. KEEP mobile slider
+
+Mobile stays unchanged:
+- swipe
+- auto-slide
+- dots
+
+-------------------------------------
+
+4. DESIGN STYLE
+
+- match Waste Removal exactly:
+  - icon circles
+  - step numbers
+  - thin connecting line
+  - clean spacing
+
+- add subtle hover effect on desktop
+
+-------------------------------------
+
+FINAL RESULT
+-------------------------------------
+
+Desktop:
+clean, structured, all steps visible
+
+Mobile:
+interactive slider
+
+-----------------------------------
+
+Update the pricing text for the Commercial Moving service card.
+
+-------------------------------------
+CHANGE TEXT
+-------------------------------------
+
+Current:
+From £45/hour
+
+Replace with:
+From £35/hour
+
+-------------------------------------
+IMPORTANT
+-------------------------------------
+
+- Do NOT change layout or spacing
+- Do NOT change font size or styling
+- Do NOT move the position of the price
+
+Only update the text value.
+
+-------------------------------------
+CONSISTENCY CHECK
+-------------------------------------
+
+Make sure this price matches:
+- House Moving pricing
+- Any other sections where hourly rate is mentioned
+
+-------------------------------------
+FINAL RESULT
+-------------------------------------
+
+Price must display clearly as:
+From £35/hour
+
+Design must remain unchanged.
+
+
+
+
+Improve hero images on both House Moving and Waste Removal pages to ensure consistency, readability, and a premium look.
+
+-------------------------------------
+1. DO NOT CHANGE LAYOUT
+-------------------------------------
+
+- Keep EXACT same hero height
+- Keep same image proportions
+- Keep same container sizes
+- Keep same desktop and mobile layout
+
+Only update images and improve readability.
+
+-------------------------------------
+2. IMAGE CONSISTENCY (VERY IMPORTANT)
+-------------------------------------
+
+Images must feel like the same company and brand.
+
+Use images where:
+
+- workers wear similar uniforms (preferably dark or purple tones)
+- similar lighting (natural daylight)
+- similar composition (van + workers loading items)
+- consistent color tone (no heavy filters)
+
+-------------------------------------
+3. IMAGE CONTENT PER PAGE
+-------------------------------------
+
+House Moving:
+- workers carrying boxes or furniture
+
+Waste Removal:
+- workers carrying rubbish, bags, or bulky waste
+
+-------------------------------------
+4. STRICT RULES
+-------------------------------------
+
+- Do NOT replace faces
+- Do NOT use face swap
+- Do NOT use identical people
+
+Images must look natural and realistic.
+
+-------------------------------------
+5. TEXT READABILITY (CRITICAL)
+-------------------------------------
+
+Fix readability issues:
+
+- Keep LEFT side (text area) visually clean
+- Avoid busy background behind text
+- Position people/objects more to the RIGHT
+
+-------------------------------------
+6. ADD SOFT GRADIENT OVERLAY
+-------------------------------------
+
+Add a subtle gradient overlay for readability:
+
+linear-gradient(to right, rgba(0,0,0,0.35), rgba(0,0,0,0))
+
+Rules:
+- Slightly darker on LEFT (for text contrast)
+- Keep RIGHT side natural
+- Do NOT use heavy purple overlay
+- Do NOT darken entire image
+
+-------------------------------------
+7. IMAGE POSITIONING
+-------------------------------------
+
+- Shift main visual elements (workers, van) slightly to the RIGHT
+- Keep LEFT side clean for text
+
+-------------------------------------
+8. FINAL RESULT
+-------------------------------------
+
+Hero sections must look:
+
+- clean
+- balanced
+- consistent across both pages
+- professional
+- easy to read
+
+NOT:
+
+- too dark
+- too bright
+- messy behind text
+- inconsistent between pages
+- stretched or poorly cropped

@@ -173,22 +173,22 @@ export default function WasteRemovalPage() {
             <img
               src={heroImg}
               alt="Move4U team loading bags and an old armchair into a white panel van during a London waste collection"
-              className="house-hero-img w-full h-full object-cover"
+              className="waste-hero-img w-full h-full object-cover"
               loading="eager"
               fetchPriority="high"
               decoding="async"
             />
-            {/* Very light overlay — soft diagonal so the photo still reads
-                as natural and bright while the white headline copy stays
-                comfortably legible. Stronger on the left where the text
-                sits, fading to almost nothing on the right behind the
-                white quick-quote card. */}
+            {/* Soft horizontal gradient — darker on the LEFT where the
+                headline sits, fading to fully transparent on the RIGHT
+                behind the white quick-quote card. Pure black (no purple
+                tint) keeps the photo's natural colour and matches
+                /house-moving so the two service heroes feel consistent. */}
             <div
               aria-hidden="true"
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(115deg, rgba(20,12,46,0.42) 0%, rgba(20,12,46,0.26) 55%, rgba(20,12,46,0.12) 100%)",
+                  "linear-gradient(to right, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 70%)",
               }}
             />
           </div>
