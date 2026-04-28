@@ -181,8 +181,7 @@ export default function WasteRemovalPage() {
             rel="preload"
             as="image"
             href={heroImg}
-            // @ts-expect-error -- React typings lag the spec
-            fetchpriority="high"
+            fetchPriority="high"
           />
           {/* Background image */}
           <div className="absolute inset-0 z-0">

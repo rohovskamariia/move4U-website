@@ -1,0 +1,106 @@
+"}
+Improve the Waste Removal hero image to better match the service context.
+
+-------------------------------------
+KEEP
+-------------------------------------
+
+- Keep current layout
+- Keep hero height
+- Keep text and form position
+- Keep gradient overlay
+
+-------------------------------------
+PROBLEM
+-------------------------------------
+
+Current image looks too similar to house moving.
+
+It does not clearly show waste removal.
+
+-------------------------------------
+FIX
+-------------------------------------
+
+Replace Waste Removal hero image with one that clearly shows:
+
+- black rubbish bags
+- waste being loaded into van
+- slightly messy but clean environment
+- 2 workers (not 3)
+- workers wearing similar purple/dark uniforms
+
+-------------------------------------
+COMPOSITION
+-------------------------------------
+
+- Workers placed more to the RIGHT
+- LEFT side must stay clean for text
+- Keep good lighting (natural daylight)
+
+-------------------------------------
+IMPORTANT
+-------------------------------------
+
+- Do NOT use completely different style
+- Do NOT use bright or unrealistic images
+- Do NOT change layout
+
+-------------------------------------
+RESULT
+-------------------------------------
+
+Image should instantly communicate:
+"This is waste removal service"
+while still matching the same Move4U brand style 
+
+}
+Simplify the "Additional stop" section in Waste Removal booking.
+
+-------------------------------------
+GOAL
+-------------------------------------
+
+Make the UI clean, minimal, and easy to use.
+
+-------------------------------------
+REMOVE
+-------------------------------------
+
+- Remove all long explanatory text
+- Remove instructions about stairs/lifts in this section
+- Remove multi-line descriptions
+
+-------------------------------------
+KEEP ONLY
+-------------------------------------
+
+Title:
+"Additional stop (optional)"
+
+Button:
+"+ Add another stop"
+
+-------------------------------------
+STYLE
+-------------------------------------
+
+- Keep it minimal and clean
+- Similar to modern apps (Uber/Bolt style)
+- No unnecessary text
+
+-------------------------------------
+IMPORTANT
+-------------------------------------
+
+Do NOT change functionality.
+Only simplify UI and remove clutter.
+
+-------------------------------------
+RESULT
+-------------------------------------
+
+User sees a clean simple option:
+"+ Add another stop"
+
+No confusion, no reading, faster booking

@@ -48,6 +48,12 @@ uri = "file://attached_assets/generated_images/move4u_waste_hero_v2.png"
 type = "image"
 title = "waste hero v2 matching"
 
+[[generated]]
+id = "2U8LeWEd5GbAOyqCX_IvK"
+uri = "file://attached_assets/generated_images/move4u_waste_hero_v3.png"
+type = "image"
+title = "waste hero v3 black bags"
+
 [[outputs]]
 id = "TLaqR2zwqYo7bZyQ2hYHo"
 uri = "file://artifacts/move4u/src/assets/hero/move4u_hero_v1.png"

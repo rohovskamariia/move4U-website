@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import { Plus, X, MapPin } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import AddressStep from "./AddressStep";
 
 /**
@@ -47,23 +47,22 @@ export default function ExtraStopsSection({ stops, setStops }: ExtraStopsSection
 
   return (
     <div className="border-t border-gray-100 pt-4">
-      <div className="flex items-baseline justify-between gap-3 mb-1">
+      {/* Minimal header — single title line, no explanatory paragraph.
+          Uber / Bolt style: the user just sees a clean optional control
+          and a button to add a stop. The detailed access questions still
+          appear inside each stop card once added, so functionality is
+          unchanged — only the surrounding copy is simplified. */}
+      <div className="flex items-baseline justify-between gap-3 mb-3">
         <p className="text-sm font-semibold text-gray-700">
-          Additional stops on the route{" "}
+          Additional stop{" "}
           <span className="text-gray-400 font-normal">(optional)</span>
         </p>
         {stops.length > 0 && (
           <span className="text-[11px] text-gray-400">
-            {stops.length} stop{stops.length === 1 ? "" : "s"} added
+            {stops.length} added
           </span>
         )}
       </div>
-      <p className="text-xs text-gray-500 mb-3 leading-relaxed">
-        If you need to collect or deliver items at more than one extra address
-        between the pickup and the final destination, add those stops here.
-        We'll ask the same access questions as for pickup and drop-off so the
-        team arrives prepared for stairs, lifts, and floor levels.
-      </p>
 
       {stops.length > 0 && (
         <div className="space-y-3 mb-3">
@@ -120,8 +119,7 @@ export default function ExtraStopsSection({ stops, setStops }: ExtraStopsSection
         data-testid="add-extra-stop"
       >
         <Plus className="w-4 h-4" />
-        {stops.length === 0 ? "Add an additional stop" : "Add another stop"}
-        {stops.length === 0 && <MapPin className="w-3.5 h-3.5 opacity-50" />}
+        Add another stop
       </button>
     </div>
   );
