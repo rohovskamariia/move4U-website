@@ -494,7 +494,9 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
       <div className="space-y-6">
         {/* Pickup address */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Pickup address</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+            Pickup address <span className="text-red-500">*</span>
+          </label>
           <AddressAutocomplete
             value={pickup}
             onChange={handlePickupChange}
@@ -506,7 +508,7 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
             <div className="mt-3">
               <label className="block text-xs font-medium text-gray-700 mb-1.5">
                 House / flat / unit number
-                <span className="text-purple-700"> *</span>
+                <span className="text-red-500"> *</span>
               </label>
               <div className="relative">
                 <Hash className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />

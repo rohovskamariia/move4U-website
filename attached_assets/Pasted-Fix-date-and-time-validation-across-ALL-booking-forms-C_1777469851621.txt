@@ -1,0 +1,175 @@
+Fix date and time validation across ALL booking forms.
+
+Current issue:
+Customers can select past dates and past time slots. This is not acceptable.
+
+Apply this to ALL booking/service forms:
+- House Moving
+- Waste Removal
+- Single Item Delivery
+- Commercial Moving
+- International Moving
+- any other booking form
+
+-------------------------------------
+DATE RULES
+-------------------------------------
+
+- Disable all past dates in the date picker.
+- Customer can only select today or future dates.
+- Past dates must not be clickable.
+- This must work on mobile and desktop.
+
+-------------------------------------
+TIME SLOT RULES
+-------------------------------------
+
+If customer selects TODAY:
+
+Disable time slots that have already passed.
+
+Example:
+If current time is 13:30:
+- Morning (8am–12pm) = disabled
+- Afternoon (12pm–5pm) = available only if still possible
+- Evening (5pm–12am) = available
+
+If current time is after 17:00:
+- Morning = disabled
+- Afternoon = disabled
+- Evening = available only if still possible
+
+If current time is after evening slot cut-off:
+- Today should not be available, or all slots disabled with message:
+  "Please select a future date."
+
+If customer selects FUTURE DATE:
+- All time slots are available.
+
+-------------------------------------
+VALIDATION
+-------------------------------------
+
+Even if a past date/time is somehow selected manually:
+- Prevent form submission.
+- Show error:
+"Please select a valid future date and time."
+
+-------------------------------------
+IMPORTANT
+-------------------------------------
+
+- Do NOT change layout
+- Do NOT change styling
+- Do NOT change booking logic
+- Only fix date/time availability and validation
+
+-------------------------------------
+RESULT
+-------------------------------------
+
+Customers can only book valid upcoming dates and valid upcoming time slots.
+Works consistently on mobile and desktop.
+
+
+Fix required fields and address autocomplete across all booking forms.
+
+-------------------------------------
+1. INTERNATIONAL MOVING ADDRESS AUTOCOMPLETE
+-------------------------------------
+
+Current issue:
+International Moving address fields do not have autocomplete like Custom Request.
+
+Fix:
+- Add the same address autocomplete system used in Custom Request.
+- Apply it to:
+  - Pickup location (UK)
+  - Delivery location / destination
+
+Do NOT change layout or design.
+
+-------------------------------------
+2. REQUIRED FIELD MARKERS
+-------------------------------------
+
+Current issue:
+Some required fields do not show a * so customers may not know they must complete them.
+
+Fix across ALL booking forms:
+- House Moving
+- Waste Removal
+- Single Item Delivery
+- Commercial Moving
+- International Moving
+- Custom Request
+
+Every required field must clearly show a red *.
+
+Required fields:
+- Pickup address / pickup location
+- Drop-off address / delivery location, where required
+- Preferred date, where required
+- Preferred time, where required
+- Full name
+- Phone number
+- Service-specific required fields
+
+Optional fields must say “(optional)”.
+
+-------------------------------------
+3. VALIDATION UI
+-------------------------------------
+
+If a required field is empty:
+- Highlight the field border in red
+- Show a short error message under the field:
+  "This field is required."
+
+If phone number is invalid:
+- Show:
+  "Please enter a valid phone number."
+
+Do not allow submit until all required fields are valid.
+
+-------------------------------------
+IMPORTANT
+-------------------------------------
+
+- Do NOT change pricing logic
+- Do NOT change booking flow
+- Do NOT redesign forms
+- Only improve required markers, validation, and address autocomplete
+
+-------------------------------------
+RESULT
+-------------------------------------
+
+Customers clearly understand what must be completed.
+Required fields are marked with red *.
+Invalid fields are highlighted clearly.
+International Moving has address autocomplete like Custom Request.
+
+Fix Telegram photo storage.
+
+Current issue:
+Photos sent to Telegram can disappear or stop opening because Telegram file links are temporary.
+
+Requirement:
+Do NOT rely on Telegram temporary file URLs.
+
+Fix:
+- When a customer uploads a photo, save it permanently in our storage/database system.
+- Store the permanent image URL/path in the booking record.
+- Telegram should receive the photo/message, but admin panel must use the saved permanent image, not Telegram’s temporary link.
+- Photos must remain visible in admin even after days/weeks.
+
+Apply to:
+- booking form uploads
+- admin booking photos
+- Telegram notification photos
+
+Do NOT change layout or booking flow.
+
+Result:
+Customer photos are permanently saved and always visible in admin panel.

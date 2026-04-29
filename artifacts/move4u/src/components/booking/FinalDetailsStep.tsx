@@ -3,6 +3,14 @@ import { Loader2, ChevronDown } from "lucide-react";
 import BookingTermsNotice from "./BookingTermsNotice";
 import PhoneField from "./PhoneField";
 import { isValidPhone, isValidEmail, toE164 } from "@/lib/validators";
+import {
+  TIME_WINDOWS,
+  todayIso,
+  isToday,
+  isSlotDisabled as slotDisabled,
+  allSlotsPassed,
+  isValidFutureDateTime,
+} from "@/lib/dateTime";
 
 interface FinalDetailsStepProps {
   onSubmit: (data: {
@@ -23,39 +31,19 @@ interface FinalDetailsStepProps {
 
 const CONTACT_METHODS = ["Phone", "WhatsApp", "Email", "Text message", "Any"];
 
-// Each window carries its END hour (24h) so we can grey out windows that
-// have already finished when the user picks today as the move date.
-// e.g. at 17:00 today, Morning (ends 12) and Afternoon (ends 17) are out.
-const TIME_WINDOWS: { label: string; endHour: number }[] = [
-  { label: "Morning (8am–12pm)", endHour: 12 },
-  { label: "Afternoon (12pm–5pm)", endHour: 17 },
-  { label: "Evening (5pm–12am)", endHour: 24 },
-];
-
-// Parse a "YYYY-MM-DD" value as a LOCAL calendar date. We never use
-// `new Date(dateStr)` for date-only inputs because the JS spec treats the
-// short ISO form as UTC midnight, which silently shifts the day in any
-// non-UTC zone (a London user on BST who picked "today" would see it
-// classified as "yesterday" or vice versa).
-function isToday(dateStr: string): boolean {
-  if (!dateStr) return false;
-  const parts = dateStr.split("-");
-  if (parts.length !== 3) return false;
-  const [y, m, d] = parts.map((p) => parseInt(p, 10));
-  if (!y || !m || !d) return false;
-  const t = new Date();
-  return y === t.getFullYear() && m === t.getMonth() + 1 && d === t.getDate();
-}
-
 export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetailsStepProps) {
   const [date, setDate] = useState("");
   const [timeWindow, setTimeWindow] = useState("");
   const [name, setName] = useState("");
+  const [nameTouched, setNameTouched] = useState(false);
   const [phone, setPhone] = useState("");
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [email, setEmail] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
   const [contactMethod, setContactMethod] = useState("");
+  const [contactMethodTouched, setContactMethodTouched] = useState(false);
+  const [dateTouched, setDateTouched] = useState(false);
+  const [timeTouched, setTimeTouched] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -74,10 +62,11 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
   }, []);
 
   // For "today" bookings, work out which slots are already in the past.
-  // For any future date, every slot stays enabled.
+  // For any future date, every slot stays enabled. Delegates to the
+  // shared lib so International Moving uses the same rule.
   const todaySelected = isToday(date);
-  const nowHour = new Date(nowTick).getHours();
-  const isSlotDisabled = (endHour: number) => todaySelected && nowHour >= endHour;
+  const nowDate = new Date(nowTick);
+  const isSlotDisabled = (endHour: number) => slotDisabled(endHour, date, nowDate);
 
   // If the selected slot becomes invalid — because the user changed the
   // date to today, or the clock crossed an hour boundary — clear it so
@@ -111,16 +100,26 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Mark every required field as touched so the inline error messages
+    // appear if the customer tried to submit a half-empty form.
+    setNameTouched(true);
     setPhoneTouched(true);
+    setContactMethodTouched(true);
+    setDateTouched(true);
+    setTimeTouched(true);
     if (emailRequired || email) setEmailTouched(true);
     if (!canSubmit) return;
     // Final guard: re-check the chosen window against the wall clock at
-    // the moment of submit, in case the user lingered past the slot end
-    // since they made the selection.
-    const slot = TIME_WINDOWS.find((w) => w.label === timeWindow);
-    if (slot && isToday(date) && new Date().getHours() >= slot.endHour) {
-      setTimeWindow("");
-      setError("That time slot has just passed. Please choose another.");
+    // the moment of submit. Catches both (a) a user who lingered past
+    // the slot end since making the selection, and (b) anyone who
+    // somehow forced a past date past the date input's `min` attribute
+    // (e.g. typed it directly on a mobile browser that ignores `min`).
+    if (!isValidFutureDateTime(date, timeWindow)) {
+      const slot = TIME_WINDOWS.find((w) => w.label === timeWindow);
+      if (slot && isToday(date) && new Date().getHours() >= slot.endHour) {
+        setTimeWindow("");
+      }
+      setError("Please select a valid future date and time.");
       return;
     }
     // Reject any second submit attempt outright.
@@ -157,18 +156,31 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
         We will contact you to confirm your booking and final price.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Preferred date</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Preferred date <span className="text-red-500">*</span>
+          </label>
           <input
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
-            min={new Date().toISOString().split("T")[0]}
+            onChange={(e) => {
+              setDate(e.target.value);
+              setDateTouched(true);
+            }}
+            onBlur={() => setDateTouched(true)}
+            min={todayIso()}
             required
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className={`w-full border rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 ${
+              dateTouched && !date
+                ? "border-red-300 focus:ring-red-400"
+                : "border-gray-200 focus:ring-purple-500"
+            }`}
             data-testid="final-date"
           />
+          {dateTouched && !date && (
+            <p className="text-[11px] text-red-600 mt-1.5">This field is required.</p>
+          )}
           {isSameDayOrLastMinute && (
             <div
               className="mt-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800"
@@ -183,7 +195,9 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Preferred time</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Preferred time <span className="text-red-500">*</span>
+          </label>
           <div className="flex flex-col gap-2">
             {TIME_WINDOWS.map((tw) => {
               const disabled = isSlotDisabled(tw.endHour);
@@ -192,7 +206,11 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
                 <button
                   key={tw.label}
                   type="button"
-                  onClick={() => !disabled && setTimeWindow(tw.label)}
+                  onClick={() => {
+                    if (disabled) return;
+                    setTimeWindow(tw.label);
+                    setTimeTouched(true);
+                  }}
                   disabled={disabled}
                   aria-disabled={disabled}
                   title={disabled ? "This time has already passed today" : undefined}
@@ -215,7 +233,7 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
               );
             })}
           </div>
-          {todaySelected && TIME_WINDOWS.every((w) => isSlotDisabled(w.endHour)) && (
+          {todaySelected && allSlotsPassed(date, nowDate) && (
             <p
               className="mt-2 text-[12px] font-medium text-red-600"
               data-testid="time-windows-all-passed"
@@ -223,26 +241,39 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
               Selected date is no longer available. Please choose another date.
             </p>
           )}
+          {timeTouched && !timeWindow && date && !allSlotsPassed(date, nowDate) && (
+            <p className="text-[11px] text-red-600 mt-1.5">This field is required.</p>
+          )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Full name <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onBlur={() => setNameTouched(true)}
             placeholder="Your full name"
             required
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className={`w-full border rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 ${
+              nameTouched && !name.trim()
+                ? "border-red-300 focus:ring-red-400"
+                : "border-gray-200 focus:ring-purple-500"
+            }`}
             data-testid="final-name"
           />
+          {nameTouched && !name.trim() && (
+            <p className="text-[11px] text-red-600 mt-1.5">This field is required.</p>
+          )}
         </div>
 
         {/* Phone + email side-by-side on desktop, stacked on mobile */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Phone number <span className="text-purple-700">*</span>
+              Phone number <span className="text-red-500">*</span>
             </label>
             <PhoneField
               value={phone}
@@ -267,7 +298,7 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Email{" "}
               {emailRequired ? (
-                <span className="text-purple-700">*</span>
+                <span className="text-red-500">*</span>
               ) : (
                 <span className="text-gray-400 font-normal">(optional)</span>
               )}
@@ -303,13 +334,21 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Preferred contact method
+            Preferred contact method <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <select
               value={contactMethod}
-              onChange={(e) => setContactMethod(e.target.value)}
-              className="w-full appearance-none border border-gray-200 rounded-xl px-4 py-3 pr-10 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              onChange={(e) => {
+                setContactMethod(e.target.value);
+                setContactMethodTouched(true);
+              }}
+              onBlur={() => setContactMethodTouched(true)}
+              className={`w-full appearance-none border rounded-xl px-4 py-3 pr-10 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 ${
+                contactMethodTouched && !contactMethod
+                  ? "border-red-300 focus:ring-red-400"
+                  : "border-gray-200 focus:ring-purple-500"
+              }`}
               data-testid="final-contact-method"
             >
               <option value="">Select an option…</option>
@@ -321,6 +360,9 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
             </select>
             <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
+          {contactMethodTouched && !contactMethod && (
+            <p className="text-[11px] text-red-600 mt-1.5">This field is required.</p>
+          )}
         </div>
 
         {error && (
