@@ -141,13 +141,17 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
 
     if (!canSubmit) return;
 
-    // Final guard: the user might have lingered past a slot end since
-    // selecting it, or forced a past date past the input's `min`.
-    if (form.date && form.timeWindow && !isValidFutureDateTime(form.date, form.timeWindow)) {
-      setSubmitError("Please select a valid future date and time.");
+    // Past-date guard FIRST — the date input's `min` blocks the picker
+    // UI but mobile keyboards can sometimes type past it. Use a clear,
+    // dedicated error message before falling through to the time-slot
+    // check, so the customer knows exactly what's wrong.
+    if (form.date && isPastDate(form.date)) {
+      setSubmitError("Please select today or a future date.");
       return;
     }
-    if (form.date && isPastDate(form.date)) {
+    // If a time slot is also picked, re-check it against the wall clock
+    // at submit time in case the user lingered past its end hour.
+    if (form.date && form.timeWindow && !isValidFutureDateTime(form.date, form.timeWindow)) {
       setSubmitError("Please select a valid future date and time.");
       return;
     }
@@ -216,19 +220,23 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
         Please contact us directly for a final international moving quote.
       </div>
 
-      {/* Pickup — UK address, autocompleted via Google Places like the
-          rest of the site so the customer can pick a real address. */}
+      {/* Pickup — bi-directional: customers may move UK→EU, EU→UK, or
+          even EU→EU, so both Pickup AND Delivery use the global mode of
+          the address autocomplete. Smart-bias inside the component snaps
+          back to UK results the moment the user starts typing what looks
+          like a UK postcode. */}
       <div onBlur={() => setPickupTouched(true)}>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-          Pickup location (UK) <span className="text-red-500">*</span>
+          Pickup location <span className="text-red-500">*</span>
         </label>
         <AddressAutocomplete
+          mode="global"
           value={form.pickupLocation}
           onChange={(val) => {
             handleChange("pickupLocation", val);
             if (val) setPickupTouched(true);
           }}
-          placeholder="Your UK address or postcode..."
+          placeholder="UK postcode, city, or international address..."
           testId="intl-pickup-input"
         />
         {pickupTouched && !form.pickupLocation && (
@@ -236,19 +244,18 @@ export default function InternationalFlow({ onBack }: InternationalFlowProps) {
         )}
       </div>
 
-      {/* Delivery — anywhere in the world, so we don't restrict to UK
-          postcodes; we still use the same autocomplete component. */}
       <div onBlur={() => setDeliveryTouched(true)}>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">
           Delivery location <span className="text-red-500">*</span>
         </label>
         <AddressAutocomplete
+          mode="global"
           value={form.deliveryLocation}
           onChange={(val) => {
             handleChange("deliveryLocation", val);
             if (val) setDeliveryTouched(true);
           }}
-          placeholder="Destination country / city / address..."
+          placeholder="Destination city, country, or address..."
           testId="intl-delivery-input"
         />
         {deliveryTouched && !form.deliveryLocation && (

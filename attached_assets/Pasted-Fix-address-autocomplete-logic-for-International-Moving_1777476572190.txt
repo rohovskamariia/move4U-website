@@ -1,0 +1,151 @@
+Fix address autocomplete logic for International Moving (bi-directional logic).
+
+Current issue:
+Address autocomplete is restricted incorrectly (UK-only or not flexible).
+
+-------------------------------------
+GOAL
+-------------------------------------
+
+Allow bookings where:
+- UK → Europe
+- Europe → UK
+- Europe → Europe (if needed)
+
+-------------------------------------
+REQUIREMENTS
+-------------------------------------
+
+Pickup location:
+- Must support BOTH:
+  - UK addresses
+  - International addresses
+
+Delivery location:
+- Must support BOTH:
+  - UK addresses
+  - International addresses
+
+-------------------------------------
+TECHNICAL LOGIC
+-------------------------------------
+
+- REMOVE hard restriction to country "gb"
+- Use global autocomplete (Google Places or similar)
+
+- Allow:
+  - city only (e.g. Milan, Paris)
+  - full address
+  - postcode (UK)
+  - country + city
+
+-------------------------------------
+UX IMPROVEMENT (IMPORTANT)
+-------------------------------------
+
+When selecting suggestion:
+- Show: City, Country (e.g. Milan, Italy)
+- Not just street-level addresses
+
+-------------------------------------
+OPTIONAL (SMART UX)
+-------------------------------------
+
+If user types:
+- UK postcode → prioritize UK results
+- City like "Milan" → prioritize international results
+
+-------------------------------------
+VALIDATION
+-------------------------------------
+
+- At least ONE of the locations must be UK (optional rule if needed for business logic)
+- Prevent empty addresses
+
+-------------------------------------
+IMPORTANT
+-------------------------------------
+
+- Do NOT change layout
+- Do NOT change form structure
+- Do NOT break existing booking logic
+
+-------------------------------------
+RESULT
+-------------------------------------
+
+Users can book:
+- UK → EU
+- EU → UK
+- any realistic international move
+
+Autocomplete works globally and feels professional.
+
+
+Fix past date and past time selection properly across all booking forms.
+
+Current issue:
+Past dates can still be selected and submitted, for example 16 April 2026.
+
+This must be fully blocked.
+
+Apply to:
+- House Moving
+- Waste Removal
+- Single Item Delivery
+- Commercial Moving
+- International Moving
+- Custom Request
+
+-------------------------------------
+DATE PICKER RULES
+-------------------------------------
+
+- Disable all dates before today.
+- Past dates must not be selectable.
+- Date picker min date must be today.
+- If browser/native picker still allows a past date, reject it in validation.
+
+-------------------------------------
+SUBMIT VALIDATION RULES
+-------------------------------------
+
+Before submit:
+- Compare selected date with today's date.
+- If selected date is before today:
+  - block submit
+  - show error:
+    "Please select today or a future date."
+
+-------------------------------------
+TIME SLOT RULES
+-------------------------------------
+
+If selected date is today:
+- Disable past time slots.
+- Do not allow past time slots to be selected.
+
+If current time is after a time slot:
+- Morning must be disabled after 12:00
+- Afternoon must be disabled after 17:00
+- Evening must be disabled after 23:59
+
+If selected date is future:
+- All time slots are available.
+
+-------------------------------------
+IMPORTANT
+-------------------------------------
+
+- Do NOT only visually disable dates.
+- Add validation before submit.
+- Do NOT change layout.
+- Do NOT change booking steps.
+- Only fix date/time validation logic.
+
+-------------------------------------
+RESULT
+-------------------------------------
+
+Past dates cannot be selected or submitted anywhere.
+Past time slots cannot be selected or submitted for today.

@@ -26,6 +26,23 @@ interface AddressAutocompleteProps {
    * (a11y — screen readers + click-to-focus).
    */
   id?: string;
+  /**
+   * Geographic mode for suggestions.
+   *
+   * - `"uk"` (default) — Restricts suggestions to GB with a Greater London
+   *   bias and street-level types only. Used by every domestic flow
+   *   (House Moving, Single Item, Commercial, Waste Removal, Custom Request).
+   *
+   * - `"global"` — Allows worldwide suggestions including city / region /
+   *   country level results. Used by International Moving so the customer
+   *   can pick "Milan, Italy" or "Paris, France" for the destination, AND
+   *   pick UK addresses on either side (UK→EU, EU→UK, EU→EU).
+   *
+   *   Smart bias: when the user starts typing what looks like a UK
+   *   postcode the suggestions snap back to GB so they get UK results
+   *   first; otherwise results stay global.
+   */
+  mode?: "uk" | "global";
 }
 
 /* ------------------------------------------------------------------ */
@@ -115,6 +132,23 @@ const ADDRESS_PRIMARY_TYPES = [
   "route",
 ];
 
+/**
+ * Broader set used for global (international) searches so the user can
+ * pick city-level (e.g. "Milan, Italy") or country-level results, not just
+ * a specific street address. Google's `includedPrimaryTypes` accepts at
+ * most 5 entries, so we bundle the most useful global picks.
+ */
+const GLOBAL_ADDRESS_PRIMARY_TYPES = [
+  "street_address",
+  "premise",
+  "postal_code",
+  "locality",
+  "country",
+];
+
+/** Loose UK-postcode prefix detector for smart biasing while typing. */
+const UK_POSTCODE_PREFIX_RE = /^\s*[A-Z]{1,2}[0-9][0-9A-Z]?(\s*[0-9][A-Z]{2})?/i;
+
 /* ----------------------------------------------------------------- */
 /* Google Maps loader — single shared promise across the whole app.   */
 /* ----------------------------------------------------------------- */
@@ -175,7 +209,11 @@ function buildFullAddress(place: PlaceLike): string {
       pick(components, "locality") ||
       pick(components, "administrative_area_level_2");
     const postcode = pick(components, "postal_code");
-    const country = pick(components, "country") || "UK";
+    // No UK fallback for the country — that broke international results
+    // by tagging "Milan, Italy" as "Milan, Italy, UK" or worse "Milan, UK".
+    // If Google didn't return a country, leave it blank and we'll fall
+    // back to the formatted address further down.
+    const country = pick(components, "country");
 
     const componentPostcodeLooksFull = /\b[A-Z]{1,2}[0-9][0-9A-Z]?\s*[0-9][A-Z]{2}\b/i.test(postcode);
     const formattedHasFullPostcode = place.formattedAddress
@@ -219,6 +257,7 @@ export default function AddressAutocomplete({
   placeholder,
   testId,
   id,
+  mode = "uk",
 }: AddressAutocompleteProps) {
   const [query, setQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<AutocompleteSuggestion[]>([]);
@@ -317,16 +356,27 @@ export default function AddressAutocomplete({
           sessionTokenRef.current = new TokenCtor();
         }
         setLoading(true);
+        // Smart-bias for global mode: if the input starts with a UK
+        // postcode pattern the user is clearly looking for a UK address,
+        // so snap back to GB-only / London-biased like the domestic
+        // flows. Otherwise allow worldwide results so customers can
+        // pick "Milan", "Paris", "Madrid", etc.
+        const looksUk = mode === "global" && UK_POSTCODE_PREFIX_RE.test(trimmed);
+        const restrictToUk = mode === "uk" || looksUk;
+        const req: AutocompleteRequest = {
+          input: trimmed,
+          sessionToken: sessionTokenRef.current,
+          includedPrimaryTypes:
+            restrictToUk ? ADDRESS_PRIMARY_TYPES : GLOBAL_ADDRESS_PRIMARY_TYPES,
+          language: "en-GB",
+        };
+        if (restrictToUk) {
+          req.includedRegionCodes = ["gb"];
+          req.locationBias = locationBias;
+          req.region = "gb";
+        }
         const { suggestions: sugg } =
-          await SuggestionApi.fetchAutocompleteSuggestions({
-            input: trimmed,
-            sessionToken: sessionTokenRef.current,
-            includedRegionCodes: ["gb"],
-            includedPrimaryTypes: ADDRESS_PRIMARY_TYPES,
-            locationBias,
-            language: "en-GB",
-            region: "gb",
-          });
+          await SuggestionApi.fetchAutocompleteSuggestions(req);
         // Drop stale responses: only apply if this is still the latest
         // in-flight request and the user hasn't typed something different.
         if (
@@ -343,7 +393,7 @@ export default function AddressAutocomplete({
         if (myId === requestIdRef.current) setLoading(false);
       }
     },
-    [ready, locationBias],
+    [ready, locationBias, mode],
   );
 
   const handleQueryChange = (q: string) => {

@@ -7,6 +7,7 @@ import {
   TIME_WINDOWS,
   todayIso,
   isToday,
+  isPastDate,
   isSlotDisabled as slotDisabled,
   allSlotsPassed,
   isValidFutureDateTime,
@@ -109,11 +110,19 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
     setTimeTouched(true);
     if (emailRequired || email) setEmailTouched(true);
     if (!canSubmit) return;
+    // Past-date guard FIRST. The date input's `min` blocks the picker
+    // UI, but some mobile browsers (notably some Android keyboards)
+    // ignore `min` for typed input — so we re-verify here and show a
+    // dedicated, clear error message before falling through to the
+    // time-slot check.
+    if (isPastDate(date)) {
+      setError("Please select today or a future date.");
+      return;
+    }
     // Final guard: re-check the chosen window against the wall clock at
-    // the moment of submit. Catches both (a) a user who lingered past
-    // the slot end since making the selection, and (b) anyone who
-    // somehow forced a past date past the date input's `min` attribute
-    // (e.g. typed it directly on a mobile browser that ignores `min`).
+    // the moment of submit. Catches a user who lingered past the slot
+    // end since making the selection (e.g. picked Morning at 11:55 then
+    // submitted at 12:01).
     if (!isValidFutureDateTime(date, timeWindow)) {
       const slot = TIME_WINDOWS.find((w) => w.label === timeWindow);
       if (slot && isToday(date) && new Date().getHours() >= slot.endHour) {

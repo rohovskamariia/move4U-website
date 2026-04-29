@@ -101,10 +101,11 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
 
     if (!canSubmit) return;
 
-    // If the user typed a past date directly past the input's `min`,
-    // refuse and show the standard validation message.
+    // If the user typed a past date directly past the input's `min`
+    // (some mobile browsers ignore the `min` attribute on text-typed
+    // dates), refuse and show the dedicated past-date message.
     if (form.date && isPastDate(form.date)) {
-      setSubmitError("Please select a valid future date and time.");
+      setSubmitError("Please select today or a future date.");
       return;
     }
 
