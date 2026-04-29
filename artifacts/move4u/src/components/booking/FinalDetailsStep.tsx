@@ -254,7 +254,7 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
             />
             {showPhoneError ? (
               <p className="text-[11px] text-red-600 mt-1.5" data-testid="phone-error">
-                Please enter a valid phone number for the selected country.
+                Please enter a valid phone number.
               </p>
             ) : (
               <p className="text-[11px] text-gray-500 mt-1.5">

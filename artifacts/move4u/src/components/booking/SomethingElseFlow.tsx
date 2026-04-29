@@ -136,7 +136,7 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
             testId="se-phone"
           />
           {showPhoneError ? (
-            <p className="text-[11px] text-red-600 mt-1.5">Please enter a valid phone number for the selected country.</p>
+            <p className="text-[11px] text-red-600 mt-1.5">Please enter a valid phone number.</p>
           ) : (
             <p className="text-[11px] text-gray-500 mt-1.5">Pick your country code, then your number — no leading 0 needed.</p>
           )}
