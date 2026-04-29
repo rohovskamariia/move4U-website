@@ -174,8 +174,24 @@ export default function FinalDetailsStep({ onSubmit, onSubmitted }: FinalDetails
             type="date"
             value={date}
             onChange={(e) => {
-              setDate(e.target.value);
+              const v = e.target.value;
               setDateTouched(true);
+              // Belt-and-braces past-date block. The `min` attribute
+              // covers desktop and most mobile browsers, but some mobile
+              // date pickers (notably certain Android Chrome / WebView
+              // versions and Samsung Internet) ignore `min` and let the
+              // user scroll to past dates. We reject those at selection
+              // time so the user gets immediate, inline feedback instead
+              // of waiting until submit.
+              if (v && isPastDate(v)) {
+                setDate("");
+                setError("Please select today or a future date.");
+                return;
+              }
+              setDate(v);
+              if (error === "Please select today or a future date.") {
+                setError("");
+              }
             }}
             onBlur={() => setDateTouched(true)}
             min={todayIso()}

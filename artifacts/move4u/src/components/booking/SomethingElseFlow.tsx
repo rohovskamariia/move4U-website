@@ -221,7 +221,20 @@ export default function SomethingElseFlow({ onBack }: SomethingElseFlowProps) {
         <input
           type="date"
           value={form.date}
-          onChange={(e) => handleChange("date", e.target.value)}
+          onChange={(e) => {
+            const v = e.target.value;
+            // Belt-and-braces past-date block — see FinalDetailsStep for
+            // the rationale. Some mobile date pickers ignore `min`.
+            if (v && isPastDate(v)) {
+              handleChange("date", "");
+              setSubmitError("Please select today or a future date.");
+              return;
+            }
+            handleChange("date", v);
+            if (submitError === "Please select today or a future date.") {
+              setSubmitError("");
+            }
+          }}
           min={todayIso()}
           className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
           data-testid="se-date"
