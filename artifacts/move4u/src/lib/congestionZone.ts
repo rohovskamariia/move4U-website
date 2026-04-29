@@ -128,21 +128,8 @@ export function isLikelyInCongestionZone(
   return false;
 }
 
-/**
- * Count the number of CCZ entries on a route. Each address that sits in
- * the zone counts as one entry — pickup AND drop-off both in the zone
- * means two entries, so the customer is billed £18 × 2 = £36.
- *
- * Empty / blank addresses are skipped.
- */
-export function countCongestionEntries(
-  addresses: (string | undefined | null)[],
-): number {
-  let count = 0;
-  for (const raw of addresses) {
-    const a = (raw ?? "").trim();
-    if (!a) continue;
-    if (checkAddress(a).matched) count++;
-  }
-  return count;
-}
+// NOTE: Pricing rule is now ONE flat £18 CCZ per booking when the route
+// enters the zone (matches TfL's daily charge model — one fee per vehicle
+// per day, not per address). Use `isLikelyInCongestionZone` above. The
+// previous per-address `countCongestionEntries` helper was removed to
+// prevent accidental regressions to the multiplied-charge behaviour.

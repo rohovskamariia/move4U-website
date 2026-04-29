@@ -13,7 +13,7 @@ import {
   getFloorLabelFromValue,
 } from "./StairsAccessSection";
 import { computeBaseServiceCharge, isSingleItem } from "@/lib/pricing";
-import { countCongestionEntries } from "@/lib/congestionZone";
+import { isLikelyInCongestionZone } from "@/lib/congestionZone";
 import { outsideM25MilesForRoute } from "@/lib/m25";
 import { submitBooking, uploadPhotos } from "@/lib/api";
 import AddressStep from "./AddressStep";
@@ -346,8 +346,12 @@ export default function StandardBookingFlow({
                 dropoffAddress,
                 ...cleanStopsForPrice.map((s) => s.address),
               ];
-              const congestionEntries = countCongestionEntries(cczAddresses);
-              const congestionCharge = congestionEntries * CONGESTION_CHARGE;
+              // CCZ daily charge is one flat fee — add it ONCE if any
+              // address on the route enters the zone, never multiplied by
+              // the number of in-zone addresses.
+              const congestionCharge = isLikelyInCongestionZone(cczAddresses)
+                ? CONGESTION_CHARGE
+                : 0;
               const outsideMiles = outsideM25MilesForRoute(cczAddresses);
               const outsideCharge = outsideMiles * OUTSIDE_M25_RATE;
               const totalPrice =
@@ -417,7 +421,7 @@ export default function StandardBookingFlow({
                   ? `Additional stops: ${cleanStopsForPrice.length} × £${EXTRA_STOP_CHARGE} = +£${extraStopFee}`
                   : null,
                 congestionCharge > 0
-                  ? `Congestion Charge: ${congestionEntries} × £${CONGESTION_CHARGE} = +£${congestionCharge}`
+                  ? `Congestion Charge: +£${congestionCharge} (route enters Central London zone)`
                   : null,
                 outsideCharge > 0
                   ? `Outside-M25 estimate: ~${outsideMiles} mi × £${OUTSIDE_M25_RATE} = +£${outsideCharge}`

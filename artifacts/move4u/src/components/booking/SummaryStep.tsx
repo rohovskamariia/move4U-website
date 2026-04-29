@@ -11,7 +11,7 @@ import {
   getFloorLabelFromValue,
 } from "./StairsAccessSection";
 import type { ExtraStop } from "./ExtraStopsSection";
-import { countCongestionEntries } from "@/lib/congestionZone";
+import { isLikelyInCongestionZone } from "@/lib/congestionZone";
 import { outsideM25MilesForRoute } from "@/lib/m25";
 import { computeBaseServiceCharge, isSingleItem } from "@/lib/pricing";
 import { Info } from "lucide-react";
@@ -90,14 +90,16 @@ export default function SummaryStep({
   // this fee — they're already part of the base service.
   const extraStopFee = cleanStops.length * EXTRA_STOP_CHARGE;
 
-  // Congestion Charge — counted PER ENTRY. Pickup, drop-off and each
-  // intermediate stop in the CCZ each add £18.
-  const congestionEntries = countCongestionEntries([
+  // Congestion Charge — TfL's CCZ daily charge is a single flat fee per
+  // vehicle per day, not per address entered. So if ANY address on the
+  // route (pickup, drop-off, or any extra stop) sits inside the zone,
+  // we add it ONCE — never multiplied by the number of in-zone stops.
+  const inCongestionZone = isLikelyInCongestionZone([
     pickup,
     dropoff,
     ...cleanStops.map((s) => s.address),
   ]);
-  const congestionCharge = congestionEntries * CONGESTION_CHARGE;
+  const congestionCharge = inCongestionZone ? CONGESTION_CHARGE : 0;
 
   // Outside-M25 surcharge — automatic estimate based on postcode area.
   // Approximates the one-way distance from the M25 to the furthest
@@ -205,7 +207,7 @@ export default function SummaryStep({
         {(congestionCharge > 0 || outsideM25Charge > 0) && (
           <p className="text-[11px] text-white/80 mt-2">
             {congestionCharge > 0 &&
-              `*Includes £${congestionCharge} Congestion Charge (${congestionEntries} entr${congestionEntries === 1 ? "y" : "ies"} × £${CONGESTION_CHARGE})`}
+              `*Includes £${congestionCharge} Congestion Charge (charged once)`}
             {congestionCharge > 0 && outsideM25Charge > 0 ? " · " : ""}
             {outsideM25Charge > 0 &&
               `Outside London ~${outsideM25Miles} mi · estimate, see breakdown below`}
@@ -243,10 +245,10 @@ export default function SummaryStep({
                 <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-[13px] font-medium text-gray-900">
-                    Congestion Charge ({congestionEntries} {congestionEntries === 1 ? "entry" : "entries"})
+                    Congestion Charge
                   </p>
                   <p className="text-[11.5px] text-gray-500 mt-0.5 leading-snug">
-                    £{CONGESTION_CHARGE} per address inside the Central London zone.
+                    Flat £{CONGESTION_CHARGE} when any address on the route is inside the Central London zone.
                   </p>
                 </div>
               </div>

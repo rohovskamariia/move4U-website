@@ -49,7 +49,7 @@ export default function BookingPolicyPage() {
           </section>
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">8. Congestion Charge</h2>
-            <p>£18 is added per address inside the Central London congestion zone — for example, a job with both pickup and drop-off inside the zone adds £36.</p>
+            <p>A single £18 Congestion Charge is added when any address on the route — pickup, drop-off, or any additional stop — is inside the Central London congestion zone. The charge is applied once per booking, regardless of how many addresses fall inside the zone.</p>
           </section>
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">9. Outside the M25</h2>

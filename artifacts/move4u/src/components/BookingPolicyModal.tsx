@@ -48,7 +48,7 @@ const SECTIONS: PolicySection[] = [
   {
     title: "8. Congestion Charge",
     body:
-      "£18 is added per address inside the Central London congestion zone. A pickup and drop-off both inside the zone adds £36.",
+      "A single £18 Congestion Charge is added when any address on the route — pickup, drop-off or any additional stop — is inside the Central London congestion zone. It's applied once per booking, regardless of how many addresses fall inside the zone.",
   },
   {
     title: "9. Outside the M25",

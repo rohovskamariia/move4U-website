@@ -206,7 +206,7 @@ export default function PricingGuidePage() {
         >
           <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden divide-y divide-gray-50 shadow-[0_4px_18px_-10px_rgba(76,29,149,0.15)]">
             <ExtraChargeRow
-              label={`Congestion Charge (per address inside zone)`}
+              label={`Congestion Charge (once per booking if route enters the zone)`}
               price={`£${CONGESTION_CHARGE}`}
             />
             <ExtraChargeRow

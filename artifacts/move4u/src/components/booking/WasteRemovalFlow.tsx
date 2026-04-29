@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BedDouble, Refrigerator, Circle, Armchair, ChevronLeft, ChevronDown, Info, Plus, Minus, Route, Check, Hash, Sparkles } from "lucide-react";
 import { WASTE_LOADS, WASTE_EXTRA_ITEMS, CONGESTION_CHARGE, OUTSIDE_M25_RATE, EXTRA_STOP_CHARGE } from "@/data/constants";
-import { countCongestionEntries } from "@/lib/congestionZone";
+import { isLikelyInCongestionZone } from "@/lib/congestionZone";
 import { outsideM25MilesForRoute } from "@/lib/m25";
 import { submitBooking, uploadPhotos } from "@/lib/api";
 import WasteSizeModal from "@/components/WasteSizeModal";
@@ -151,13 +151,15 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
   const extraStopsFee = cleanExtraStops.length * EXTRA_STOP_CHARGE;
   const surchargeTotal =
     stairsCharge + accessCharge + extraStopsFloorCharge + extraStopsFee;
-  // Congestion Charge — counted across the pickup AND every additional
-  // collection address so multi-stop waste runs that touch the CCZ are
-  // priced correctly. Added on top of the calculated total but BEFORE the
-  // minimum-charge floor so a CCZ pickup never gets absorbed by the £60 min.
+  // Congestion Charge — TfL's CCZ daily charge is a single flat fee per
+  // vehicle per day. If ANY address on the route (pickup or any extra
+  // collection stop) is inside the zone we add it ONCE, never multiplied
+  // by the number of in-zone stops. Added on top of the calculated total
+  // but BEFORE the minimum-charge floor so a CCZ pickup never gets
+  // absorbed by the £60 min.
   const allAddresses = [pickup, ...cleanExtraStops.map((s) => s.address)];
-  const congestionEntries = countCongestionEntries(allAddresses);
-  const congestionCharge = congestionEntries * CONGESTION_CHARGE;
+  const inCongestionZone = isLikelyInCongestionZone(allAddresses);
+  const congestionCharge = inCongestionZone ? CONGESTION_CHARGE : 0;
   // Outside-M25 mileage estimate — routed across pickup + every extra stop.
   // Outside-M25 portions are billed at £1/mile on top of the base.
   const outsideM25Miles = outsideM25MilesForRoute(allAddresses);
@@ -276,7 +278,7 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
                   : null,
                 minChargeApplied ? `Min charge applied (calc £${calculatedTotal} → £${baseTotal})` : null,
                 congestionCharge > 0
-                  ? `Congestion Charge: ${congestionEntries} × £${CONGESTION_CHARGE} = +£${congestionCharge}`
+                  ? `Congestion Charge: +£${congestionCharge} (route enters Central London zone)`
                   : null,
                 outsideM25Charge > 0
                   ? `Outside-M25 estimate: ~${outsideM25Miles} mi × £${OUTSIDE_M25_RATE} = +£${outsideM25Charge}`
@@ -336,7 +338,7 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
           {(congestionCharge > 0 || outsideM25Charge > 0) && (
             <p className="text-[11px] text-white/80 mt-2">
               {congestionCharge > 0 &&
-                `*Includes £${congestionCharge} Congestion Charge (${congestionEntries} entr${congestionEntries === 1 ? "y" : "ies"})`}
+                `*Includes £${congestionCharge} Congestion Charge (charged once)`}
               {congestionCharge > 0 && outsideM25Charge > 0 ? " · " : ""}
               {outsideM25Charge > 0 &&
                 `Outside-M25 estimate: ~${outsideM25Miles} mi × £${OUTSIDE_M25_RATE}`}
@@ -354,10 +356,10 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
                 <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-[13px] font-medium text-gray-900">
-                    Congestion Charge ({congestionEntries} {congestionEntries === 1 ? "entry" : "entries"})
+                    Congestion Charge
                   </p>
                   <p className="text-[11.5px] text-gray-500 mt-0.5 leading-snug">
-                    £{CONGESTION_CHARGE} per address inside the Central London zone.
+                    Flat £{CONGESTION_CHARGE} when any address on the route is inside the Central London zone.
                   </p>
                 </div>
               </div>
@@ -453,7 +455,7 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
               : null,
             congestionCharge > 0
               ? {
-                  label: `Congestion Charge × ${congestionEntries}`,
+                  label: `Congestion Charge`,
                   value: `+£${congestionCharge}`,
                 }
               : null,
