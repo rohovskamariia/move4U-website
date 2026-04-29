@@ -193,6 +193,11 @@ export default function PhoneField({
   const idCountry = testId ? `${testId}-country` : undefined;
   const idDigits = testId ? `${testId}-number` : undefined;
 
+  // Two-letter short label for the currently-selected country (e.g. "UK").
+  // Used for the compact desktop trigger; mobile shows just the dial code.
+  const currentShort =
+    COUNTRIES.find((c) => c.code === country)?.short ?? "";
+
   return (
     <div
       className={`flex items-stretch w-full border rounded-xl bg-white overflow-hidden focus-within:ring-2 ${
@@ -201,14 +206,35 @@ export default function PhoneField({
           : "border-gray-200 focus-within:ring-purple-500"
       }`}
     >
-      <div className="relative shrink-0 border-r border-gray-200">
+      {/* Country trigger:
+          - The visible content is a compact label that shows ONLY the dial
+            code on mobile (e.g. "+44 ▾") and adds the 2-letter short code
+            on ≥sm screens (e.g. "+44 UK ▾"). The full country name is
+            never rendered inside the closed trigger — that's what made
+            the control too wide on mobile previously.
+          - The real <select> is positioned absolutely on top with
+            `opacity:0` so it stays fully accessible and still opens the
+            native platform picker (the best UX on iOS / Android). */}
+      <div className="relative shrink-0 border-r border-gray-200 bg-gray-50">
+        <div
+          aria-hidden="true"
+          className="flex items-center gap-1 h-full pl-2.5 pr-6 text-sm text-gray-700 select-none whitespace-nowrap"
+        >
+          <span className="font-medium tabular-nums">+{country}</span>
+          {currentShort && (
+            <span className="hidden sm:inline text-gray-500">
+              {currentShort}
+            </span>
+          )}
+        </div>
+        <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         <select
           aria-label="Country code"
           value={country}
           onChange={handleCountryChange}
           onBlur={onBlur}
           data-testid={idCountry}
-          className="appearance-none h-full bg-gray-50 pl-3 pr-7 text-sm text-gray-700 focus:outline-none cursor-pointer"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-sm"
         >
           {COUNTRIES.map((c) => (
             <option key={`${c.code}-${c.short}`} value={c.code}>
@@ -216,7 +242,6 @@ export default function PhoneField({
             </option>
           ))}
         </select>
-        <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
       </div>
       <input
         type="tel"
@@ -228,7 +253,7 @@ export default function PhoneField({
         placeholder={placeholder}
         required={required}
         data-testid={idDigits}
-        className="flex-1 min-w-0 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none bg-transparent"
+        className="flex-1 min-w-0 w-full px-3 sm:px-4 py-3 text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none bg-transparent"
       />
     </div>
   );
