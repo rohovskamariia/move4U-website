@@ -132,10 +132,6 @@ export default function HouseMovingPage() {
     ...Object.values(HELP_PRICING).map((p) => p.driverPlusHelper - p.noHelp),
   );
 
-  // Placeholder Google reviews link — defaults to a Google search for the
-  // brand until a real Google Business profile URL is wired in.
-  const googleReviewsUrl =
-    "https://www.google.com/search?q=Move4U+London+removals+reviews";
 
   return (
     <div className="min-h-screen bg-white">
@@ -517,15 +513,15 @@ export default function HouseMovingPage() {
                 <p className="text-[12.5px] text-gray-500">
                   — London customer
                 </p>
-                <a
-                  href={googleReviewsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[12.5px] font-medium text-purple-700 hover:text-purple-800 underline underline-offset-2"
-                  data-testid="see-all-google-reviews"
+                {/* Google Business profile is not live yet, so we
+                    intentionally render a non-clickable trust line here
+                    instead of a "See all reviews on Google" link. */}
+                <span
+                  className="text-[12.5px] font-medium text-gray-500"
+                  data-testid="reviews-trust-line"
                 >
-                  See all reviews on Google
-                </a>
+                  Trusted by real customers across London
+                </span>
               </div>
             </div>
           </div>
