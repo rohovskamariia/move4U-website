@@ -475,7 +475,10 @@ export async function appendBooking(row: BookingRow): Promise<AppendResult> {
   await patchNewHeaders(id);
 
   const bookingRef = await getNextBookingRef(id);
-  const timestamp = new Date().toLocaleString("en-GB", { timeZone: "Europe/London" });
+  // Store as ISO 8601 UTC so the admin panel can parse it unambiguously
+  // with new Date(ts).  The old en-GB locale format ("03/05/2026, 15:30:00")
+  // included a comma that silently broke the admin's time-ago parser.
+  const timestamp = new Date().toISOString();
 
   const values = [
     [

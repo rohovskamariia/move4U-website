@@ -185,11 +185,32 @@ const NEEDS_ACTION = new Set(["", "New"]);
 
 function parseTimestamp(ts: string): number {
   if (!ts) return 0;
-  let d = new Date(ts);
-  if (!isNaN(d.getTime())) return d.getTime();
-  // UK format DD/MM/YYYY HH:mm:ss → swap to MM/DD/YYYY
-  const m = ts.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(.*)/);
-  if (m) { d = new Date(`${m[2]}/${m[1]}/${m[3]}${m[4]}`); }
+
+  // Check for the legacy en-GB locale format FIRST, before passing anything
+  // to new Date().
+  //
+  // Background: toLocaleString("en-GB") produces "03/05/2026, 15:30:00"
+  // (DD/MM/YYYY with a comma).  V8's Date constructor parses that string
+  // "successfully" but treats it as MM/DD (US order), so "03/05/2026"
+  // becomes March 5 instead of 3 May — making every booking appear
+  // ~59 days (~1415 h) old.
+  //
+  // Solution: detect the DD/MM/YYYY pattern explicitly, parse each
+  // component by hand with Date.UTC, and never let the Date constructor
+  // guess the locale.  The stored time is London local time (BST = UTC+1
+  // in summer); treating it as UTC is at most 1 h off — negligible for
+  // "N minutes / hours ago" display purposes.
+  const legacy = ts.match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2}):(\d{2})/,
+  );
+  if (legacy) {
+    const [, dd, mm, yyyy, hh, min, sec] = legacy;
+    return Date.UTC(+yyyy, +mm - 1, +dd, +hh, +min, +sec);
+  }
+
+  // ISO 8601 and any other standard format (new bookings store toISOString()).
+  // e.g. "2026-05-03T15:30:00.000Z" — new Date() handles this correctly.
+  const d = new Date(ts);
   return isNaN(d.getTime()) ? 0 : d.getTime();
 }
 
