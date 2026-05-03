@@ -475,10 +475,22 @@ export async function appendBooking(row: BookingRow): Promise<AppendResult> {
   await patchNewHeaders(id);
 
   const bookingRef = await getNextBookingRef(id);
-  // Store as ISO 8601 UTC so the admin panel can parse it unambiguously
-  // with new Date(ts).  The old en-GB locale format ("03/05/2026, 15:30:00")
-  // included a comma that silently broke the admin's time-ago parser.
-  const timestamp = new Date().toISOString();
+  // Store as ISO 8601 UTC so the admin panel can parse it unambiguously.
+  //
+  // The leading apostrophe is essential: we append with
+  // valueInputOption=USER_ENTERED (so Sheets parses formulas / hyperlinks
+  // for other columns), but for the timestamp that means Sheets recognises
+  // the ISO string as a date, converts it to an internal date serial,
+  // and re-formats it on read using the spreadsheet's locale — leaving
+  // us with something like "5/3/2026 15:30" or a 4-day-skewed date
+  // depending on the sheet's locale settings.
+  //
+  // Prefixing with `'` is Google Sheets' documented marker for "store
+  // this cell as plain text, do not parse" — the apostrophe itself is
+  // metadata and is NOT returned by FORMATTED_VALUE reads, so the admin
+  // panel sees the clean ISO string and parses it perfectly with
+  // new Date().
+  const timestamp = "'" + new Date().toISOString();
 
   const values = [
     [
