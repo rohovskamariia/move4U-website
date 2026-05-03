@@ -596,17 +596,14 @@ export default function AdminBookingsPage() {
         ? bookings
         : bookings.filter((b) => b.bookingStatus === statusFilter);
 
-    // Sort: unprocessed "New" bookings by oldest first (most urgent), rest keep existing order
-    return [...base].sort((a, b) => {
-      const aNew = NEEDS_ACTION.has(a.bookingStatus);
-      const bNew = NEEDS_ACTION.has(b.bookingStatus);
-      if (aNew && !bNew) return -1;
-      if (!aNew && bNew) return 1;
-      if (aNew && bNew) {
-        return parseTimestamp(a.timestamp) - parseTimestamp(b.timestamp); // oldest first
-      }
-      return 0; // preserve existing newest-first for processed
-    });
+    // Sort by booking-reference number ascending (oldest first, newest last).
+    // Extract the trailing digits from refs like "MV4U-1030" and compare
+    // numerically — string comparison would put "MV4U-1029" after "MV4U-10000".
+    const refNum = (ref: string): number => {
+      const m = ref.match(/(\d+)\s*$/);
+      return m ? parseInt(m[1]!, 10) : Number.MAX_SAFE_INTEGER;
+    };
+    return [...base].sort((a, b) => refNum(a.bookingReference) - refNum(b.bookingReference));
   })();
 
   return (
