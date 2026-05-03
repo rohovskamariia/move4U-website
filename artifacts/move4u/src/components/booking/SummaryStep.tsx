@@ -13,7 +13,12 @@ import {
 import type { ExtraStop } from "./ExtraStopsSection";
 import { isLikelyInCongestionZone } from "@/lib/congestionZone";
 import { outsideM25MilesForRoute } from "@/lib/m25";
-import { computeBaseServiceCharge, isSingleItem } from "@/lib/pricing";
+import {
+  computeBaseServiceCharge,
+  computeSingleItemHelperCharge,
+  isSingleItem,
+  SINGLE_ITEM_HELPER_FEE,
+} from "@/lib/pricing";
 import { Info } from "lucide-react";
 
 interface SummaryStepProps {
@@ -35,6 +40,8 @@ interface SummaryStepProps {
    *  Shown as its own row in the summary so the customer can confirm
    *  the team will know what to expect. */
   itemDescription?: string;
+  /** Single Item Delivery — selected loading-help option. */
+  singleItemHelper?: string;
   onContinue: () => void;
 }
 
@@ -71,6 +78,7 @@ export default function SummaryStep({
   hours,
   notes,
   itemDescription,
+  singleItemHelper = "driver-only",
   onContinue,
 }: SummaryStepProps) {
   const singleItem = isSingleItem(serviceId);
@@ -111,7 +119,16 @@ export default function SummaryStep({
   ]);
   const outsideM25Charge = outsideM25Miles * OUTSIDE_M25_RATE;
 
-  const totalExtras = pickupCharge + dropoffCharge + stopChargesTotal + extraStopFee;
+  const singleItemHelperCharge = computeSingleItemHelperCharge(
+    serviceId,
+    singleItemHelper,
+  );
+  const totalExtras =
+    pickupCharge +
+    dropoffCharge +
+    stopChargesTotal +
+    extraStopFee +
+    singleItemHelperCharge;
   const estimatedBase = computeBaseServiceCharge(serviceId, vanSize, helpOption, hours);
   const estimatedTotal =
     estimatedBase + totalExtras + congestionCharge + outsideM25Charge;
@@ -127,6 +144,13 @@ export default function SummaryStep({
     if (itemDescription && itemDescription.trim()) {
       rows.push({ label: "Item", value: itemDescription.trim() });
     }
+    rows.push({
+      label: "Help with loading",
+      value:
+        singleItemHelper === "driver-plus-helper"
+          ? `Driver + 1 extra helper (+£${SINGLE_ITEM_HELPER_FEE})`
+          : "Driver only (included)",
+    });
   } else {
     rows.push({ label: "Van size", value: getVanLabel(vanSize) });
     rows.push({ label: "Help option", value: getHelpLabel(helpOption) });

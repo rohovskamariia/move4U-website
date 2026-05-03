@@ -46,6 +46,27 @@ export function isSingleItem(serviceId: string): boolean {
 }
 
 /**
+ * Single Item Delivery — flat add-on fee when the customer chooses to
+ * have an extra helper accompany the driver. The driver-only option is
+ * included in the £60 base; the extra helper is +£30.
+ */
+export const SINGLE_ITEM_HELPER_FEE = 30;
+
+/**
+ * Helper charge for a Single Item booking. Returns 0 for any service
+ * that is NOT single-item (the standard flow has its own van+help
+ * pricing in HELP_PRICING and must not be touched), and 0 when the
+ * customer chose the default driver-only option.
+ */
+export function computeSingleItemHelperCharge(
+  serviceId: string,
+  singleItemHelper: string,
+): number {
+  if (!isSingleItem(serviceId)) return 0;
+  return singleItemHelper === "driver-plus-helper" ? SINGLE_ITEM_HELPER_FEE : 0;
+}
+
+/**
  * Compute the time-portion of the price for a service.
  *   - single-item → fixed formula (van/help ignored)
  *   - everything else → hourly rate × hours

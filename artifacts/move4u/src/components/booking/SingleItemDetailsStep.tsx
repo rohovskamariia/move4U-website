@@ -1,8 +1,12 @@
-import { Info, Package } from "lucide-react";
+import { Info, Package, User, Users } from "lucide-react";
+import { SINGLE_ITEM_HELPER_FEE } from "@/lib/pricing";
 
 interface SingleItemDetailsStepProps {
   description: string;
   onDescriptionChange: (value: string) => void;
+  /** "driver-only" (default, included) or "driver-plus-helper" (+£30). */
+  helperOption: string;
+  onHelperChange: (value: string) => void;
 }
 
 /**
@@ -20,7 +24,32 @@ interface SingleItemDetailsStepProps {
 export default function SingleItemDetailsStep({
   description,
   onDescriptionChange,
+  helperOption,
+  onHelperChange,
 }: SingleItemDetailsStepProps) {
+  const helperOptions: {
+    id: string;
+    label: string;
+    sub: string;
+    price: string;
+    Icon: typeof User;
+  }[] = [
+    {
+      id: "driver-only",
+      label: "Driver will help",
+      sub: "Included in price",
+      price: "Included",
+      Icon: User,
+    },
+    {
+      id: "driver-plus-helper",
+      label: "Driver + 1 extra helper",
+      sub: "Faster & easier for heavy items",
+      price: `+£${SINGLE_ITEM_HELPER_FEE}`,
+      Icon: Users,
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
@@ -58,6 +87,62 @@ export default function SingleItemDetailsStep({
           Please describe your item clearly so we can prepare the right
           equipment and team.
         </p>
+      </div>
+
+      {/* Help with loading — additive add-on. Driver-only is included
+          in the £60 base; the extra helper is +£30 and adds to the
+          estimated total. Defaults to driver-only. */}
+      <div data-testid="single-item-help-section">
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-900 mb-1.5">
+          <Users className="w-4 h-4 text-purple-600" />
+          Help with loading
+        </label>
+        <p className="text-[12px] text-gray-500 mb-2 leading-snug">
+          The driver always helps. Add an extra helper for heavy or bulky items.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {helperOptions.map((opt) => {
+            const selected = helperOption === opt.id;
+            const Icon = opt.Icon;
+            return (
+              <button
+                type="button"
+                key={opt.id}
+                onClick={() => onHelperChange(opt.id)}
+                aria-pressed={selected}
+                data-testid={`single-item-helper-${opt.id}`}
+                className={`text-left rounded-xl border px-3.5 py-3 transition-colors flex items-start gap-2.5 ${
+                  selected
+                    ? "border-purple-500 bg-purple-50/60 ring-2 ring-purple-100"
+                    : "border-gray-200 bg-white hover:border-purple-300"
+                }`}
+              >
+                <Icon
+                  className={`w-4 h-4 mt-0.5 shrink-0 ${
+                    selected ? "text-purple-600" : "text-gray-400"
+                  }`}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="text-[13.5px] font-semibold text-gray-900 leading-snug">
+                      {opt.label}
+                    </p>
+                    <span
+                      className={`text-[12px] font-semibold tabular-nums shrink-0 ${
+                        selected ? "text-purple-700" : "text-gray-500"
+                      }`}
+                    >
+                      {opt.price}
+                    </span>
+                  </div>
+                  <p className="text-[11.5px] text-gray-500 mt-0.5 leading-snug">
+                    {opt.sub}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Please note — surfaces the operating rules so customers know

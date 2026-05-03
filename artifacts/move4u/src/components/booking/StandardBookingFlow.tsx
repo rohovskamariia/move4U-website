@@ -12,7 +12,12 @@ import {
   getFloorChargeFromValue,
   getFloorLabelFromValue,
 } from "./StairsAccessSection";
-import { computeBaseServiceCharge, isSingleItem } from "@/lib/pricing";
+import {
+  computeBaseServiceCharge,
+  computeSingleItemHelperCharge,
+  isSingleItem,
+  SINGLE_ITEM_HELPER_FEE,
+} from "@/lib/pricing";
 import { isLikelyInCongestionZone } from "@/lib/congestionZone";
 import { outsideM25MilesForRoute } from "@/lib/m25";
 import { submitBooking, uploadPhotos } from "@/lib/api";
@@ -160,6 +165,11 @@ export default function StandardBookingFlow({
   // for bulky/heavy items and is shown in the summary + booking notes).
   const [itemDescription, setItemDescription] = useState("");
 
+  // Single Item Delivery — help with loading. Defaults to driver-only
+  // (included in the £60 base). Choosing the extra helper adds a flat
+  // +£30 to the estimated total. Only used by the single-item flow.
+  const [singleItemHelper, setSingleItemHelper] = useState("driver-only");
+
   // Step list adapts to the service: single-item gets a simplified flow
   // (no van/help selection — just "describe what you're moving").
   const STEPS = singleItem ? SINGLE_ITEM_STEPS : FULL_STEPS;
@@ -286,6 +296,8 @@ export default function StandardBookingFlow({
           <SingleItemDetailsStep
             description={itemDescription}
             onDescriptionChange={setItemDescription}
+            helperOption={singleItemHelper}
+            onHelperChange={setSingleItemHelper}
           />
         );
       case "time":
@@ -318,6 +330,7 @@ export default function StandardBookingFlow({
             hours={hours}
             notes={notes}
             itemDescription={itemDescription}
+            singleItemHelper={singleItemHelper}
             onContinue={() => setStep("final")}
           />
         );
@@ -354,6 +367,10 @@ export default function StandardBookingFlow({
                 : 0;
               const outsideMiles = outsideM25MilesForRoute(cczAddresses);
               const outsideCharge = outsideMiles * OUTSIDE_M25_RATE;
+              const singleItemHelperCharge = computeSingleItemHelperCharge(
+                serviceId,
+                singleItemHelper,
+              );
               const totalPrice =
                 baseCharge +
                 pickupCharge +
@@ -361,7 +378,8 @@ export default function StandardBookingFlow({
                 stopsCharge +
                 extraStopFee +
                 congestionCharge +
-                outsideCharge;
+                outsideCharge +
+                singleItemHelperCharge;
               const vanLabel = VAN_SIZES.find((v) => v.id === vanSize)?.name ?? vanSize;
               const helpLabels: Record<string, string> = {
                 "no-help": "No help needed",
@@ -415,8 +433,17 @@ export default function StandardBookingFlow({
               const itemNote = isSingleItem(serviceId) && desc
                 ? `Item: ${desc}${bulkyKeywords.test(desc) ? " [REVIEW: bulky/heavy/fragile — confirm van + helper]" : ""}`
                 : null;
+              // Surface the customer's loading-help choice in the notes
+              // so admin/Telegram see exactly what was selected, even
+              // before reading the helpOption column.
+              const singleItemHelpNote = isSingleItem(serviceId)
+                ? singleItemHelper === "driver-plus-helper"
+                  ? `Help: Driver + 1 extra helper (+£${SINGLE_ITEM_HELPER_FEE})`
+                  : `Help: Driver only (included)`
+                : null;
               const surchargeNotes = [
                 itemNote,
+                singleItemHelpNote,
                 extraStopFee > 0
                   ? `Additional stops: ${cleanStopsForPrice.length} × £${EXTRA_STOP_CHARGE} = +£${extraStopFee}`
                   : null,
@@ -453,11 +480,20 @@ export default function StandardBookingFlow({
                 // Send neutral values so ops never reads the silent
                 // defaults as customer-confirmed selections.
                 vanSize: isSingleItem(serviceId) ? "To be confirmed" : vanLabel,
+                // For Single Item bookings the helpOption column now
+                // reflects the customer's loading-help choice so the
+                // admin panel can show "Driver only" or "Driver + helper
+                // +£30" at a glance, instead of the old generic
+                // "To be confirmed after review" placeholder.
                 helpOption: isSingleItem(serviceId)
-                  ? "To be confirmed after review"
+                  ? singleItemHelper === "driver-plus-helper"
+                    ? `Driver + helper +£${SINGLE_ITEM_HELPER_FEE}`
+                    : "Driver only"
                   : (helpLabels[helpOption] ?? helpOption),
                 peopleCount: isSingleItem(serviceId)
-                  ? ""
+                  ? singleItemHelper === "driver-plus-helper"
+                    ? "2 (driver + helper)"
+                    : "1 (driver only)"
                   : (peopleCounts[helpOption] ?? ""),
                 estimatedPrice: `£${totalPrice.toFixed(0)}`,
                 estimatedTime,
