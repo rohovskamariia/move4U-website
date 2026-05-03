@@ -603,7 +603,7 @@ export default function AdminBookingsPage() {
       const m = ref.match(/(\d+)\s*$/);
       return m ? parseInt(m[1]!, 10) : Number.MAX_SAFE_INTEGER;
     };
-    return [...base].sort((a, b) => refNum(a.bookingReference) - refNum(b.bookingReference));
+    return [...base].sort((a, b) => refNum(b.bookingReference) - refNum(a.bookingReference));
   })();
 
   return (
