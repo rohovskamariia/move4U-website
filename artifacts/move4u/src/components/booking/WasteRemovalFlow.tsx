@@ -83,6 +83,35 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
     setUnitNumber(val);
     commitPickup(corePickupRef.current, val);
   };
+
+  // Validate prefilled / externally-seeded pickup addresses on mount —
+  // mirrors the AddressStep behaviour used by the standard booking flow.
+  // Without this, an incomplete prefilled address coming in from
+  // /waste-removal (e.g. "Alexandra Park Road, London N2") would never
+  // trigger the inline "House / flat / unit number" prompt or the
+  // postcode validation, and the disabled Continue button would have no
+  // obvious cause. We run this only when an already-filled value arrives
+  // for the first time so it doesn't fight the autocomplete handler.
+  const prefillSeenRef = useRef<string>("");
+  useEffect(() => {
+    if (!pickup) return;
+    if (prefillSeenRef.current === pickup) return;
+    prefillSeenRef.current = pickup;
+    // Only treat as a "prefill" when this is the first non-empty value
+    // we've seen (corePickupRef is empty) — once the user starts typing
+    // / picking via Google, the autocomplete handler owns the state.
+    if (corePickupRef.current && corePickupRef.current !== pickup) return;
+    corePickupRef.current = pickup;
+    // Heuristic mirror of Google's `hasStreetNumber` meta hint: a street
+    // number is present when the address starts with a digit
+    // ("12 High Street", "221B Baker St") or with a recognised unit
+    // prefix ("Flat 2, ...", "Apt 4B ...").
+    const trimmed = pickup.trim();
+    const startsWithNumber = /^\d/.test(trimmed);
+    const startsWithUnitPrefix =
+      /^(flat|apt|apartment|unit|suite|studio|house|no\.?)\s*\d/i.test(trimmed);
+    setNeedsUnit(!startsWithNumber && !startsWithUnitPrefix);
+  }, [pickup]);
   // Stairs & access — same model as the standard flow.
   const [liftValue, setLiftValue] = useState<string>("");
   const [floorValue, setFloorValue] = useState<string>("lift");

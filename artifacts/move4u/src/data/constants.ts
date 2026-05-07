@@ -22,7 +22,7 @@ export const CONTACT = {
 // HOMEPAGE SLIDER CONTENT — Edit slide text here
 // Hero background images — imported so Vite hashes / optimises them.
 // To swap images, update the imports below.
-import slide1Image from "@assets/ChatGPT_Image_May_7,_2026,_11_36_40_AM_1778150968414.png";
+import slide1Image from "@assets/ChatGPT_Image_May_7_2026_11_36_40_AM_1778150968414.webp";
 // Higher-quality versions — order intentionally swapped:
 // the new "couch / packing" photo is now slide 2,
 // the new "stairs / furniture" photo is now slide 3.
