@@ -1,0 +1,54 @@
+Please fix the Booking Flow prefilled address logic so it behaves exactly the same as when the user enters the address directly inside the Booking Flow.
+
+The normal Booking Flow already works correctly.
+
+Example of correct behaviour:
+If the user enters an incomplete address like:
+“Alexandra Park Road, London N2”
+
+The Booking Flow detects that the address is incomplete and automatically shows the extra field:
+
+“House / flat / unit number”
+
+This is good.
+
+The problem happens only when the user comes from the House Moving page or Waste Removal page.
+
+When the address is passed automatically from the service page into the Booking Flow, the Booking Flow displays the address, but it does not trigger the same address validation / missing-details logic immediately.
+
+Required behaviour:
+
+When the user is redirected from House Moving or Waste Removal into the Booking Flow, the prefilled pickup and drop-off addresses must be checked immediately on page load.
+
+The prefilled address should behave exactly as if the user typed it directly into the Booking Flow.
+
+So if the prefilled address is incomplete, the Booking Flow must automatically:
+- detect that the address is incomplete
+- show the required extra field, for example:
+  “House / flat / unit number”
+- or ask for postcode if the postcode is missing
+- block the Continue button until the missing information is completed
+- show the correct validation message
+
+Example:
+If the prefilled address is:
+“Alexandra Park Road, London N2”
+
+The Booking Flow should immediately show:
+“House / flat / unit number”
+
+And the user should not be allowed to continue until they complete it.
+
+If the address has a house number but no postcode, then the Booking Flow should ask for a postcode.
+
+Important:
+Do not only validate when the user edits the field manually.
+
+Please run the same existing Booking Flow address validation logic on the prefilled address values as soon as the Booking Flow loads.
+
+This should apply to:
+- House Moving page → Booking Flow
+- Waste Removal page → Booking Flow
+- any service page that passes pickup/drop-off addresses into Booking Flow
+
+Please do not redesign anything. Only reuse the existing Booking Flow validation logic for prefilled addresses.

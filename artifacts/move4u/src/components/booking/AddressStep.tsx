@@ -168,10 +168,11 @@ export default function AddressStep({
   // time the parent injects a brand-new value that we haven't processed
   // yet — e.g. quick-quote handoff from /house-moving or /waste-removal).
   // Without this, an incomplete prefilled UK address would never trigger
-  // the inline postcode prompt — the parent's `canProceed` would silently
-  // disable the Continue button with no obvious way for the user to fix
-  // it. We only run this when the input arrives ALREADY filled (not on
-  // every keystroke) so it doesn't fight the autocomplete handler.
+  // the inline house-number / postcode prompts — the parent's
+  // `canProceed` would silently disable the Continue button with no
+  // obvious way for the user to fix it. We only run this when the input
+  // arrives ALREADY filled (not on every keystroke) so it doesn't fight
+  // the autocomplete handler.
   const prefillSeenRef = useRef<string>("");
   useEffect(() => {
     if (!addressValue) return;
@@ -184,6 +185,17 @@ export default function AddressStep({
       return;
     }
     coreAddressRef.current = addressValue;
+    // Mirror the autocomplete's `hasStreetNumber` meta hint with a text
+    // heuristic — Google isn't in the loop on prefill, so we look at the
+    // first token of the address. A street number is present when the
+    // address starts with a digit ("12 High Street", "221B Baker St") or
+    // with a recognised unit prefix ("Flat 2, ...", "Apt 4B ...").
+    const trimmed = addressValue.trim();
+    const startsWithNumber = /^\d/.test(trimmed);
+    const startsWithUnitPrefix =
+      /^(flat|apt|apartment|unit|suite|studio|house|no\.?)\s*\d/i.test(trimmed);
+    const numberMissing = !startsWithNumber && !startsWithUnitPrefix;
+    setNeedsNumber(numberMissing);
     setNeedsPostcode(isUKAddressMissingFullPostcode(addressValue));
   }, [addressValue]);
 
