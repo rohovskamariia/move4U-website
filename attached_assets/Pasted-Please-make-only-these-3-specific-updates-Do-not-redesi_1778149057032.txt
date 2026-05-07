@@ -1,0 +1,54 @@
+Please make only these 3 specific updates. Do not redesign the website and do not change anything else.
+
+1. Update the “About Move4U” section
+
+Please update the About Move4U text to include that we also offer international moving.
+
+Current meaning should stay the same, but add international moving clearly.
+
+Suggested text:
+
+ABOUT MOVE4U
+
+London’s Trusted Removals, Man and Van & International Moving Service
+
+Move4U is a London-based removals company offering house moving, man and van, furniture delivery, commercial moving, waste removal and international moving services across London, the UK and Europe.
+
+From single-item drop-offs to full house moves, office relocations and international moves, we provide a reliable moving service with clear hourly pricing from £35/hour and friendly, professional movers.
+
+Please keep the style consistent with the current website.
+
+2. Fix address validation on House Moving and Waste Removal quote forms
+
+There is an issue on the separate House Moving and Waste Removal pages.
+
+When a customer enters an incomplete address or incomplete postcode, the form should not allow them to continue.
+
+Required behaviour:
+
+* The customer must enter either a full address or a valid postcode.
+* The form must not accept partial/incomplete addresses.
+* This must work on the House Moving page.
+* This must work on the Waste Removal page.
+* If the customer enters a valid address/postcode on those pages, it should pass automatically into the main quote/booking form.
+* If the address/postcode is incomplete, the customer must be asked to complete it before continuing.
+* Please show a clear validation message:
+  “Please enter a full address or valid postcode before continuing.”
+
+Please check the logic when the user is redirected from House Moving or Waste Removal into the main quote form. The system still needs to detect if the address is incomplete.
+
+3. Remove the logo from the van image on the homepage
+
+On the homepage hero/main image, there is a van in the background near the section with two men carrying items.
+
+Please remove the Move4U/M4U logo from the van so the van looks plain white.
+
+Important:
+
+* Do not redesign the hero section.
+* Do not change the layout.
+* Only replace or edit the image so the van is plain white.
+* Please choose the simplest method that uses the fewest Replit credits.
+* If possible, only update the image asset instead of rebuilding the whole section.
+
+Please only work on these 3 tasks and do not change other parts of the website.

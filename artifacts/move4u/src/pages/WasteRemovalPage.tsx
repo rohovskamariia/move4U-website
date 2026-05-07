@@ -7,6 +7,7 @@ import BackToHome from "@/components/BackToHome";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import WasteRemovalHowItWorks from "@/components/WasteRemovalHowItWorks";
 import { CONTACT, WASTE_LOADS } from "@/data/constants";
+import { isAddressAcceptable } from "@/lib/postcode";
 import {
   ArrowRight,
   BadgePoundSterling,
@@ -76,16 +77,32 @@ export default function WasteRemovalPage() {
   });
   const [, setLocation] = useLocation();
   const [pickup, setPickup] = useState("");
+  // Inline validation message shown under the form when the customer
+  // tries to continue with a partial / incomplete UK address.
+  const [quickQuoteError, setQuickQuoteError] = useState<string | null>(null);
 
   /**
    * Hand off the typed collection address to /book/waste-removal via the
    * ?pickup=... query param. BookingPage reads it once on mount and seeds
    * WasteRemovalFlow's pickup state through its `initialPickup` prop, so
    * the user never re-enters the same address.
+   *
+   * If a value is provided it must be a complete address: a full UK
+   * postcode (e.g. "N22 8HE") or a non-UK address. Partial postcodes
+   * like "London N22, UK" are rejected so the booking flow never starts
+   * with an undeliverable seed. Empty is allowed — the customer can fill
+   * it in later inside the booking flow.
    */
   const onQuickQuote = () => {
-    const params = new URLSearchParams();
     const p = pickup.trim();
+    if (p && !isAddressAcceptable(p)) {
+      setQuickQuoteError(
+        "Please enter a full address or valid postcode before continuing.",
+      );
+      return;
+    }
+    setQuickQuoteError(null);
+    const params = new URLSearchParams();
     if (p) params.set("pickup", p);
     const qs = params.toString();
     setLocation(qs ? `/book/waste-removal?${qs}` : "/book/waste-removal");
@@ -314,7 +331,10 @@ export default function WasteRemovalPage() {
                       <AddressAutocomplete
                         id="quick-pickup"
                         value={pickup}
-                        onChange={(v) => setPickup(v)}
+                        onChange={(v) => {
+                          setPickup(v);
+                          if (quickQuoteError) setQuickQuoteError(null);
+                        }}
                         placeholder="Address or postcode"
                         testId="quick-quote-pickup"
                       />
@@ -332,9 +352,19 @@ export default function WasteRemovalPage() {
                       />
                     </button>
 
-                    <p className="hidden lg:block text-center text-[11.5px] text-gray-400 mt-1">
-                      Instant estimate in seconds
-                    </p>
+                    {quickQuoteError ? (
+                      <p
+                        role="alert"
+                        className="text-[12px] lg:text-[12.5px] text-red-600 text-center mt-1"
+                        data-testid="quick-quote-error"
+                      >
+                        {quickQuoteError}
+                      </p>
+                    ) : (
+                      <p className="hidden lg:block text-center text-[11.5px] text-gray-400 mt-1">
+                        Instant estimate in seconds
+                      </p>
+                    )}
                   </form>
                 </div>
               </div>

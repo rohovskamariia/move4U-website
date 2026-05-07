@@ -7,6 +7,7 @@ import BackToHome from "@/components/BackToHome";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import HouseMovingHowItWorks from "@/components/HouseMovingHowItWorks";
 import { CONTACT, HELP_PRICING, VAN_SIZES } from "@/data/constants";
+import { isAddressAcceptable } from "@/lib/postcode";
 import {
   ArrowRight,
   BadgePoundSterling,
@@ -48,19 +49,38 @@ export default function HouseMovingPage() {
   const [, setLocation] = useLocation();
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
+  // Inline validation message shown under the form when the customer
+  // tries to continue with a partial / incomplete UK address.
+  const [quickQuoteError, setQuickQuoteError] = useState<string | null>(null);
 
   /**
    * Hand off the typed pickup / drop-off addresses to /book/house-move via
    * URL query params. The booking page reads these once on mount and seeds
    * its address fields — so the user never re-enters the same address.
    *
-   * If both fields are empty we just navigate to the booking flow as
-   * normal — no query string clutter.
+   * If a field is filled in, it must be a complete address: either a full
+   * UK postcode (e.g. "N22 8HE") or a non-UK address. Partial postcodes
+   * like "London N22, UK" are rejected so the booking flow never starts
+   * with an undeliverable seed. Empty fields are allowed (the customer
+   * can fill them in later inside the booking flow).
    */
   const onQuickQuote = () => {
-    const params = new URLSearchParams();
     const p = pickup.trim();
     const d = dropoff.trim();
+    if (p && !isAddressAcceptable(p)) {
+      setQuickQuoteError(
+        "Please enter a full address or valid postcode before continuing.",
+      );
+      return;
+    }
+    if (d && !isAddressAcceptable(d)) {
+      setQuickQuoteError(
+        "Please enter a full address or valid postcode before continuing.",
+      );
+      return;
+    }
+    setQuickQuoteError(null);
+    const params = new URLSearchParams();
     if (p) params.set("pickup", p);
     if (d) params.set("dropoff", d);
     const qs = params.toString();
@@ -316,7 +336,10 @@ export default function HouseMovingPage() {
                       <AddressAutocomplete
                         id="quick-pickup"
                         value={pickup}
-                        onChange={(v) => setPickup(v)}
+                        onChange={(v) => {
+                          setPickup(v);
+                          if (quickQuoteError) setQuickQuoteError(null);
+                        }}
                         placeholder="Pickup address or postcode"
                         testId="quick-quote-pickup"
                       />
@@ -331,7 +354,10 @@ export default function HouseMovingPage() {
                       <AddressAutocomplete
                         id="quick-dropoff"
                         value={dropoff}
-                        onChange={(v) => setDropoff(v)}
+                        onChange={(v) => {
+                          setDropoff(v);
+                          if (quickQuoteError) setQuickQuoteError(null);
+                        }}
                         placeholder="Drop-off address or postcode"
                         testId="quick-quote-dropoff"
                       />
@@ -348,9 +374,19 @@ export default function HouseMovingPage() {
                       <span className="hidden lg:inline">Get Quote</span>
                       <ArrowRight className="w-3.5 h-3.5 lg:w-4 lg:h-4" strokeWidth={2.25} />
                     </button>
-                    <p className="hidden lg:block text-[11.5px] text-gray-400 text-center pt-1">
-                      Instant estimate in seconds
-                    </p>
+                    {quickQuoteError ? (
+                      <p
+                        role="alert"
+                        className="text-[12px] lg:text-[12.5px] text-red-600 text-center pt-1"
+                        data-testid="quick-quote-error"
+                      >
+                        {quickQuoteError}
+                      </p>
+                    ) : (
+                      <p className="hidden lg:block text-[11.5px] text-gray-400 text-center pt-1">
+                        Instant estimate in seconds
+                      </p>
+                    )}
                   </form>
                 </div>
               </div>

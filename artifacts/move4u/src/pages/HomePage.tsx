@@ -223,10 +223,10 @@ export default function HomePage() {
             ABOUT MOVE4U
           </p>
           <h2 className="text-[24px] sm:text-3xl font-bold text-gray-900 mb-3 tracking-tight">
-            London's Trusted Removals & Man and Van Service
+            London's Trusted Removals, Man and Van &amp; International Moving Service
           </h2>
           <p className="text-gray-600 text-[14px] sm:text-base leading-relaxed max-w-2xl mx-auto mb-7">
-            Move4U is a London-based removals company offering house moving, man and van, furniture delivery, commercial moving and waste removal services across London and surrounding areas. From single-item drop-offs to full house moves, we provide a same-day moving service with clear hourly pricing from £35/hour and friendly, professional movers.
+            Move4U is a London-based removals company offering house moving, man and van, furniture delivery, commercial moving, waste removal and international moving services across London, the UK and Europe. From single-item drop-offs to full house moves, office relocations and international moves, we provide a reliable moving service with clear hourly pricing from £35/hour and friendly, professional movers.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button

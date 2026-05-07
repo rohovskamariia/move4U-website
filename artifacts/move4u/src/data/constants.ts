@@ -22,7 +22,7 @@ export const CONTACT = {
 // HOMEPAGE SLIDER CONTENT — Edit slide text here
 // Hero background images — imported so Vite hashes / optimises them.
 // To swap images, update the imports below.
-import slide1Image from "@assets/IMG_3267_1776604323710.webp";
+import slide1Image from "@/assets/hero/movers_van_no_logo.png";
 // Higher-quality versions — order intentionally swapped:
 // the new "couch / packing" photo is now slide 2,
 // the new "stairs / furniture" photo is now slide 3.
