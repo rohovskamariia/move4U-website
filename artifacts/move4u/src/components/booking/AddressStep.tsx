@@ -164,6 +164,29 @@ export default function AddressStep({
     }
   }, [addressValue]);
 
+  // Validate prefilled / externally-seeded addresses on mount (and any
+  // time the parent injects a brand-new value that we haven't processed
+  // yet — e.g. quick-quote handoff from /house-moving or /waste-removal).
+  // Without this, an incomplete prefilled UK address would never trigger
+  // the inline postcode prompt — the parent's `canProceed` would silently
+  // disable the Continue button with no obvious way for the user to fix
+  // it. We only run this when the input arrives ALREADY filled (not on
+  // every keystroke) so it doesn't fight the autocomplete handler.
+  const prefillSeenRef = useRef<string>("");
+  useEffect(() => {
+    if (!addressValue) return;
+    if (prefillSeenRef.current === addressValue) return;
+    prefillSeenRef.current = addressValue;
+    // Only treat as a "prefill" when this is the first non-empty value
+    // we've seen (coreAddressRef is empty) — i.e. the user hasn't typed
+    // anything yet. After that, the autocomplete handler owns the state.
+    if (coreAddressRef.current && coreAddressRef.current !== addressValue) {
+      return;
+    }
+    coreAddressRef.current = addressValue;
+    setNeedsPostcode(isUKAddressMissingFullPostcode(addressValue));
+  }, [addressValue]);
+
   const postcodeFilledOk = manualPostcode ? hasFullUKPostcode(manualPostcode) : false;
 
   const enterManualMode = () => {

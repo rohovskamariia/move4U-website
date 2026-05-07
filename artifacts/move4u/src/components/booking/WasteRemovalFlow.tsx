@@ -13,6 +13,7 @@ import StairsAccessSection, {
   getFloorLabelFromValue,
 } from "./StairsAccessSection";
 import ExtraStopsSection, { type ExtraStop } from "./ExtraStopsSection";
+import { isAddressAcceptable, isUKAddressMissingFullPostcode } from "@/lib/postcode";
 
 /** Flat surcharge for restricted-access pickups (long carry, narrow lane, etc). */
 const RESTRICTED_ACCESS_SURCHARGE = 10;
@@ -702,14 +703,62 @@ export default function WasteRemovalFlow({ onBack, initialPickup = "" }: WasteRe
           {photos.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{photos.map((f, i) => <span key={i} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-lg">{f.name}</span>)}</div>}
         </div>
 
-        <button
-          onClick={() => setStep("summary")}
-          disabled={!hasSelection || !pickup || !liftValue}
-          className="btn-purple w-full py-2.5 sm:py-3.5 font-semibold rounded-xl text-sm"
-          data-testid="waste-continue"
-        >
-          See Summary
-        </button>
+        {(() => {
+          const pickupOk = isAddressAcceptable(pickup);
+          const stopsOk = extraStops.every(
+            (s) => !s.address.trim() || isAddressAcceptable(s.address),
+          );
+          const canContinue =
+            hasSelection && pickupOk && stopsOk && !!liftValue;
+          // Surface the most relevant missing piece so the user is never
+          // silently blocked by a disabled button — same UX pattern as
+          // the StandardBookingFlow "missing hint" banner.
+          let missingHint: string | null = null;
+          if (!pickup.trim()) {
+            missingHint = "Please enter the pickup address";
+          } else if (isUKAddressMissingFullPostcode(pickup)) {
+            missingHint =
+              "Please enter a full address or valid postcode before continuing.";
+          } else if (!liftValue) {
+            missingHint = "Please select if there are stairs";
+          } else if (!stopsOk) {
+            missingHint =
+              "Please enter a full address or valid postcode before continuing.";
+          } else if (!hasSelection) {
+            missingHint = "Please pick a load size or add at least one item";
+          }
+          return (
+            <>
+              {!canContinue && missingHint && (
+                <div
+                  className="mt-1 flex items-start gap-2 rounded-xl border border-[#3D1289]/20 bg-[#3D1289]/5 px-3.5 py-2.5"
+                  data-testid="waste-missing-hint"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span
+                    className="mt-[2px] flex h-4 w-4 flex-none items-center justify-center rounded-full text-[11px] font-bold text-white"
+                    style={{ backgroundColor: "#3D1289" }}
+                    aria-hidden="true"
+                  >
+                    !
+                  </span>
+                  <p className="text-[13px] font-medium text-[#1F0648] leading-snug">
+                    {missingHint}
+                  </p>
+                </div>
+              )}
+              <button
+                onClick={() => setStep("summary")}
+                disabled={!canContinue}
+                className="btn-purple w-full py-2.5 sm:py-3.5 font-semibold rounded-xl text-sm"
+                data-testid="waste-continue"
+              >
+                See Summary
+              </button>
+            </>
+          );
+        })()}
       </div>
 
       {showGuide && <WasteSizeModal onClose={() => setShowGuide(false)} />}

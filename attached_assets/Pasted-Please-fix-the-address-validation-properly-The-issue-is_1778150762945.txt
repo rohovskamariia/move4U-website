@@ -1,0 +1,39 @@
+Please fix the address validation properly. The issue is not fully fixed yet.
+
+The validation works only when the customer manually edits the address field, but it does NOT work correctly when the address is passed automatically from the House Moving page into the booking flow.
+
+Current problem:
+
+When a customer enters addresses on the House Moving page and clicks Get Quote, the addresses are carried into the booking form automatically.
+
+However, the booking form allows the customer to continue even if the prefilled address is incomplete or not properly validated.
+
+Example:
+
+* Pickup address: valid, includes postcode
+* Drop-off address: “Alexandra Park Road, London N22 7BJ, United Kingdom”
+* The system allows the customer to continue because the field was prefilled.
+* But if I manually delete one letter and re-enter/select the address again, then the validation works correctly.
+
+This means the validation is only triggered on manual input/change, but not when the address is loaded from the previous page.
+
+Required fix:
+
+1. When the booking form loads with prefilled pickup/drop-off addresses, validate them immediately.
+2. Do not treat prefilled addresses as automatically valid.
+3. The form must check whether the address came from a valid Google Places/address selection or contains a valid full address/postcode.
+4. If the address is incomplete or not properly validated, the customer must not be allowed to continue.
+5. This must work even if the customer does not touch or edit the field.
+6. Apply this to:
+
+   * House Moving page → booking flow
+   * Waste Removal page → booking flow
+   * Any other service page that passes addresses into the booking form
+
+Please add validation on initial load / prefilled state, not only on input change.
+
+If a prefilled address is not valid, show this message:
+
+“Please enter a full address or valid postcode before continuing.”
+
+Please do not redesign anything. Only fix the address validation logic for prefilled addresses passed from service pages.
