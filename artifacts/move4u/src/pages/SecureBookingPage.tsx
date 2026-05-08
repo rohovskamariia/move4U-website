@@ -14,11 +14,13 @@ import { Link } from "wouter";
 import { ShieldCheck, Lock, CalendarCheck, CreditCard, ChevronLeft, CheckCircle, AlertCircle } from "lucide-react";
 import { CONTACT } from "@/data/constants";
 
-// ── STRIPE PAYMENT LINK ───────────────────────────────────────
-// Paste your Stripe Payment Link URL here.
-// Get it from: Stripe Dashboard → Payment Links → Copy link
-// It looks like: https://buy.stripe.com/xxxxxxxxxxxxxxxx
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_14AaEXdZR5Mm4cF6hd6g800";
+// ── PAYMENT FLOW ──────────────────────────────────────────────
+// The customer is redirected to /pay/:ref, which asks the API server
+// for the live Stripe Checkout Session URL that the admin generated
+// for this booking (created server-side using STRIPE_SECRET_KEY in
+// /api/admin/bookings/:ref/payment-link, persisted to Google Sheets,
+// and served back via GET /api/pay/:ref). No Stripe URL or key is
+// ever embedded in the frontend bundle.
 // ─────────────────────────────────────────────────────────────
 
 // ── Editable text ─────────────────────────────────────────────
@@ -111,11 +113,12 @@ export default function SecureBookingPage() {
 
   function handlePay() {
     if (!canSubmit) return;
-    // Appends the booking reference so Stripe passes it back in the webhook event.
-    // Stripe receives this as `client_reference_id` on checkout.session.completed.
+    // Hand off to /pay/:ref — that page calls GET /api/pay/:ref which
+    // returns the live Stripe Checkout Session URL the admin generated
+    // for this booking (with client_reference_id already baked in by
+    // the server). The customer is then redirected to Stripe.
     const ref = encodeURIComponent(form.bookingRef.trim());
-    const url = `${STRIPE_PAYMENT_LINK}?client_reference_id=${ref}`;
-    window.location.href = url;
+    window.location.href = `/pay/${ref}`;
   }
 
   if (submitted) {
