@@ -8,7 +8,9 @@ import {
 } from "@/data/constants";
 import {
   getFloorChargeFromValue,
+  getFloorChargeWithWorkers,
   getFloorLabelFromValue,
+  getWorkerCount,
 } from "./StairsAccessSection";
 import type { ExtraStop } from "./ExtraStopsSection";
 import { isLikelyInCongestionZone } from "@/lib/congestionZone";
@@ -83,15 +85,23 @@ export default function SummaryStep({
 }: SummaryStepProps) {
   const singleItem = isSingleItem(serviceId);
   const cleanStops = extraStops.filter((s) => s.address.trim());
-  const stopCharges = cleanStops.map((s) => getFloorChargeFromValue(s.floorValue));
+  // Worker count drives the stair multiplier:
+  //   Standard services → derived from helpOption
+  //   Single Item Delivery → 1 for driver-only, 2 for driver-plus-helper
+  const workerCount = singleItem
+    ? singleItemHelper === "driver-plus-helper" ? 2 : 1
+    : getWorkerCount(helpOption);
+  const stopCharges = cleanStops.map((s) =>
+    getFloorChargeWithWorkers(s.floorValue, workerCount),
+  );
   const stopChargesTotal = stopCharges.reduce((a, b) => a + b, 0);
   const pricing = HELP_PRICING[vanSize] || HELP_PRICING.medium;
   let hourlyRate = pricing.noHelp;
   if (helpOption === "driver-help") hourlyRate = pricing.driverHelp;
   if (helpOption === "driver-plus-helper") hourlyRate = pricing.driverPlusHelper;
 
-  const pickupCharge = getFloorChargeFromValue(pickupFloor);
-  const dropoffCharge = getFloorChargeFromValue(dropoffFloor);
+  const pickupCharge = getFloorChargeWithWorkers(pickupFloor, workerCount);
+  const dropoffCharge = getFloorChargeWithWorkers(dropoffFloor, workerCount);
 
   // Each intermediate stop adds a flat per-stop fee on top of any
   // floor charge it contributes. Pickup and drop-off do NOT incur

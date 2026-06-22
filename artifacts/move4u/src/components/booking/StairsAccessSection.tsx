@@ -61,6 +61,33 @@ function StairsAccessInfo() {
  */
 export const FLOOR_PRICE = 10;
 
+/**
+ * Maps a helpOption id to the number of workers on the job.
+ *   no-help            → 1  (driver only)
+ *   driver-help        → 2  (driver + customer carries)
+ *   driver-plus-helper → 3  (driver + 1 paid helper)
+ * Defaults to 1 for any unknown value (e.g. waste removal which has no
+ * help-option selector — the driver is always the only person).
+ */
+export function getWorkerCount(helpOption: string): number {
+  if (helpOption === "driver-help") return 2;
+  if (helpOption === "driver-plus-helper") return 3;
+  return 1;
+}
+
+/**
+ * Returns the stairs surcharge for a given floor value multiplied by the
+ * number of workers. The formula is: flights × £10 × workers.
+ * Use this everywhere a final price is computed; use getFloorChargeFromValue
+ * only when the worker count is not yet known (e.g. during the address step).
+ */
+export function getFloorChargeWithWorkers(
+  floorValue: string,
+  workerCount: number,
+): number {
+  return getFloorChargeFromValue(floorValue) * Math.max(1, workerCount);
+}
+
 export function getFloorChargeFromValue(floorValue: string): number {
   if (!floorValue || floorValue === "lift" || floorValue === "none") return 0;
   // Backward-compat with the old keyed values that still live in saved
@@ -108,6 +135,13 @@ interface StairsAccessSectionProps {
   onFloorChange: (val: string) => void;
   /** Test-id suffix so multiple instances on the same page stay unique. */
   testIdSuffix?: string;
+  /**
+   * Number of workers on the job — used for the live stairsCost readout.
+   * Defaults to 1 when unknown (e.g. address step, which runs before the
+   * help option is chosen). The final price in SummaryStep always passes
+   * the correct count.
+   */
+  workerCount?: number;
 }
 
 export default function StairsAccessSection({
@@ -117,6 +151,7 @@ export default function StairsAccessSection({
   floorValue,
   onFloorChange,
   testIdSuffix = "",
+  workerCount = 1,
 }: StairsAccessSectionProps) {
   // Derive the answer to step 1 from the existing state.
   //   ""     → unanswered
@@ -140,7 +175,10 @@ export default function StairsAccessSection({
     return Number.isNaN(n) || n < 0 ? 0 : n;
   })();
 
-  const stairsCost = liftValue === "no" ? parsedFloor * FLOOR_PRICE : 0;
+  const stairsCost =
+    liftValue === "no"
+      ? parsedFloor * FLOOR_PRICE * Math.max(1, workerCount)
+      : 0;
   const idSuffix = testIdSuffix ? `-${testIdSuffix}` : "";
 
   const setHasStairs = (val: "yes" | "no") => {
@@ -241,8 +279,8 @@ export default function StairsAccessSection({
         <div className="mt-3 sm:mt-4">
           <p className="text-[12.5px] sm:text-[13px] font-semibold text-gray-700">Floor level</p>
           <p className="text-[11px] sm:text-[12px] text-gray-500 mt-0.5 sm:mt-1 leading-snug sm:leading-relaxed">
-            Please select the floor. £{FLOOR_PRICE} is added per floor when no
-            lift is available.
+            Please select the floor. £{FLOOR_PRICE} per flight per worker is
+            added when no lift is available.
           </p>
 
           <div className="mt-2 sm:mt-3 flex items-center gap-3 bg-purple-50/60 border border-purple-100 rounded-2xl p-2">

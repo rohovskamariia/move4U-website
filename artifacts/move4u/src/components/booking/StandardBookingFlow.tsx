@@ -9,8 +9,9 @@ import {
 } from "@/data/constants";
 import BookingSuccess from "./BookingSuccess";
 import {
-  getFloorChargeFromValue,
+  getFloorChargeWithWorkers,
   getFloorLabelFromValue,
+  getWorkerCount,
 } from "./StairsAccessSection";
 import {
   computeBaseServiceCharge,
@@ -93,7 +94,6 @@ const SINGLE_ITEM_STEPS: Step[] = [
   "final",
 ];
 
-const getFloorCharge = getFloorChargeFromValue;
 
 // Standard booking flow — used for House Move, Commercial Move, Single Item, Small Move
 // Edit steps and flow logic here
@@ -191,11 +191,18 @@ export default function StandardBookingFlow({
 
   const showPhotos = ["house-move", "waste-removal", "single-item", "small-move"].includes(serviceId);
 
-  const pickupCharge = getFloorCharge(pickupFloor);
-  const dropoffCharge = getFloorCharge(dropoffFloor);
+  // Worker count for stair multiplier — only known after the help step.
+  // Before that, helpOption is "" so getWorkerCount defaults to 1 (correct
+  // for the live price preview during the address steps).
+  const workerCountLive = isSingleItem(serviceId)
+    ? singleItemHelper === "driver-plus-helper" ? 2 : 1
+    : getWorkerCount(helpOption);
+  const pickupCharge = getFloorChargeWithWorkers(pickupFloor, workerCountLive);
+  const dropoffCharge = getFloorChargeWithWorkers(dropoffFloor, workerCountLive);
   // Sum any per-stop stair surcharges so the running total stays accurate.
   const extraStopsCharge = extraStops.reduce(
-    (sum, s) => sum + (s.address.trim() ? getFloorCharge(s.floorValue) : 0),
+    (sum, s) =>
+      sum + (s.address.trim() ? getFloorChargeWithWorkers(s.floorValue, workerCountLive) : 0),
     0,
   );
 
@@ -345,11 +352,14 @@ export default function StandardBookingFlow({
                 helpOption,
                 hours,
               );
-              const pickupCharge = getFloorCharge(pickupFloor);
-              const dropoffCharge = getFloorCharge(dropoffFloor);
+              const workerCount = isSingleItem(serviceId)
+                ? singleItemHelper === "driver-plus-helper" ? 2 : 1
+                : getWorkerCount(helpOption);
+              const pickupCharge = getFloorChargeWithWorkers(pickupFloor, workerCount);
+              const dropoffCharge = getFloorChargeWithWorkers(dropoffFloor, workerCount);
               const cleanStopsForPrice = extraStops.filter((s) => s.address.trim());
               const stopsCharge = cleanStopsForPrice.reduce(
-                (sum, s) => sum + getFloorCharge(s.floorValue),
+                (sum, s) => sum + getFloorChargeWithWorkers(s.floorValue, workerCount),
                 0,
               );
               const extraStopFee =
@@ -407,7 +417,7 @@ export default function StandardBookingFlow({
               //   "<address> — <floor label>(+£charge)"
               const cleanStops = extraStops.filter((s) => s.address.trim());
               const stopFloorCharges = cleanStops.map((s) =>
-                getFloorCharge(s.floorValue),
+                getFloorChargeWithWorkers(s.floorValue, workerCount),
               );
               const formattedStops = cleanStops.map((s, i) => {
                 const label = getFloorLabelFromValue(s.floorValue);
