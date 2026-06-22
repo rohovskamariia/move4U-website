@@ -62,22 +62,24 @@ function StairsAccessInfo() {
 export const FLOOR_PRICE = 10;
 
 /**
- * Maps a helpOption id to the number of workers on the job.
- *   no-help            → 1  (driver only)
- *   driver-help        → 2  (driver + customer carries)
- *   driver-plus-helper → 2  (driver + 1 paid helper = 2 workers)
- * Defaults to 1 for any unknown value (e.g. waste removal which has no
- * help-option selector — the driver is always the only person).
+ * Maps a helpOption id to the number of workers carrying on the job.
+ *   no-help            → 0  (customer carries; our team does NOT carry, so no stair charge)
+ *   driver-help        → 1  (driver carries alongside customer)
+ *   driver-plus-helper → 2  (driver + 1 paid helper)
+ * Defaults to 1 for any unknown / empty value (e.g. waste removal which has no
+ * help-option selector — the driver is always the one carrying).
  */
 export function getWorkerCount(helpOption: string): number {
-  if (helpOption === "driver-help") return 2;
+  if (helpOption === "no-help") return 0;
+  if (helpOption === "driver-help") return 1;
   if (helpOption === "driver-plus-helper") return 2;
   return 1;
 }
 
 /**
  * Returns the stairs surcharge for a given floor value multiplied by the
- * number of workers. The formula is: flights × £10 × workers.
+ * number of workers carrying. The formula is: flights × £10 × workers.
+ * Returns £0 when workerCount is 0 (customer carries — no-help option).
  * Use this everywhere a final price is computed; use getFloorChargeFromValue
  * only when the worker count is not yet known (e.g. during the address step).
  */
@@ -85,7 +87,7 @@ export function getFloorChargeWithWorkers(
   floorValue: string,
   workerCount: number,
 ): number {
-  return getFloorChargeFromValue(floorValue) * Math.max(1, workerCount);
+  return getFloorChargeFromValue(floorValue) * workerCount;
 }
 
 export function getFloorChargeFromValue(floorValue: string): number {
@@ -279,8 +281,8 @@ export default function StairsAccessSection({
         <div className="mt-3 sm:mt-4">
           <p className="text-[12.5px] sm:text-[13px] font-semibold text-gray-700">Floor level</p>
           <p className="text-[11px] sm:text-[12px] text-gray-500 mt-0.5 sm:mt-1 leading-snug sm:leading-relaxed">
-            Please select the floor. £{FLOOR_PRICE} per flight per worker is
-            added when no lift is available.
+            Please select the floor. Stairs/flights are charged only when our
+            team helps with carrying: £{FLOOR_PRICE} per flight per worker.
           </p>
 
           <div className="mt-2 sm:mt-3 flex items-center gap-3 bg-purple-50/60 border border-purple-100 rounded-2xl p-2">

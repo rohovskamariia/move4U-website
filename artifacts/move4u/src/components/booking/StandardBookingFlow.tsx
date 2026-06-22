@@ -397,8 +397,8 @@ export default function StandardBookingFlow({
                 "driver-plus-helper": "Driver + helper",
               };
               const peopleCounts: Record<string, string> = {
-                "no-help": "1 (driver only)",
-                "driver-help": "2 (driver + you carry)",
+                "no-help": "1 (driver only — you carry)",
+                "driver-help": "1 worker carrying (driver + you)",
                 "driver-plus-helper": "2 (driver + 1 helper)",
               };
               const formatFloorDetail = (key: string, charge: number) => {
