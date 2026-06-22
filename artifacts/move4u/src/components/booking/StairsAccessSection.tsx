@@ -65,13 +65,13 @@ export const FLOOR_PRICE = 10;
  * Maps a helpOption id to the number of workers on the job.
  *   no-help            → 1  (driver only)
  *   driver-help        → 2  (driver + customer carries)
- *   driver-plus-helper → 3  (driver + 1 paid helper)
+ *   driver-plus-helper → 2  (driver + 1 paid helper = 2 workers)
  * Defaults to 1 for any unknown value (e.g. waste removal which has no
  * help-option selector — the driver is always the only person).
  */
 export function getWorkerCount(helpOption: string): number {
   if (helpOption === "driver-help") return 2;
-  if (helpOption === "driver-plus-helper") return 3;
+  if (helpOption === "driver-plus-helper") return 2;
   return 1;
 }
 

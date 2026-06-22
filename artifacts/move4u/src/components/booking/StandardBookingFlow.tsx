@@ -399,7 +399,7 @@ export default function StandardBookingFlow({
               const peopleCounts: Record<string, string> = {
                 "no-help": "1 (driver only)",
                 "driver-help": "2 (driver + you carry)",
-                "driver-plus-helper": "3 (driver + 1 helper)",
+                "driver-plus-helper": "2 (driver + 1 helper)",
               };
               const formatFloorDetail = (key: string, charge: number) => {
                 const label = getFloorLabelFromValue(key);
