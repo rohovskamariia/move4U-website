@@ -14,8 +14,8 @@
 
 import express, { Router, type Request, type Response } from "express";
 import { createHmac, timingSafeEqual } from "crypto";
-import { updatePaymentStatus, getBookingByRef } from "../lib/sheets";
-import { editBookingMessage, sendDepositNotification } from "../lib/telegram";
+import { updatePaymentStatus, updateBookingAdmin, getBookingByRef } from "../lib/sheets";
+import { editBookingMessage, sendDepositNotification, sendInvoicePaymentNotification } from "../lib/telegram";
 import { logger } from "../lib/logger";
 
 export const webhookRouter = Router();
@@ -55,9 +55,17 @@ interface StripeCheckoutSession {
   customer_details?: { name?: string | null; email?: string | null } | null;
 }
 
+interface StripeInvoice {
+  id?: string;
+  metadata?: Record<string, string>;
+  amount_paid?: number;
+  amount_due?: number;
+}
+
 interface StripeEvent {
   type: string;
-  data: { object: StripeCheckoutSession };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: { object: StripeCheckoutSession & StripeInvoice & Record<string, any> };
 }
 
 // express.raw() is applied here (not globally) so only this route receives a Buffer body.
@@ -165,6 +173,52 @@ webhookRouter.post("/stripe-webhook", express.raw({ type: "application/json", li
         }
       } catch (err) {
         logger.error({ err, bookingRef }, "Telegram payment notification failed");
+      }
+    })();
+  }
+
+  // ── Handle invoice.paid ───────────────────────────────────────
+  if (event.type === "invoice.paid" || event.type === "invoice.payment_failed") {
+    const inv = event.data.object;
+    const bookingRef = (inv.metadata?.["booking_reference"] ?? "").trim();
+    const invoiceType = inv.metadata?.["invoice_type"] ?? "";
+    const agreedQuote = inv.metadata?.["agreed_quote"] ?? "—";
+    const depositAmount = inv.metadata?.["deposit_amount"] ?? "—";
+    const remainingBalance = inv.metadata?.["remaining_balance"] ?? "—";
+    const paid = event.type === "invoice.paid";
+    const amountRaw = paid ? (inv.amount_paid ?? 0) : (inv.amount_due ?? 0);
+    const amountFormatted = `£${(amountRaw / 100).toFixed(2)}`;
+
+    logger.info({ type: event.type, bookingRef, invoiceType }, "Stripe invoice event received");
+
+    if (!bookingRef) {
+      logger.warn("No booking_reference in invoice metadata — skipping");
+      res.json({ received: true });
+      return;
+    }
+
+    const paymentStatus = !paid
+      ? "Invoice payment failed"
+      : invoiceType === "deposit"
+        ? "Deposit paid"
+        : "Fully paid";
+
+    await updateBookingAdmin(bookingRef, { paymentStatus });
+
+    ;(async () => {
+      try {
+        await sendInvoicePaymentNotification({
+          bookingRef,
+          invoiceType,
+          amountFormatted,
+          agreedQuote: agreedQuote !== "—" ? `£${agreedQuote}` : "—",
+          depositAmount: depositAmount !== "—" ? `£${depositAmount}` : "—",
+          remainingBalance: remainingBalance !== "—" ? `£${remainingBalance}` : "—",
+          paymentStatus,
+          paid,
+        });
+      } catch (err) {
+        logger.error({ err, bookingRef }, "Invoice payment Telegram notification failed");
       }
     })();
   }

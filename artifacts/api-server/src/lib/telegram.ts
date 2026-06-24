@@ -352,6 +352,77 @@ export async function editBookingMessage(
   }
 }
 
+// ── Invoice notifications ──────────────────────────────────────
+
+export interface InvoiceCreatedPayload {
+  bookingRef: string;
+  invoiceType: string;
+  amountFormatted: string;
+  customerName: string;
+  agreedQuote: string;
+  depositAmount: string;
+  remainingBalance: string;
+  paymentStatus: string;
+  invoiceUrl: string;
+  emailSent: boolean;
+}
+
+export async function sendInvoiceCreatedNotification(p: InvoiceCreatedPayload): Promise<void> {
+  const typeLabel = p.invoiceType === "deposit" ? "Deposit"
+    : p.invoiceType === "full" ? "Full payment" : "Remaining balance";
+
+  const lines = [
+    `🧾 Invoice created — ${p.bookingRef}`,
+    `Type: ${typeLabel}`,
+    `Amount: ${p.amountFormatted}`,
+    p.customerName ? `Customer: ${p.customerName}` : null,
+    `Agreed Quote: ${p.agreedQuote}`,
+    `Deposit: ${p.depositAmount}`,
+    `Remaining: ${p.remainingBalance}`,
+    `Payment Status: ${p.paymentStatus}`,
+    p.emailSent ? "📧 Invoice sent by email" : "⚠️ No email — copy link to send manually",
+    p.invoiceUrl ? `🔗 Invoice: ${p.invoiceUrl}` : null,
+    `🔗 Admin panel: ${ADMIN_PANEL_URL}`,
+  ].filter((l): l is string => l !== null).join("\n");
+
+  const { botToken, chatId } = getCredentials();
+  if (!botToken || !chatId) return;
+  await tgSend(lines);
+}
+
+export interface InvoicePaymentPayload {
+  bookingRef: string;
+  invoiceType: string;
+  amountFormatted: string;
+  agreedQuote: string;
+  depositAmount: string;
+  remainingBalance: string;
+  paymentStatus: string;
+  paid: boolean; // true = paid, false = failed
+}
+
+export async function sendInvoicePaymentNotification(p: InvoicePaymentPayload): Promise<void> {
+  const typeLabel = p.invoiceType === "deposit" ? "Deposit"
+    : p.invoiceType === "full" ? "Full payment" : "Remaining balance";
+  const icon = p.paid ? "✅" : "❌";
+  const event = p.paid ? "Invoice paid" : "Invoice payment failed";
+
+  const lines = [
+    `${icon} ${event} — ${p.bookingRef}`,
+    `Type: ${typeLabel}`,
+    `Amount: ${p.amountFormatted}`,
+    `Agreed Quote: ${p.agreedQuote}`,
+    `Deposit: ${p.depositAmount}`,
+    `Remaining: ${p.remainingBalance}`,
+    `Payment Status: ${p.paymentStatus}`,
+    `🔗 Admin panel: ${ADMIN_PANEL_URL}`,
+  ].join("\n");
+
+  const { botToken, chatId } = getCredentials();
+  if (!botToken || !chatId) return;
+  await tgSend(lines);
+}
+
 // Short fallback notification for deposit payments when no stored message_id is available.
 export async function sendDepositNotification(
   bookingRef: string,

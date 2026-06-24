@@ -35,6 +35,9 @@ interface BookingRecord {
   paymentLink: string;
   photoUrls: string; // comma-separated serving URLs for uploaded photos
   timeWindow: string; // customer's preferred time slot (e.g. "Morning (8am–12pm)")
+  invoiceId: string;
+  invoiceUrl: string;
+  invoiceType: string;
 }
 
 interface EditForm {
@@ -50,7 +53,7 @@ interface EditForm {
 // ── Constants ─────────────────────────────────────────────────
 
 const BOOKING_STATUSES = ["New", "Contacted", "Confirmed", "Denied", "Booked", "Completed"];
-const PAYMENT_STATUSES = ["Unpaid", "Payment link ready", "Paid", "Deposit paid"];
+const PAYMENT_STATUSES = ["Unpaid", "Payment link ready", "Invoice created", "Invoice sent", "Deposit paid", "Invoice payment failed", "Fully paid", "Paid"];
 const STATUS_FILTERS   = ["All", "New", "Contacted", "Confirmed", "Booked", "Completed", "Denied"];
 
 function initEditForm(b: BookingRecord): EditForm {
@@ -334,6 +337,10 @@ export default function AdminBookingsPage() {
   const [linkErrors,    setLinkErrors]    = useState<Record<string, string>>({});
   const [copied,        setCopied]        = useState<string | null>(null);
   const [copiedMsg,     setCopiedMsg]     = useState<string | null>(null);
+  const [invoiceBusy,   setInvoiceBusy]   = useState<string | null>(null);
+  const [invoiceErrors, setInvoiceErrors] = useState<Record<string, string>>({});
+  const [invoiceModal,  setInvoiceModal]  = useState<string | null>(null); // ref of booking showing options
+  const [copiedInvoice, setCopiedInvoice] = useState<string | null>(null);
 
   const apiFetch = useCallback(
     (path: string, init?: RequestInit) =>
@@ -534,6 +541,67 @@ export default function AdminBookingsPage() {
       setLinkErrors((e) => ({ ...e, [ref]: msg }));
     } finally {
       setLinkBusy(null);
+    }
+  }
+
+  async function createInvoice(ref: string, invoiceType: "deposit" | "full" | "remaining") {
+    const booking = bookings.find((b) => b.bookingReference === ref);
+    const form = editForms[ref];
+    if (!booking || !form) return;
+
+    setInvoiceBusy(ref);
+    setInvoiceErrors((e) => ({ ...e, [ref]: "" }));
+    setInvoiceModal(null);
+
+    const email = parseEmailFromContactMethod(booking.contactMethod);
+    try {
+      const res = await apiFetch(
+        `/api/admin/bookings/${encodeURIComponent(ref)}/invoice`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            invoiceType,
+            agreedQuote: form.agreedQuote,
+            depositAmount: form.depositAmount,
+            customerName: booking.name ?? "",
+            customerEmail: email,
+            customerPhone: booking.phone ?? "",
+            pickup: booking.pickup ?? "",
+            dropoff: booking.dropoff ?? "",
+            serviceType: booking.service ?? "",
+          }),
+        },
+      );
+      const data = (await res.json()) as {
+        invoiceId?: string; invoiceUrl?: string; emailSent?: boolean;
+        paymentStatus?: string; error?: string;
+      };
+      if (!res.ok) throw new Error(data.error ?? "Invoice creation failed");
+
+      const newStatus = data.paymentStatus ?? (data.emailSent ? "Invoice sent" : "Invoice created");
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.bookingReference === ref
+            ? { ...b, invoiceId: data.invoiceId ?? "", invoiceUrl: data.invoiceUrl ?? "", invoiceType, paymentStatus: newStatus }
+            : b,
+        ),
+      );
+      setEditForms((prev) => ({
+        ...prev,
+        [ref]: { ...(prev[ref] ?? {}), paymentStatus: newStatus } as EditForm,
+      }));
+
+      if (!data.emailSent) {
+        setInvoiceErrors((e) => ({
+          ...e,
+          [ref]: "Invoice created. No customer email found — copy the invoice link to send manually.",
+        }));
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Invoice creation failed";
+      setInvoiceErrors((e) => ({ ...e, [ref]: msg }));
+    } finally {
+      setInvoiceBusy(null);
     }
   }
 
@@ -1023,6 +1091,123 @@ export default function AdminBookingsPage() {
                         </p>
                       )}
                     </section>
+
+                    {/* Invoice section */}
+                    {(() => {
+                      const isInvoiceBusy = invoiceBusy === ref;
+                      const invoiceUrl = booking.invoiceUrl;
+                      const agreedNum = parseFloat(editForms[ref]?.agreedQuote ?? "");
+                      const depositNum = parseFloat(editForms[ref]?.depositAmount ?? "");
+                      const remaining = !isNaN(agreedNum) && !isNaN(depositNum)
+                        ? Math.max(0, agreedNum - depositNum) : null;
+
+                      return (
+                        <section className="border-t border-gray-100 pt-4">
+                          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Stripe Invoice</h3>
+
+                          {/* Financial summary */}
+                          <div className="grid grid-cols-3 gap-2 mb-3 text-sm">
+                            <div className="bg-gray-50 rounded-lg px-3 py-2">
+                              <p className="text-xs text-gray-400 mb-0.5">Agreed Quote</p>
+                              <p className="font-semibold text-gray-800">{editForms[ref]?.agreedQuote ? `£${editForms[ref].agreedQuote}` : "—"}</p>
+                            </div>
+                            <div className="bg-gray-50 rounded-lg px-3 py-2">
+                              <p className="text-xs text-gray-400 mb-0.5">Deposit</p>
+                              <p className="font-semibold text-gray-800">{editForms[ref]?.depositAmount ? `£${editForms[ref].depositAmount}` : "—"}</p>
+                            </div>
+                            <div className="bg-gray-50 rounded-lg px-3 py-2">
+                              <p className="text-xs text-gray-400 mb-0.5">Remaining</p>
+                              <p className="font-semibold text-gray-800">{remaining !== null ? `£${remaining.toFixed(2)}` : "—"}</p>
+                            </div>
+                          </div>
+
+                          {/* Existing invoice */}
+                          {invoiceUrl ? (
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs text-gray-500">
+                                  {booking.invoiceType === "deposit" ? "Deposit invoice"
+                                    : booking.invoiceType === "full" ? "Full payment invoice"
+                                    : booking.invoiceType === "remaining" ? "Remaining balance invoice"
+                                    : "Invoice"} created
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <a
+                                  href={invoiceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-700 text-white rounded-lg text-xs font-semibold hover:bg-purple-800 transition-colors"
+                                >
+                                  <ExternalLink className="w-3 h-3" /> Open invoice
+                                </a>
+                                <button
+                                  onClick={() => {
+                                    void navigator.clipboard.writeText(invoiceUrl).then(() => {
+                                      setCopiedInvoice(ref);
+                                      setTimeout(() => setCopiedInvoice(null), 2000);
+                                    });
+                                  }}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
+                                  {copiedInvoice === ref ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                                  {copiedInvoice === ref ? "Copied!" : "Copy link"}
+                                </button>
+                                <button
+                                  onClick={() => setInvoiceModal(invoiceModal === ref ? null : ref)}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
+                                  New invoice
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setInvoiceModal(invoiceModal === ref ? null : ref)}
+                              disabled={isInvoiceBusy}
+                              className="flex items-center gap-2 px-4 py-2.5 bg-gray-800 text-white text-sm font-semibold rounded-xl hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isInvoiceBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                              Create invoice
+                            </button>
+                          )}
+
+                          {/* Invoice type picker */}
+                          {invoiceModal === ref && (
+                            <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
+                              <p className="text-xs font-semibold text-gray-600 mb-2">Choose invoice type:</p>
+                              {[
+                                { type: "deposit" as const, label: "Deposit invoice", amount: editForms[ref]?.depositAmount ? `£${editForms[ref].depositAmount}` : "(30% of quote)" },
+                                { type: "full" as const,    label: "Full amount invoice", amount: editForms[ref]?.agreedQuote ? `£${editForms[ref].agreedQuote}` : "requires Agreed Quote" },
+                                { type: "remaining" as const, label: "Remaining balance invoice", amount: remaining !== null ? `£${remaining.toFixed(2)}` : "requires Agreed Quote" },
+                              ].map(({ type, label, amount }) => (
+                                <button
+                                  key={type}
+                                  onClick={() => void createInvoice(ref, type)}
+                                  disabled={isInvoiceBusy}
+                                  className="w-full flex items-center justify-between px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm hover:border-purple-400 hover:bg-purple-50 transition-colors disabled:opacity-50"
+                                >
+                                  <span className="font-medium text-gray-800">{label}</span>
+                                  <span className="text-gray-500 text-xs">{amount}</span>
+                                </button>
+                              ))}
+                              <button
+                                onClick={() => setInvoiceModal(null)}
+                                className="text-xs text-gray-400 hover:text-gray-600 pt-1"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          )}
+
+                          {invoiceErrors[ref] && (
+                            <p className={`mt-2 text-sm flex items-center gap-1 ${invoiceErrors[ref].startsWith("Invoice created") ? "text-amber-600" : "text-red-600"}`}>
+                              <AlertCircle className="w-4 h-4 shrink-0" /> {invoiceErrors[ref]}
+                            </p>
+                          )}
+                        </section>
+                      );
+                    })()}
                   </div>
                 )}
               </div>

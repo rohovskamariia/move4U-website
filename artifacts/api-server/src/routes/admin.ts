@@ -67,7 +67,7 @@ adminRouter.get("/admin/bookings", requireAdmin, async (_req: Request, res: Resp
 
 // ── PUT /api/admin/bookings/:ref ──────────────────────────────
 adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: Response) => {
-  const bookingRef = req.params.ref;
+  const bookingRef = req.params.ref as string;
   const fields = req.body as Record<string, string>;
 
   // Only allow known fields through
@@ -140,12 +140,188 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
   }
 });
 
+// ── POST /api/admin/bookings/:ref/invoice ────────────────────
+// Creates a Stripe Invoice (deposit / full / remaining balance).
+// Email is optional: if present the invoice is sent; if absent the
+// hosted URL is returned for manual copy/paste.
+adminRouter.post("/admin/bookings/:ref/invoice", requireAdmin, async (req: Request, res: Response) => {
+  const bookingRef = req.params.ref as string;
+
+  const stripe = getStripe();
+  if (!stripe) {
+    res.status(503).json({ error: "STRIPE_SECRET_KEY not configured" });
+    return;
+  }
+
+  const {
+    invoiceType = "",
+    agreedQuote = "",
+    depositAmount = "",
+    customerName = "",
+    customerEmail = "",
+    customerPhone = "",
+    pickup = "",
+    dropoff = "",
+    serviceType = "",
+  } = req.body as Record<string, string>;
+
+  if (!["deposit", "full", "remaining"].includes(invoiceType)) {
+    res.status(400).json({ error: "invoiceType must be deposit, full, or remaining" });
+    return;
+  }
+
+  const agreedNum = parseFloat(agreedQuote);
+  if ((invoiceType === "full" || invoiceType === "remaining") && (!agreedQuote || isNaN(agreedNum))) {
+    res.status(400).json({ error: "Please enter Agreed Quote first." });
+    return;
+  }
+
+  // Compute deposit: use provided value or 30 % of agreed quote
+  const depositNum = depositAmount && !isNaN(parseFloat(depositAmount))
+    ? parseFloat(depositAmount)
+    : agreedQuote ? Math.round(agreedNum * 0.30 * 100) / 100 : 0;
+
+  let amountNum: number;
+  let lineLabel: string;
+  if (invoiceType === "deposit") {
+    if (!depositNum) {
+      res.status(400).json({ error: "Cannot determine deposit amount. Enter Agreed Quote or Deposit Amount." });
+      return;
+    }
+    amountNum = depositNum;
+    lineLabel = `Move4U Booking ${bookingRef} — Deposit`;
+  } else if (invoiceType === "full") {
+    amountNum = agreedNum;
+    lineLabel = `Move4U Booking ${bookingRef} — Full payment`;
+  } else {
+    amountNum = Math.max(0, agreedNum - depositNum);
+    lineLabel = `Move4U Booking ${bookingRef} — Remaining balance`;
+  }
+
+  const amountPence = Math.round(amountNum * 100);
+  if (amountPence <= 0) {
+    res.status(400).json({ error: "Invoice amount must be greater than £0." });
+    return;
+  }
+
+  const remainingBalance = agreedQuote ? Math.max(0, agreedNum - depositNum).toFixed(2) : "—";
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const s = stripe as any;
+
+    // Find or create Stripe customer
+    let customerId: string;
+    if (customerEmail) {
+      const existing = await s.customers.list({ email: customerEmail, limit: 1 });
+      if (existing.data.length > 0) {
+        customerId = existing.data[0].id as string;
+      } else {
+        const cust = await s.customers.create({
+          ...(customerName && { name: customerName }),
+          email: customerEmail,
+          ...(customerPhone && { phone: customerPhone }),
+          metadata: { booking_reference: bookingRef },
+        });
+        customerId = cust.id as string;
+      }
+    } else {
+      const cust = await s.customers.create({
+        ...(customerName && { name: customerName }),
+        ...(customerPhone && { phone: customerPhone }),
+        metadata: { booking_reference: bookingRef },
+      });
+      customerId = cust.id as string;
+    }
+
+    // Create invoice
+    const invoice = await s.invoices.create({
+      customer: customerId,
+      collection_method: "send_invoice",
+      days_until_due: 14,
+      description: [
+        `Booking: ${bookingRef}`,
+        serviceType && `Service: ${serviceType}`,
+        pickup && `From: ${pickup}`,
+        dropoff && `To: ${dropoff}`,
+      ].filter(Boolean).join(" | "),
+      metadata: {
+        booking_reference: bookingRef,
+        invoice_type: invoiceType,
+        agreed_quote: agreedQuote || "—",
+        deposit_amount: depositNum.toFixed(2),
+        remaining_balance: remainingBalance,
+      },
+    });
+
+    // Add line item
+    await s.invoiceItems.create({
+      customer: customerId,
+      invoice: invoice.id,
+      amount: amountPence,
+      currency: "gbp",
+      description: lineLabel,
+    });
+
+    // Finalize
+    const finalized = await s.invoices.finalizeInvoice(invoice.id);
+    const hostedUrl: string = finalized.hosted_invoice_url ?? "";
+
+    // Send by email if available
+    let emailSent = false;
+    if (customerEmail) {
+      try {
+        await s.invoices.sendInvoice(invoice.id);
+        emailSent = true;
+      } catch (sendErr) {
+        logger.warn({ sendErr, invoiceId: invoice.id }, "sendInvoice failed — invoice finalized but not emailed");
+      }
+    }
+
+    // Persist to Sheets
+    const paymentStatus = emailSent ? "Invoice sent" : "Invoice created";
+    await updateBookingAdmin(bookingRef, {
+      invoiceId: invoice.id as string,
+      invoiceUrl: hostedUrl,
+      invoiceType,
+      paymentStatus,
+    });
+
+    // Telegram notification (fire-and-forget)
+    ;(async () => {
+      try {
+        const { sendInvoiceCreatedNotification } = await import("../lib/telegram");
+        await sendInvoiceCreatedNotification({
+          bookingRef,
+          invoiceType,
+          amountFormatted: `£${amountNum.toFixed(2)}`,
+          customerName,
+          agreedQuote: agreedQuote ? `£${agreedNum.toFixed(2)}` : "—",
+          depositAmount: `£${depositNum.toFixed(2)}`,
+          remainingBalance: agreedQuote ? `£${remainingBalance}` : "—",
+          paymentStatus,
+          invoiceUrl: hostedUrl,
+          emailSent,
+        });
+      } catch (err) {
+        logger.warn({ err, bookingRef }, "Invoice Telegram notification failed");
+      }
+    })();
+
+    logger.info({ bookingRef, invoiceType, amountPence, emailSent }, "Stripe invoice created");
+    res.json({ invoiceId: invoice.id, invoiceUrl: hostedUrl, emailSent, paymentStatus });
+  } catch (err) {
+    logger.error({ err, bookingRef }, "Failed to create Stripe invoice");
+    res.status(500).json({ error: "Failed to create invoice" });
+  }
+});
+
 // ── POST /api/admin/bookings/:ref/payment-link ────────────────
 // Creates a unique Stripe Checkout Session for a specific booking.
 // The booking reference is passed as client_reference_id AND metadata
 // so the webhook can match it.
 adminRouter.post("/admin/bookings/:ref/payment-link", requireAdmin, async (req: Request, res: Response) => {
-  const bookingRef = req.params.ref;
+  const bookingRef = req.params.ref as string;
 
   const stripe = getStripe();
   if (!stripe) {

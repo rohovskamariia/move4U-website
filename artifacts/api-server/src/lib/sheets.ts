@@ -222,6 +222,9 @@ const ADMIN_HEADER_ROW = [
   "Telegram Message ID", // V
   "Photos",              // W
   "Preferred Time",      // X — customer's chosen time window (Morning / Afternoon / Evening)
+  "Invoice ID",          // Y — Stripe invoice ID
+  "Invoice URL",         // Z — hosted invoice URL
+  "Invoice Type",        // AA — deposit / full / remaining
 ];
 
 let adminHeaderPatched = false;
@@ -231,14 +234,14 @@ async function patchAdminHeaders(id: string): Promise<void> {
   try {
     await connectors.proxy(
       "google-sheet",
-      `/v4/spreadsheets/${id}/values/Bookings!P1:X1?valueInputOption=USER_ENTERED`,
+      `/v4/spreadsheets/${id}/values/Bookings!P1:AA1?valueInputOption=USER_ENTERED`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ values: [ADMIN_HEADER_ROW] }),
       },
     );
-    logger.info("Patched admin column headers P–W");
+    logger.info("Patched admin column headers P–AA");
   } catch (err) {
     logger.warn({ err }, "Could not patch admin column headers — continuing");
   }
@@ -272,6 +275,9 @@ export interface BookingRecord {
   telegramMessageId: string; // V — stored so status updates can edit the same message
   photoUrls: string;         // W — comma-separated serving URLs for uploaded photos
   timeWindow: string;        // X — customer's preferred time window (e.g. "Morning (8am–12pm)")
+  invoiceId: string;         // Y — Stripe invoice ID
+  invoiceUrl: string;        // Z — hosted invoice URL
+  invoiceType: string;       // AA — deposit / full / remaining
 }
 
 export async function getAllBookings(): Promise<BookingRecord[]> {
@@ -280,7 +286,7 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
 
   const res = await connectors.proxy(
     "google-sheet",
-    `/v4/spreadsheets/${id}/values/Bookings!A:X`,
+    `/v4/spreadsheets/${id}/values/Bookings!A:AA`,
   );
   const data = (await res.json()) as { values?: string[][] };
   const rows = data.values ?? [];
@@ -314,6 +320,9 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
       telegramMessageId: row[21] ?? "",
       photoUrls:         row[22] ?? "",
       timeWindow:        row[23] ?? "",
+      invoiceId:         row[24] ?? "",
+      invoiceUrl:        row[25] ?? "",
+      invoiceType:       row[26] ?? "",
     }))
     .filter((b) => b.bookingReference)
     .reverse(); // newest first
@@ -331,6 +340,9 @@ export interface BookingAdminUpdate {
   telegramMessageId?: string; // column V
   photoUrls?:         string; // column W — comma-separated photo serving URLs
   preferredTime?:     string; // column X — customer's chosen time window
+  invoiceId?:         string; // column Y — Stripe invoice ID
+  invoiceUrl?:        string; // column Z — hosted invoice URL
+  invoiceType?:       string; // column AA — deposit / full / remaining
 }
 
 // Builds the batchUpdate ranges for a known sheet row. Shared by the
@@ -354,6 +366,9 @@ function buildAdminWriteRanges(
   if (fields.telegramMessageId  !== undefined) updates.push({ range: c("V"), values: [[fields.telegramMessageId]] });
   if (fields.photoUrls          !== undefined) updates.push({ range: c("W"), values: [[fields.photoUrls]] });
   if (fields.preferredTime      !== undefined) updates.push({ range: c("X"), values: [[fields.preferredTime]] });
+  if (fields.invoiceId          !== undefined) updates.push({ range: c("Y"), values: [[fields.invoiceId]] });
+  if (fields.invoiceUrl         !== undefined) updates.push({ range: c("Z"), values: [[fields.invoiceUrl]] });
+  if (fields.invoiceType        !== undefined) updates.push({ range: c("AA"), values: [[fields.invoiceType]] });
 
   return updates;
 }
