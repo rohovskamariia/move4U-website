@@ -52,6 +52,10 @@ interface EditForm {
 
 // ── Constants ─────────────────────────────────────────────────
 
+// Feature flag — must match server-side ENABLE_STRIPE_INVOICES env var.
+// Keep false until the invoice feature is intentionally re-enabled.
+const ENABLE_STRIPE_INVOICES = false;
+
 const BOOKING_STATUSES = ["New", "Contacted", "Confirmed", "Denied", "Booked", "Completed"];
 const PAYMENT_STATUSES = ["Unpaid", "Payment link ready", "Invoice created", "Invoice sent", "Deposit paid", "Invoice payment failed", "Fully paid", "Paid"];
 const STATUS_FILTERS   = ["All", "New", "Contacted", "Confirmed", "Booked", "Completed", "Denied"];
@@ -1092,8 +1096,8 @@ export default function AdminBookingsPage() {
                       )}
                     </section>
 
-                    {/* Invoice section */}
-                    {(() => {
+                    {/* Invoice section — hidden while ENABLE_STRIPE_INVOICES=false */}
+                    {ENABLE_STRIPE_INVOICES && (() => {
                       const isInvoiceBusy = invoiceBusy === ref;
                       const invoiceUrl = booking.invoiceUrl;
                       const agreedNum = parseFloat(editForms[ref]?.agreedQuote ?? "");

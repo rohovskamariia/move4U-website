@@ -36,6 +36,10 @@ if (!process.env["SITE_URL"]) {
   );
 }
 
+// Feature flag — set ENABLE_STRIPE_INVOICES=true in env to re-enable.
+// Default is false: the /invoice endpoint returns 503 and no invoice is ever created.
+const ENABLE_STRIPE_INVOICES = (process.env["ENABLE_STRIPE_INVOICES"] ?? "false").toLowerCase() === "true";
+
 // Lazily initialise Stripe — only if STRIPE_SECRET_KEY is set
 function getStripe() {
   const key = process.env["STRIPE_SECRET_KEY"];
@@ -145,6 +149,11 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
 // Email is optional: if present the invoice is sent; if absent the
 // hosted URL is returned for manual copy/paste.
 adminRouter.post("/admin/bookings/:ref/invoice", requireAdmin, async (req: Request, res: Response) => {
+  if (!ENABLE_STRIPE_INVOICES) {
+    res.status(503).json({ error: "Invoice feature is currently disabled (ENABLE_STRIPE_INVOICES=false)" });
+    return;
+  }
+
   const bookingRef = req.params.ref as string;
 
   const stripe = getStripe();
