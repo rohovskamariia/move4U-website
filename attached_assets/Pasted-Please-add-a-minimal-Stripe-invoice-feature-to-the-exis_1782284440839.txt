@@ -1,0 +1,219 @@
+Please add a minimal Stripe invoice feature to the existing Move4U admin booking panel.
+
+Please keep this change small and focused. I am trying to save Replit credits, so please do not write long reports unless there is an error or an important decision needed.
+
+Important:
+
+* Do not rebuild the website.
+* Do not change the customer booking form design.
+* Do not make the customer email required in the public booking form.
+* Do not change the existing deposit payment link flow.
+* Do not remove or break the existing checkout.session.completed webhook logic.
+* Do not rebuild the Telegram bot.
+* Do not make unnecessary design changes.
+* Do not hardcode any Stripe keys or secrets.
+* Use the existing Stripe environment variables/secrets.
+
+Current situation:
+The existing Stripe deposit checkout/payment link system already works.
+The existing Telegram/payment status update after deposit payment already works.
+Please reuse the current logic where possible and only extend it for invoices.
+
+Goal:
+In the existing admin booking card, add a “Create invoice” feature connected to the booking reference number, for example MV4U-1051.
+
+The admin booking card already has or should use:
+
+* Booking reference
+* Customer name
+* Customer email, but email must remain optional
+* Customer phone
+* Service type
+* From address
+* To address
+* Estimated price
+* Agreed Quote (£)
+* Deposit Amount (£)
+* Payment Status
+* Booking Status
+
+Admin panel invoice button:
+Add a button in the existing booking card/payment section:
+
+“Create invoice”
+
+When clicked, show three invoice options:
+
+1. Deposit invoice
+2. Full amount invoice
+3. Remaining balance invoice
+
+Invoice amount logic:
+
+* Deposit invoice = Deposit Amount (£)
+* Full amount invoice = Agreed Quote (£)
+* Remaining balance invoice = Agreed Quote (£) minus Deposit Amount (£)
+
+Important:
+Use Agreed Quote (£) as the final confirmed price for invoices.
+Do not use Estimated price for invoice creation unless Agreed Quote is empty and admin explicitly confirms.
+If Agreed Quote (£) is empty, do not create a full amount or remaining balance invoice. Show a clear message:
+“Please enter Agreed Quote first.”
+
+Deposit invoice:
+If Deposit Amount (£) is empty, calculate it as 30% of Agreed Quote (£), but allow admin to edit Deposit Amount manually.
+
+Remaining Balance:
+Please calculate Remaining Balance automatically from:
+Agreed Quote (£) minus Deposit Amount (£)
+
+In the admin booking card, clearly display:
+
+* Agreed Quote (£)
+* Deposit Amount (£)
+* Remaining Balance (£)
+* Payment Status
+* Invoice type, if created
+* Stripe invoice link, if created
+
+Customer email logic:
+Customer email must remain optional in the public booking form.
+
+For Stripe invoices:
+
+* If customer email exists, create the Stripe invoice and send it to the customer email.
+* If customer email is missing, still create the Stripe invoice, but do not send it by email.
+* In that case, show the hosted invoice URL in the admin panel and allow me to copy the invoice link, so I can send it manually by WhatsApp/SMS.
+
+If customer email is missing, do not block invoice creation.
+Instead show a clear message:
+“Invoice created. No customer email found, please copy and send the invoice link manually.”
+
+Only require email if I specifically click a separate “Send invoice by email” action.
+
+Stripe invoice requirements:
+Create the invoice through Stripe Invoicing, not as a custom PDF.
+The Stripe invoice should use my Stripe branding/logo/colours from Stripe settings.
+The invoice must be linked to the booking reference number.
+
+Each invoice must include:
+
+* Move4U booking reference, for example MV4U-1051
+* Customer name
+* Customer email, if available
+* Customer phone
+* Service type
+* From address
+* To address
+* Agreed Quote
+* Deposit Amount
+* Remaining Balance
+* Invoice type: Deposit / Full amount / Remaining balance
+
+Invoice line examples:
+
+Deposit invoice:
+“Move4U Booking MV4U-1051 — Deposit”
+Amount = Deposit Amount (£)
+
+Full amount invoice:
+“Move4U Booking MV4U-1051 — Full payment”
+Amount = Agreed Quote (£)
+
+Remaining balance invoice:
+“Move4U Booking MV4U-1051 — Remaining balance”
+Amount = Agreed Quote (£) minus Deposit Amount (£)
+
+After creating invoice:
+
+* Save Stripe invoice ID
+* Save hosted invoice URL
+* Show the invoice link in the admin booking panel
+* Add a “Copy invoice link” button
+* If customer email exists, send the invoice to the customer email
+* If customer email is missing, show the copy link option only
+* Update Payment Status to “Invoice sent” or similar
+
+Payment status logic:
+When invoice is paid:
+
+* Deposit invoice paid → Payment Status becomes “Deposit paid”
+* Full amount invoice paid → Payment Status becomes “Fully paid”
+* Remaining balance invoice paid → Payment Status becomes “Fully paid”
+
+Webhook:
+Please add Stripe webhook support for invoice payment events.
+Check the correct Stripe event type for the current Stripe API version.
+
+Likely events:
+
+* invoice.paid
+* invoice.payment_failed
+
+Do not remove the existing checkout.session.completed webhook logic because it already works for deposit payment links.
+
+Telegram:
+The existing Telegram booking update after deposit payment already works.
+Please reuse the existing Telegram notification/update logic where possible.
+
+For invoices, add Telegram notifications/updates for:
+
+1. Invoice created:
+    Show:
+
+* Booking reference
+* Invoice type
+* Invoice amount
+* Customer name
+* Agreed Quote
+* Deposit Amount
+* Remaining Balance
+* Payment Status: Invoice sent
+* Invoice link, if useful
+
+2. Invoice paid:
+    Show:
+
+* Booking reference
+* Invoice type
+* Amount paid
+* Agreed Quote
+* Deposit Amount
+* Remaining Balance
+* Payment Status
+
+3. Invoice payment failed:
+    Show:
+
+* Booking reference
+* Invoice type
+* Amount
+* Payment Status: Invoice payment failed
+
+Driver/Telegram message must clearly show:
+
+* Agreed Quote
+* Deposit Amount
+* Remaining Balance
+* Payment Status
+
+Storage:
+Please store enough invoice information so the admin panel can show the created invoice later:
+
+* Stripe invoice ID
+* Hosted invoice URL
+* Invoice type
+* Invoice amount
+* Invoice status
+* Payment status
+
+Before coding:
+Please briefly confirm:
+
+1. Which files you plan to edit.
+2. How you will store invoice ID and invoice URL.
+3. Which Stripe invoice paid event you will use.
+4. Whether this can be implemented without changing the existing deposit checkout flow.
+5. Whether email can remain optional while still allowing invoice link creation.
+
+After I confirm, then make only the necessary code changes.
