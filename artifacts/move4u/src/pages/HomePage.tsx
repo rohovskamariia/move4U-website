@@ -57,6 +57,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-[#faf8fd]">
       <Navbar />
 
+      <main>
       {/* Hero slider */}
       <HeroSlider />
 
@@ -252,6 +253,8 @@ export default function HomePage() {
 
       {/* Contact */}
       <ContactSection />
+
+      </main>
 
       {/* Footer */}
       <Footer />

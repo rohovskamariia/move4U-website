@@ -45,6 +45,19 @@ export function usePageMeta({ title, description, path }: PageMeta): void {
     }
     const cleanPath = path.startsWith("/") ? path : `/${path}`;
     canonical.setAttribute("href", `${SITE_ORIGIN}${cleanPath}`);
+
+    // OG + Twitter — update per route so social shares reflect the current page.
+    // We only update existing tags (all are statically present in index.html).
+    const ogTitle = document.querySelector<HTMLMetaElement>('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute("content", title);
+    const ogDesc = document.querySelector<HTMLMetaElement>('meta[property="og:description"]');
+    if (ogDesc) ogDesc.setAttribute("content", description);
+    const ogUrl = document.querySelector<HTMLMetaElement>('meta[property="og:url"]');
+    if (ogUrl) ogUrl.setAttribute("content", `${SITE_ORIGIN}${cleanPath}`);
+    const twTitle = document.querySelector<HTMLMetaElement>('meta[name="twitter:title"]');
+    if (twTitle) twTitle.setAttribute("content", title);
+    const twDesc = document.querySelector<HTMLMetaElement>('meta[name="twitter:description"]');
+    if (twDesc) twDesc.setAttribute("content", description);
   }, [title, description, path]);
 }
 
