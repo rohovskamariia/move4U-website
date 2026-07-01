@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import BackToHome from "@/components/BackToHome";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import HouseMovingHowItWorks from "@/components/HouseMovingHowItWorks";
+import TrustpilotBanner from "@/components/TrustpilotBanner";
 import { CONTACT, HELP_PRICING, VAN_SIZES } from "@/data/constants";
 import { isAddressAcceptable } from "@/lib/postcode";
 import {
@@ -711,6 +712,8 @@ export default function HouseMovingPage() {
             </div>
           </div>
         </section>
+
+      <TrustpilotBanner />
 
       </main>
 

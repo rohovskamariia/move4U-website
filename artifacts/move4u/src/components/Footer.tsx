@@ -95,7 +95,18 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 pt-4 sm:pt-6 flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[11px] sm:text-xs text-gray-500">
           <p>&copy; {year} Move4U. All rights reserved. London, UK.</p>
-          <p>Self-employed removal service</p>
+          <div className="flex items-center gap-3">
+            <p>Self-employed removal service</p>
+            <span className="text-gray-700">·</span>
+            <a
+              href="https://uk.trustpilot.com/review/move4u.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-purple-400 transition-colors"
+            >
+              Review us on Trustpilot
+            </a>
+          </div>
         </div>
       </div>
     </footer>

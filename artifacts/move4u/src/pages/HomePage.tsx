@@ -5,6 +5,7 @@ import { usePageMeta } from "@/lib/usePageMeta";
 import Navbar from "@/components/Navbar";
 import HeroSlider from "@/components/HeroSlider";
 import ServicesSection from "@/components/ServicesSection";
+import TrustpilotBanner from "@/components/TrustpilotBanner";
 import ReviewsSection from "@/components/ReviewsSection";
 import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
@@ -63,6 +64,9 @@ export default function HomePage() {
 
       {/* Services */}
       <ServicesSection />
+
+      {/* Trustpilot review prompt */}
+      <TrustpilotBanner />
 
       {/* How It Works — refined editorial timeline.
           Mobile: continuous left rail with numbered nodes.
