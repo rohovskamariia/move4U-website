@@ -1,0 +1,48 @@
+Please adjust the Trustpilot update.
+
+The last added large Trustpilot/review section is not needed. Remove the newly added large Trustpilot section/block.
+
+Do not remove, edit, or change the existing reviews/testimonials sections, including:
+- “What Our Customers Say”
+- “Why customers choose Move4U”
+- existing review cards
+- existing review layout and design
+- Google review setup or any future Google review links
+
+The goal is only to add a small Trustpilot review CTA to the existing review areas and near the bottom of the website.
+
+Trustpilot review link:
+https://uk.trustpilot.com/review/move4u.uk
+
+Add a small Trustpilot CTA:
+Text:
+"Leave a review on Trustpilot"
+
+Button/link text:
+"Leave a Review"
+
+The link should open in a new tab:
+https://uk.trustpilot.com/review/move4u.uk
+
+Where to add it:
+1. Under or inside the existing “What Our Customers Say” section on the homepage.
+2. Under the existing review/testimonial area on the House Moving page.
+3. Under the existing review/testimonial area on service pages where reviews already appear.
+4. Add a small Trustpilot review link near the bottom of the website, above the main footer or inside the footer area, but keep it subtle.
+
+Important:
+This should not be a new full section or big banner.
+It should look like a small review link/CTA connected to the existing reviews.
+
+Design requirements:
+- Match the current Move4U purple style.
+- Keep it small, clean and professional.
+- Make it mobile-friendly.
+- Check both desktop and mobile layouts.
+- On mobile, the Trustpilot CTA should be centered, easy to tap, and not too large.
+- On desktop, it should sit neatly under the existing reviews section without adding too much space.
+- Do not create duplicate large review sections.
+- Do not claim a Trustpilot rating yet.
+- Do not write “Excellent”, “5 stars”, “4.9/5”, or any Trustpilot score unless it is real and pulled from Trustpilot.
+- Do not change the existing testimonials/reviews section.
+- Do not change the layout of the current review cards.

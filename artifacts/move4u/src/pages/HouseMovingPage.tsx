@@ -6,7 +6,6 @@ import Footer from "@/components/Footer";
 import BackToHome from "@/components/BackToHome";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import HouseMovingHowItWorks from "@/components/HouseMovingHowItWorks";
-import TrustpilotBanner from "@/components/TrustpilotBanner";
 import { CONTACT, HELP_PRICING, VAN_SIZES } from "@/data/constants";
 import { isAddressAcceptable } from "@/lib/postcode";
 import {
@@ -561,6 +560,19 @@ export default function HouseMovingPage() {
                 </span>
               </div>
             </div>
+
+            {/* Trustpilot CTA */}
+            <div className="mt-5 sm:mt-6 text-center">
+              <p className="text-[12px] text-gray-400 mb-2.5">Leave a review on Trustpilot</p>
+              <a
+                href="https://uk.trustpilot.com/review/move4u.uk"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-purple-700 hover:text-purple-900 border border-purple-200 hover:border-purple-300 bg-white hover:bg-purple-50 px-5 py-2 rounded-full transition-all shadow-sm hover:-translate-y-0.5"
+              >
+                Leave a Review
+              </a>
+            </div>
           </div>
         </section>
 
@@ -712,8 +724,6 @@ export default function HouseMovingPage() {
             </div>
           </div>
         </section>
-
-      <TrustpilotBanner />
 
       </main>
 

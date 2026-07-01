@@ -396,6 +396,19 @@ export default function ReviewsSection() {
             </div>
           </div>
         </div>
+
+        {/* Trustpilot CTA */}
+        <div className="mt-8 sm:mt-10 text-center">
+          <p className="text-[12px] text-gray-400 mb-2.5">Leave a review on Trustpilot</p>
+          <a
+            href="https://uk.trustpilot.com/review/move4u.uk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-purple-700 hover:text-purple-900 border border-purple-200 hover:border-purple-300 bg-white hover:bg-purple-50 px-5 py-2 rounded-full transition-all shadow-sm hover:-translate-y-0.5"
+          >
+            Leave a Review
+          </a>
+        </div>
       </div>
     </section>
   );
