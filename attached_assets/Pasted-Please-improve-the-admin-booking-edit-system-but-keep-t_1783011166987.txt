@@ -1,0 +1,143 @@
+Please improve the admin booking edit system, but keep the admin panel clean and not overloaded.
+
+Main goal:
+The admin panel must let me update booking details after a customer requests changes, and the updated details must be reflected in Google Sheets and Telegram when I choose to notify the driver.
+
+Admin panel layout:
+Keep the main booking view simple.
+
+Always show only the key fields:
+
+* Date
+* Time / time window
+* Pickup address
+* Drop-off address
+* Van size
+* Help option
+* Duration
+* Agreed total price
+* Deposit paid
+* Remaining balance
+* Payment status
+* Notes
+
+Then add optional expandable sections/buttons:
+
+1. * Add Extra Stop
+     Each extra stop should have:
+
+* Address
+* Charge
+* Notes
+
+Allow multiple extra stops.
+If no extra stop is added, do not show it in Telegram or customer messages.
+If added, show it between pickup and drop-off.
+
+2. * Add Extra Charge
+     Each extra charge should have:
+
+* Type/label, for example:
+
+  * Extra time
+  * Stairs
+  * Congestion charge
+  * Outside M25
+  * Manual adjustment
+* Amount
+* Notes
+
+If no extra charge is added, do not show it.
+
+3. Price Breakdown
+   Show a clear but compact breakdown:
+
+* Base price
+* Extra stops total
+* Extra charges total
+* Agreed total
+* Deposit paid
+* Remaining balance
+
+Deposit logic:
+If deposit is already paid, it must stay fixed unless I manually edit it.
+
+Example:
+Original total: £180
+Deposit paid: £54
+Updated total: £215
+Deposit paid stays £54
+Remaining balance becomes £161
+
+Formula:
+remaining balance = agreed total price - deposit paid
+
+Buttons:
+Add two main buttons:
+
+1. Save Changes
+
+* Saves changes in admin panel
+* Updates Google Sheets
+* Does NOT send Telegram
+* Does NOT send customer message
+
+2. Save & Notify Driver
+
+* Saves changes
+* Updates Google Sheets
+* Sends a new internal Telegram update:
+  ✏️ Booking Updated — [Booking Reference]
+* Does NOT send customer message
+
+Keep “Send Updated Confirmation to Customer” as a separate button in the email/customer communication section only.
+
+Telegram update:
+When “Save & Notify Driver” is clicked, send a new Telegram message with:
+
+* Booking reference
+* Customer name and phone
+* Updated date/time
+* Pickup
+* Extra stops if added
+* Drop-off
+* Van
+* Help
+* Duration
+* Price breakdown
+* Deposit paid
+* Remaining balance
+* Payment status
+* Notes
+
+Only include optional fields if they have a value.
+
+Google Sheets:
+Store all updated values, including:
+
+* duration
+* extra stops
+* extra charges
+* agreed total
+* deposit paid
+* remaining balance
+* notes
+* payment status
+
+Booking History:
+Log every admin edit:
+
+* timestamp
+* booking reference
+* changed field
+* old value
+* new value
+* changed by
+
+Important:
+Do not change the customer-facing booking flow design.
+Do not change pricing rules unless needed for admin editing.
+Do not break payment/deposit logic.
+Do not break existing bookings.
+Do not automatically send anything to the customer.
+Please first show me a short implementation plan before making code changes.

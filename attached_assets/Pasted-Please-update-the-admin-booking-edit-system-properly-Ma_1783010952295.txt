@@ -1,0 +1,162 @@
+Please update the admin booking edit system properly.
+
+Main goal:
+The admin panel must become the source of truth for every booking update. If a customer later asks to add extra stops, change duration, add stairs, change addresses or adjust the price, I need to be able to update everything in the admin panel properly.
+
+Required admin editing features:
+
+1. Editable core booking details:
+
+* date
+* time / time window
+* duration / hours
+* van size
+* help option
+* pickup address
+* pickup stairs / floor
+* drop-off address
+* drop-off stairs / floor
+* notes
+* payment status
+
+2. Extra Stops:
+   Add a button: “+ Add Extra Stop”
+
+Each extra stop should have:
+
+* address
+* charge
+* notes
+
+Allow multiple extra stops, not just one fixed field.
+
+If no extra stop is added, do not show it in Telegram or customer messages.
+If extra stop is added, show it in the route between pickup and drop-off.
+
+3. Extra charges:
+   Add optional editable charges:
+
+* extra time
+* stairs charge
+* congestion charge
+* outside M25 charge
+* manual extra charge
+
+Each charge should have:
+
+* label
+* amount
+* notes
+
+4. Price breakdown:
+   Admin panel must clearly show:
+
+* base price
+* duration
+* hourly rate
+* extra stops total
+* extra time total
+* stairs charge
+* congestion charge
+* outside M25 charge
+* manual charges
+* agreed total price
+* deposit paid
+* remaining balance
+
+5. Deposit logic:
+   If deposit is already paid, it must stay fixed unless I manually edit it.
+
+Example:
+Original total: £180
+Deposit paid: £54
+
+Updated total: £215
+
+Deposit paid must stay £54.
+Remaining balance must automatically become £161.
+
+Formula:
+remaining balance = agreed total price - deposit paid
+
+6. Save buttons:
+   Add two separate admin actions:
+
+A) “Save Changes”
+
+* Saves changes in admin panel
+* Updates Google Sheets
+* Does NOT send Telegram update
+* Does NOT send customer message
+
+B) “Save & Confirm Update”
+
+* Saves changes
+* Updates Google Sheets
+* Sends a new internal Telegram update to the Move4U Jobs chat
+* Does NOT send customer message
+
+7. Telegram update:
+   When “Save & Confirm Update” is clicked, send a new Telegram message:
+
+✏️ Booking Updated — [Booking Reference]
+
+The message must include:
+
+* updated date/time
+* service
+* customer name
+* phone
+* pickup address + stairs/floor if filled
+* extra stops if added
+* drop-off address + stairs/floor if filled
+* van size
+* help option
+* duration
+* price breakdown
+* total price
+* deposit paid
+* remaining balance
+* payment status
+* notes
+
+Only include optional fields if they are filled in.
+
+8. Customer confirmation:
+   Do not send anything to the customer automatically.
+
+Keep a separate button:
+“Send Updated Confirmation to Customer”
+
+Only when I manually click this button should the customer confirmation be prepared/sent.
+
+9. Google Sheets:
+   Google Sheets must store all updated details, including:
+
+* duration
+* extra stops
+* pickup/drop-off stairs
+* extra charges
+* total
+* deposit paid
+* remaining balance
+* payment status
+* notes
+
+10. Booking History:
+    Every admin edit should be logged:
+
+* timestamp
+* booking reference
+* changed field
+* old value
+* new value
+* changed by
+
+Important:
+Do not change the customer-facing booking flow design.
+Do not change pricing rules unless needed to calculate/admin-edit correctly.
+Do not break payment/deposit logic.
+Do not break existing bookings.
+Do not automatically send anything to the customer.
+Please first show me a short implementation plan before making code changes.
