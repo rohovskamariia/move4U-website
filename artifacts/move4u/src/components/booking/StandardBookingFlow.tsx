@@ -512,6 +512,18 @@ export default function StandardBookingFlow({
                 wasteAddons: "",
                 uploadedFiles: photoUrls.join(", "),
                 notes: fullNotes,
+                // Price breakdown — stored in Sheets columns AB–AM
+                duration: estimatedTime,
+                hourlyRate: !isSingleItem(serviceId) && hours > 0
+                  ? `£${Math.round(baseCharge / hours)}/h`
+                  : "",
+                baseCharge: `£${baseCharge.toFixed(0)}`,
+                stairsCharge: (pickupCharge + dropoffCharge + stopsCharge) > 0
+                  ? `£${(pickupCharge + dropoffCharge + stopsCharge).toFixed(0)}`
+                  : "",
+                extraStopCharge: extraStopFee > 0 ? `£${extraStopFee.toFixed(0)}` : "",
+                congestionCharge: congestionCharge > 0 ? `£${congestionCharge.toFixed(0)}` : "",
+                outsideM25Charge: outsideCharge > 0 ? `£${outsideCharge.toFixed(0)}` : "",
               });
             }}
           />

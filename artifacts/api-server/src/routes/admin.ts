@@ -13,8 +13,8 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Stripe = require("stripe").default ?? require("stripe");
-import { getAllBookings, updateBookingAdmin, getBookingByRef } from "../lib/sheets";
-import { editBookingMessage } from "../lib/telegram";
+import { getAllBookings, updateBookingAdmin, getBookingByRef, writeAuditLog } from "../lib/sheets";
+import { editBookingMessage, sendBookingUpdateNotification } from "../lib/telegram";
 import { logger } from "../lib/logger";
 
 const adminRouter = Router();
@@ -80,13 +80,23 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
     "agreedQuote", "depositAmount",
     "confirmedDate", "confirmedTime",
     "driverNotes", "paymentLink",
+    "notes", "pickup", "dropoff",
   ];
   const update: Record<string, string> = {};
   for (const key of allowed) {
     if (fields[key] !== undefined) update[key] = fields[key];
   }
 
+  // Deposit-lock: if agreedQuote changes but depositAmount is NOT explicitly sent,
+  // strip it so the existing deposit in Sheets is never overwritten.
+  if ("agreedQuote" in update && !("depositAmount" in fields)) {
+    delete update["depositAmount"];
+  }
+
   try {
+    // Read old booking BEFORE update so we can diff old vs new for audit log
+    const oldBooking = await getBookingByRef(bookingRef).catch(() => null);
+
     const found = await updateBookingAdmin(bookingRef, update);
     if (!found) {
       res.status(404).json({ error: "Booking not found" });
@@ -94,50 +104,104 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
     }
     res.json({ success: true });
 
-    // If status or payment changed, edit the existing Telegram message (fire-and-forget)
-    const statusChanged = "bookingStatus" in update || "paymentStatus" in update
-      || "confirmedDate" in update || "confirmedTime" in update;
+    // Fire-and-forget: audit log + Telegram notifications
+    ;(async () => {
+      try {
+        const booking = await getBookingByRef(bookingRef);
+        if (!booking) return;
 
-    if (statusChanged) {
-      (async () => {
-        try {
-          const booking = await getBookingByRef(bookingRef);
-          if (!booking?.telegramMessageId) return;
-          const msgId = parseInt(booking.telegramMessageId, 10);
-          if (isNaN(msgId)) return;
+        const changedFields = Object.keys(update).filter(
+          (k) => k !== "telegramMessageId" && k !== "paymentLink",
+        );
 
-          await editBookingMessage(msgId, {
-            bookingReference: booking.bookingReference,
-            service:          booking.service,
-            name:             booking.name,
-            phone:            booking.phone,
-            contactMethod:    booking.contactMethod,
-            pickup:           booking.pickup,
-            pickupDetails:    "",
-            dropoff:          booking.dropoff,
-            dropoffDetails:   "",
-            extraAddress:     "",
-            vanSize:          booking.vanSize,
-            helpOption:       booking.helpOption,
-            peopleCount:      "",
-            estimatedPrice:   booking.estimatedPrice,
-            estimatedTime:    "",
-            preferredDate:    booking.date,
-            timeWindow:       booking.timeWindow,
-            wasteAddons:      "",
-            uploadedFiles:    "",
-            notes:            booking.notes,
-            // Use incoming fields where provided, fall back to stored values
-            bookingStatus: update.bookingStatus ?? booking.bookingStatus,
-            paymentStatus: update.paymentStatus ?? booking.paymentStatus,
-            confirmedDate: update.confirmedDate ?? booking.confirmedDate,
-            confirmedTime: update.confirmedTime ?? booking.confirmedTime,
-          });
-        } catch (err) {
-          logger.error({ err, bookingRef }, "Failed to update Telegram message after admin status change");
+        // 1. Write audit log entries for each changed field
+        if (changedFields.length > 0 && oldBooking) {
+          const auditEntries = changedFields.map((key) => ({
+            bookingRef,
+            fieldChanged: key,
+            oldValue: (oldBooking as unknown as Record<string, string>)[key] ?? "—",
+            newValue: String(update[key] ?? ""),
+            changedBy: "Admin",
+          }));
+          await writeAuditLog(auditEntries);
         }
-      })();
-    }
+
+        // 2. Always send a new Telegram update notification (never edits original)
+        const agreedNum  = parseFloat(booking.agreedQuote);
+        const depositNum = parseFloat(booking.depositAmount);
+        const remaining  = !isNaN(agreedNum) && !isNaN(depositNum) && agreedNum > 0
+          ? String(Math.max(0, agreedNum - depositNum).toFixed(2))
+          : "";
+
+        await sendBookingUpdateNotification({
+          bookingReference: booking.bookingReference,
+          service:          booking.service,
+          name:             booking.name,
+          phone:            booking.phone,
+          contactMethod:    booking.contactMethod,
+          pickup:           update.pickup  ?? booking.pickup,
+          pickupDetails:    "",
+          dropoff:          update.dropoff ?? booking.dropoff,
+          dropoffDetails:   "",
+          extraAddress:     "",
+          vanSize:          booking.vanSize,
+          helpOption:       booking.helpOption,
+          peopleCount:      "",
+          estimatedPrice:   booking.estimatedPrice,
+          estimatedTime:    booking.duration ?? "",
+          preferredDate:    booking.date,
+          timeWindow:       booking.timeWindow,
+          wasteAddons:      "",
+          uploadedFiles:    "",
+          notes:            update.notes ?? booking.notes,
+          bookingStatus:    update.bookingStatus ?? booking.bookingStatus,
+          paymentStatus:    update.paymentStatus ?? booking.paymentStatus,
+          confirmedDate:    update.confirmedDate ?? booking.confirmedDate,
+          confirmedTime:    update.confirmedTime ?? booking.confirmedTime,
+          agreedQuote:      update.agreedQuote ?? booking.agreedQuote,
+          depositAmount:    booking.depositAmount,
+          remainingBalance: remaining,
+          changedFields,
+        });
+
+        // 3. Also edit original message when status-related fields change
+        const statusChanged = "bookingStatus" in update || "paymentStatus" in update
+          || "confirmedDate" in update || "confirmedTime" in update;
+        if (statusChanged && booking.telegramMessageId) {
+          const msgId = parseInt(booking.telegramMessageId, 10);
+          if (!isNaN(msgId)) {
+            await editBookingMessage(msgId, {
+              bookingReference: booking.bookingReference,
+              service:          booking.service,
+              name:             booking.name,
+              phone:            booking.phone,
+              contactMethod:    booking.contactMethod,
+              pickup:           update.pickup  ?? booking.pickup,
+              pickupDetails:    "",
+              dropoff:          update.dropoff ?? booking.dropoff,
+              dropoffDetails:   "",
+              extraAddress:     "",
+              vanSize:          booking.vanSize,
+              helpOption:       booking.helpOption,
+              peopleCount:      "",
+              estimatedPrice:   booking.estimatedPrice,
+              estimatedTime:    "",
+              preferredDate:    booking.date,
+              timeWindow:       booking.timeWindow,
+              wasteAddons:      "",
+              uploadedFiles:    "",
+              notes:            update.notes ?? booking.notes,
+              bookingStatus:    update.bookingStatus ?? booking.bookingStatus,
+              paymentStatus:    update.paymentStatus ?? booking.paymentStatus,
+              confirmedDate:    update.confirmedDate ?? booking.confirmedDate,
+              confirmedTime:    update.confirmedTime ?? booking.confirmedTime,
+            });
+          }
+        }
+      } catch (err) {
+        logger.error({ err, bookingRef }, "Post-save admin notifications failed");
+      }
+    })();
   } catch (err) {
     logger.error({ err, bookingRef }, "Failed to update booking via admin panel");
     res.status(500).json({ error: "Failed to update booking" });
@@ -393,6 +457,42 @@ adminRouter.post("/admin/bookings/:ref/payment-link", requireAdmin, async (req: 
   } catch (err) {
     logger.error({ err, bookingRef }, "Failed to create Stripe Checkout Session");
     res.status(500).json({ error: "Failed to generate payment link" });
+  }
+});
+
+// ── POST /api/admin/bookings/:ref/send-confirmation ──────────────────────────
+// Records that a confirmation email has been sent (opened manually via Gmail).
+// Does NOT send the email itself — the admin opens a Gmail compose link in the UI.
+adminRouter.post("/admin/bookings/:ref/send-confirmation", requireAdmin, async (req: Request, res: Response) => {
+  const bookingRef = req.params.ref as string;
+  const {
+    subject = `Updated Booking Confirmation — ${bookingRef}`,
+    sentTo  = "",
+  } = req.body as Record<string, string>;
+
+  const sentAt = new Date().toISOString();
+
+  try {
+    await updateBookingAdmin(bookingRef, {
+      confirmationSent:    "Yes",
+      confirmationSentAt:  sentAt,
+      confirmationSubject: subject,
+      confirmationSentBy:  "Admin",
+    });
+
+    await writeAuditLog([{
+      bookingRef,
+      fieldChanged: "Confirmation Email",
+      oldValue:     "Not sent",
+      newValue:     `Sent — Subject: ${subject}${sentTo ? ` | To: ${sentTo}` : ""}`,
+      changedBy:    "Admin",
+    }]);
+
+    logger.info({ bookingRef, subject, sentTo }, "Confirmation send recorded");
+    res.json({ success: true, sentAt });
+  } catch (err) {
+    logger.error({ err, bookingRef }, "Failed to record confirmation send");
+    res.status(500).json({ error: "Failed to record confirmation" });
   }
 });
 

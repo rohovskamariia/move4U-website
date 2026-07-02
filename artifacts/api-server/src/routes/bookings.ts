@@ -36,6 +36,13 @@ bookingsRouter.post("/bookings", async (req, res) => {
     const wasteAddons      = str("wasteAddons");
     const uploadedFiles    = str("uploadedFiles");
     const rawNotes         = str("notes");
+    const duration         = str("duration");
+    const hourlyRate       = str("hourlyRate");
+    const baseCharge       = str("baseCharge");
+    const stairsCharge     = str("stairsCharge");
+    const extraStopCharge  = str("extraStopCharge");
+    const congestionCharge = str("congestionCharge");
+    const outsideM25Charge = str("outsideM25Charge");
 
     // Numbered, human-readable summary of intermediate route stops.
     // Used both in the Sheets notes column AND as the canonical extraAddress
@@ -109,8 +116,21 @@ bookingsRouter.post("/bookings", async (req, res) => {
     //    cannot possibly be attached to a different booking, even in the
     //    extremely unlikely event of a duplicate ref.
     const followUp: Parameters<typeof updateBookingByRow>[1] = {};
-    if (timeWindow) followUp.preferredTime = timeWindow;
-    if (uploadedFiles) followUp.photoUrls = uploadedFiles;
+    if (timeWindow)       followUp.preferredTime      = timeWindow;
+    if (uploadedFiles)    followUp.photoUrls           = uploadedFiles;
+    // Price breakdown + route detail columns AB–AM
+    if (pickupDetails)    followUp.pickupFloorDetail   = pickupDetails;
+    if (dropoffDetails)   followUp.dropoffFloorDetail  = dropoffDetails;
+    if (extraStops[0])    followUp.extraStop1           = extraStops[0];
+    if (extraStops[1])    followUp.extraStop2           = extraStops[1];
+    if (extraStops[2])    followUp.extraStop3           = extraStops[2];
+    if (duration)         followUp.duration             = duration;
+    if (hourlyRate)       followUp.hourlyRate           = hourlyRate;
+    if (baseCharge)       followUp.baseCharge           = baseCharge;
+    if (stairsCharge)     followUp.stairsCharge         = stairsCharge;
+    if (extraStopCharge)  followUp.extraStopCharge      = extraStopCharge;
+    if (congestionCharge) followUp.congestionCharge     = congestionCharge;
+    if (outsideM25Charge) followUp.outsideM25Charge     = outsideM25Charge;
     if (Object.keys(followUp).length > 0) {
       if (sheetRow >= 2) {
         updateBookingByRow(sheetRow, followUp).catch((err) =>

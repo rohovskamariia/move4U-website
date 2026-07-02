@@ -227,6 +227,52 @@ const ADMIN_HEADER_ROW = [
   "Invoice Type",        // AA — deposit / full / remaining
 ];
 
+// ── Extra detail columns AB–AQ ────────────────────────────────────────────────
+//
+// Additive extension — existing columns A–AA are never touched.
+// Captures price breakdown and extra route details computed on the frontend,
+// plus confirmation-send tracking fields.
+
+const EXTRA_HEADER_ROW = [
+  "Pickup Floor/Stairs",    // AB (index 27)
+  "Extra Stop 1",           // AC (index 28)
+  "Extra Stop 2",           // AD (index 29)
+  "Extra Stop 3",           // AE (index 30)
+  "Dropoff Floor/Stairs",   // AF (index 31)
+  "Duration",               // AG (index 32)
+  "Hourly Rate",            // AH (index 33)
+  "Base Charge",            // AI (index 34)
+  "Extra Stop Charge",      // AJ (index 35)
+  "Stairs Charge",          // AK (index 36)
+  "Congestion Charge",      // AL (index 37)
+  "Outside M25 Charge",     // AM (index 38)
+  "Confirmation Sent",      // AN (index 39)
+  "Confirmation Sent At",   // AO (index 40)
+  "Confirmation Subject",   // AP (index 41)
+  "Sent By",                // AQ (index 42)
+];
+
+let extraHeaderPatched = false;
+
+async function patchExtraHeaders(id: string): Promise<void> {
+  if (extraHeaderPatched) return;
+  try {
+    await connectors.proxy(
+      "google-sheet",
+      `/v4/spreadsheets/${id}/values/Bookings!AB1:AQ1?valueInputOption=USER_ENTERED`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ values: [EXTRA_HEADER_ROW] }),
+      },
+    );
+    logger.info("Patched extra column headers AB–AQ");
+  } catch (err) {
+    logger.warn({ err }, "Could not patch extra column headers — continuing");
+  }
+  extraHeaderPatched = true;
+}
+
 let adminHeaderPatched = false;
 
 async function patchAdminHeaders(id: string): Promise<void> {
@@ -265,28 +311,46 @@ export interface BookingRecord {
   bookingStatus: string;
   paymentStatus: string;
   bookingReference: string;
-  // Admin fields
+  // Admin fields (P–AA)
   agreedQuote: string;
   depositAmount: string;
   confirmedDate: string;
   confirmedTime: string;
   driverNotes: string;
   paymentLink: string;
-  telegramMessageId: string; // V — stored so status updates can edit the same message
-  photoUrls: string;         // W — comma-separated serving URLs for uploaded photos
-  timeWindow: string;        // X — customer's preferred time window (e.g. "Morning (8am–12pm)")
-  invoiceId: string;         // Y — Stripe invoice ID
-  invoiceUrl: string;        // Z — hosted invoice URL
-  invoiceType: string;       // AA — deposit / full / remaining
+  telegramMessageId: string; // V
+  photoUrls: string;         // W
+  timeWindow: string;        // X
+  invoiceId: string;         // Y
+  invoiceUrl: string;        // Z
+  invoiceType: string;       // AA
+  // Extra detail columns (AB–AQ)
+  pickupFloorDetail: string;   // AB
+  extraStop1: string;          // AC
+  extraStop2: string;          // AD
+  extraStop3: string;          // AE
+  dropoffFloorDetail: string;  // AF
+  duration: string;            // AG
+  hourlyRate: string;          // AH
+  baseCharge: string;          // AI
+  extraStopCharge: string;     // AJ
+  stairsCharge: string;        // AK
+  congestionCharge: string;    // AL
+  outsideM25Charge: string;    // AM
+  confirmationSent: string;    // AN
+  confirmationSentAt: string;  // AO
+  confirmationSubject: string; // AP
+  confirmationSentBy: string;  // AQ
 }
 
 export async function getAllBookings(): Promise<BookingRecord[]> {
   const id = await ensureSheet();
   await patchAdminHeaders(id);
+  await patchExtraHeaders(id);
 
   const res = await connectors.proxy(
     "google-sheet",
-    `/v4/spreadsheets/${id}/values/Bookings!A:AA`,
+    `/v4/spreadsheets/${id}/values/Bookings!A:AQ`,
   );
   const data = (await res.json()) as { values?: string[][] };
   const rows = data.values ?? [];
@@ -295,34 +359,51 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
   return rows
     .slice(1) // skip header
     .map((row, i) => ({
-      rowNumber:         i + 2,
-      timestamp:         row[0]  ?? "",
-      service:           row[1]  ?? "",
-      name:              row[2]  ?? "",
-      phone:             row[3]  ?? "",
-      pickup:            row[4]  ?? "",
-      dropoff:           row[5]  ?? "",
-      vanSize:           row[6]  ?? "",
-      helpOption:        row[7]  ?? "",
-      estimatedPrice:    row[8]  ?? "",
-      date:              row[9]  ?? "",
-      notes:             row[10] ?? "",
-      contactMethod:     row[11] ?? "",
-      bookingStatus:     row[12] ?? "",
-      paymentStatus:     row[13] ?? "",
-      bookingReference:  row[14] ?? "",
-      agreedQuote:       row[15] ?? "",
-      depositAmount:     row[16] ?? "",
-      confirmedDate:     row[17] ?? "",
-      confirmedTime:     row[18] ?? "",
-      driverNotes:       row[19] ?? "",
-      paymentLink:       row[20] ?? "",
-      telegramMessageId: row[21] ?? "",
-      photoUrls:         row[22] ?? "",
-      timeWindow:        row[23] ?? "",
-      invoiceId:         row[24] ?? "",
-      invoiceUrl:        row[25] ?? "",
-      invoiceType:       row[26] ?? "",
+      rowNumber:            i + 2,
+      timestamp:            row[0]  ?? "",
+      service:              row[1]  ?? "",
+      name:                 row[2]  ?? "",
+      phone:                row[3]  ?? "",
+      pickup:               row[4]  ?? "",
+      dropoff:              row[5]  ?? "",
+      vanSize:              row[6]  ?? "",
+      helpOption:           row[7]  ?? "",
+      estimatedPrice:       row[8]  ?? "",
+      date:                 row[9]  ?? "",
+      notes:                row[10] ?? "",
+      contactMethod:        row[11] ?? "",
+      bookingStatus:        row[12] ?? "",
+      paymentStatus:        row[13] ?? "",
+      bookingReference:     row[14] ?? "",
+      agreedQuote:          row[15] ?? "",
+      depositAmount:        row[16] ?? "",
+      confirmedDate:        row[17] ?? "",
+      confirmedTime:        row[18] ?? "",
+      driverNotes:          row[19] ?? "",
+      paymentLink:          row[20] ?? "",
+      telegramMessageId:    row[21] ?? "",
+      photoUrls:            row[22] ?? "",
+      timeWindow:           row[23] ?? "",
+      invoiceId:            row[24] ?? "",
+      invoiceUrl:           row[25] ?? "",
+      invoiceType:          row[26] ?? "",
+      // Extra detail columns AB–AQ (indices 27–42)
+      pickupFloorDetail:    row[27] ?? "",
+      extraStop1:           row[28] ?? "",
+      extraStop2:           row[29] ?? "",
+      extraStop3:           row[30] ?? "",
+      dropoffFloorDetail:   row[31] ?? "",
+      duration:             row[32] ?? "",
+      hourlyRate:           row[33] ?? "",
+      baseCharge:           row[34] ?? "",
+      extraStopCharge:      row[35] ?? "",
+      stairsCharge:         row[36] ?? "",
+      congestionCharge:     row[37] ?? "",
+      outsideM25Charge:     row[38] ?? "",
+      confirmationSent:     row[39] ?? "",
+      confirmationSentAt:   row[40] ?? "",
+      confirmationSubject:  row[41] ?? "",
+      confirmationSentBy:   row[42] ?? "",
     }))
     .filter((b) => b.bookingReference)
     .reverse(); // newest first
@@ -337,12 +418,33 @@ export interface BookingAdminUpdate {
   confirmedTime?:     string;
   driverNotes?:       string;
   paymentLink?:       string;
-  telegramMessageId?: string; // column V
-  photoUrls?:         string; // column W — comma-separated photo serving URLs
-  preferredTime?:     string; // column X — customer's chosen time window
-  invoiceId?:         string; // column Y — Stripe invoice ID
-  invoiceUrl?:        string; // column Z — hosted invoice URL
-  invoiceType?:       string; // column AA — deposit / full / remaining
+  telegramMessageId?: string; // V
+  photoUrls?:         string; // W
+  preferredTime?:     string; // X
+  invoiceId?:         string; // Y
+  invoiceUrl?:        string; // Z
+  invoiceType?:       string; // AA
+  // Admin-editable core fields
+  notes?:             string; // K — customer notes
+  pickup?:            string; // E — pickup address
+  dropoff?:           string; // F — drop-off address
+  // Extra detail columns AB–AQ
+  pickupFloorDetail?:   string;
+  extraStop1?:          string;
+  extraStop2?:          string;
+  extraStop3?:          string;
+  dropoffFloorDetail?:  string;
+  duration?:            string;
+  hourlyRate?:          string;
+  baseCharge?:          string;
+  extraStopCharge?:     string;
+  stairsCharge?:        string;
+  congestionCharge?:    string;
+  outsideM25Charge?:    string;
+  confirmationSent?:    string;
+  confirmationSentAt?:  string;
+  confirmationSubject?: string;
+  confirmationSentBy?:  string;
 }
 
 // Builds the batchUpdate ranges for a known sheet row. Shared by the
@@ -367,8 +469,29 @@ function buildAdminWriteRanges(
   if (fields.photoUrls          !== undefined) updates.push({ range: c("W"), values: [[fields.photoUrls]] });
   if (fields.preferredTime      !== undefined) updates.push({ range: c("X"), values: [[fields.preferredTime]] });
   if (fields.invoiceId          !== undefined) updates.push({ range: c("Y"), values: [[fields.invoiceId]] });
-  if (fields.invoiceUrl         !== undefined) updates.push({ range: c("Z"), values: [[fields.invoiceUrl]] });
+  if (fields.invoiceUrl         !== undefined) updates.push({ range: c("Z"),  values: [[fields.invoiceUrl]] });
   if (fields.invoiceType        !== undefined) updates.push({ range: c("AA"), values: [[fields.invoiceType]] });
+  // Admin-editable core fields (existing columns)
+  if (fields.pickup             !== undefined) updates.push({ range: c("E"),  values: [[fields.pickup]] });
+  if (fields.dropoff            !== undefined) updates.push({ range: c("F"),  values: [[fields.dropoff]] });
+  if (fields.notes              !== undefined) updates.push({ range: c("K"),  values: [[fields.notes]] });
+  // Extra detail columns AB–AQ
+  if (fields.pickupFloorDetail   !== undefined) updates.push({ range: c("AB"), values: [[fields.pickupFloorDetail]] });
+  if (fields.extraStop1          !== undefined) updates.push({ range: c("AC"), values: [[fields.extraStop1]] });
+  if (fields.extraStop2          !== undefined) updates.push({ range: c("AD"), values: [[fields.extraStop2]] });
+  if (fields.extraStop3          !== undefined) updates.push({ range: c("AE"), values: [[fields.extraStop3]] });
+  if (fields.dropoffFloorDetail  !== undefined) updates.push({ range: c("AF"), values: [[fields.dropoffFloorDetail]] });
+  if (fields.duration            !== undefined) updates.push({ range: c("AG"), values: [[fields.duration]] });
+  if (fields.hourlyRate          !== undefined) updates.push({ range: c("AH"), values: [[fields.hourlyRate]] });
+  if (fields.baseCharge          !== undefined) updates.push({ range: c("AI"), values: [[fields.baseCharge]] });
+  if (fields.extraStopCharge     !== undefined) updates.push({ range: c("AJ"), values: [[fields.extraStopCharge]] });
+  if (fields.stairsCharge        !== undefined) updates.push({ range: c("AK"), values: [[fields.stairsCharge]] });
+  if (fields.congestionCharge    !== undefined) updates.push({ range: c("AL"), values: [[fields.congestionCharge]] });
+  if (fields.outsideM25Charge    !== undefined) updates.push({ range: c("AM"), values: [[fields.outsideM25Charge]] });
+  if (fields.confirmationSent    !== undefined) updates.push({ range: c("AN"), values: [[fields.confirmationSent]] });
+  if (fields.confirmationSentAt  !== undefined) updates.push({ range: c("AO"), values: [[fields.confirmationSentAt]] });
+  if (fields.confirmationSubject !== undefined) updates.push({ range: c("AP"), values: [[fields.confirmationSubject]] });
+  if (fields.confirmationSentBy  !== undefined) updates.push({ range: c("AQ"), values: [[fields.confirmationSentBy]] });
 
   return updates;
 }
@@ -561,4 +684,94 @@ export async function appendBooking(row: BookingRow): Promise<AppendResult> {
     "Booking appended to Google Sheets",
   );
   return { bookingRef, sheetRow };
+}
+
+// ── Audit log — "Booking History" sheet tab ──────────────────────────────────
+//
+// Appends change records to a dedicated "Booking History" tab. The tab is
+// created automatically with headers on first use.
+
+let auditSheetEnsured = false;
+
+async function ensureAuditSheet(spreadsheetId: string): Promise<void> {
+  if (auditSheetEnsured) return;
+  try {
+    const metaRes = await connectors.proxy(
+      "google-sheet",
+      `/v4/spreadsheets/${spreadsheetId}`,
+    );
+    const metaData = (await metaRes.json()) as {
+      sheets?: Array<{ properties?: { title?: string } }>;
+    };
+    const exists = (metaData.sheets ?? []).some(
+      (s) => s.properties?.title === "Booking History",
+    );
+
+    if (!exists) {
+      await connectors.proxy(
+        "google-sheet",
+        `/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            requests: [{ addSheet: { properties: { title: "Booking History" } } }],
+          }),
+        },
+      );
+      await connectors.proxy(
+        "google-sheet",
+        `/v4/spreadsheets/${spreadsheetId}/values/'Booking History'!A1:F1?valueInputOption=USER_ENTERED`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            values: [["Timestamp", "Booking Ref", "Field Changed", "Old Value", "New Value", "Changed By"]],
+          }),
+        },
+      );
+      logger.info("Created Booking History audit log tab");
+    }
+    auditSheetEnsured = true;
+  } catch (err) {
+    logger.warn({ err }, "Could not ensure audit sheet — continuing");
+    auditSheetEnsured = true; // avoid retrying on every write
+  }
+}
+
+export async function writeAuditLog(
+  entries: Array<{
+    bookingRef:   string;
+    fieldChanged: string;
+    oldValue:     string;
+    newValue:     string;
+    changedBy?:   string;
+  }>,
+): Promise<void> {
+  if (entries.length === 0) return;
+  try {
+    const id = await ensureSheet();
+    await ensureAuditSheet(id);
+    const timestamp = new Date().toISOString();
+    const values = entries.map((e) => [
+      timestamp,
+      e.bookingRef,
+      e.fieldChanged,
+      e.oldValue,
+      e.newValue,
+      e.changedBy ?? "Admin",
+    ]);
+    await connectors.proxy(
+      "google-sheet",
+      `/v4/spreadsheets/${id}/values/'Booking History'!A:F:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ values }),
+      },
+    );
+    logger.info({ count: entries.length }, "Audit log entries written");
+  } catch (err) {
+    logger.error({ err }, "Failed to write audit log — continuing");
+  }
 }

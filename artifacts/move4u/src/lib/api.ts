@@ -20,6 +20,14 @@ export interface BookingPayload {
   wasteAddons: string;
   uploadedFiles: string; // comma-separated serving URLs for uploaded photos
   notes: string;
+  // Price breakdown (optional — only sent by StandardBookingFlow)
+  duration?: string;        // e.g. "2.5h"
+  hourlyRate?: string;      // e.g. "£65/h"
+  baseCharge?: string;      // e.g. "£130"
+  stairsCharge?: string;    // combined floor surcharges e.g. "£20"
+  extraStopCharge?: string; // stop fees (not floor) e.g. "£40"
+  congestionCharge?: string;// e.g. "£18"
+  outsideM25Charge?: string;// e.g. "£30"
 }
 
 export interface BookingResult {

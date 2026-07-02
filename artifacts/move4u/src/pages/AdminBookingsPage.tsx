@@ -38,6 +38,23 @@ interface BookingRecord {
   invoiceId: string;
   invoiceUrl: string;
   invoiceType: string;
+  // Extra detail columns AB–AQ
+  pickupFloorDetail: string;
+  extraStop1: string;
+  extraStop2: string;
+  extraStop3: string;
+  dropoffFloorDetail: string;
+  duration: string;
+  hourlyRate: string;
+  baseCharge: string;
+  extraStopCharge: string;
+  stairsCharge: string;
+  congestionCharge: string;
+  outsideM25Charge: string;
+  confirmationSent: string;
+  confirmationSentAt: string;
+  confirmationSubject: string;
+  confirmationSentBy: string;
 }
 
 interface EditForm {
@@ -48,6 +65,10 @@ interface EditForm {
   confirmedDate: string;
   confirmedTime: string;
   driverNotes: string;
+  // Admin-editable core fields
+  notes: string;
+  pickup: string;
+  dropoff: string;
 }
 
 // ── Constants ─────────────────────────────────────────────────
@@ -69,6 +90,9 @@ function initEditForm(b: BookingRecord): EditForm {
     confirmedDate: b.confirmedDate  || "",
     confirmedTime: b.confirmedTime  || "",
     driverNotes:   b.driverNotes    || "",
+    notes:         b.notes          || "",
+    pickup:        b.pickup         || "",
+    dropoff:       b.dropoff        || "",
   };
 }
 
@@ -143,9 +167,16 @@ function buildContactHref(channel: ContactChannel, b: BookingRecord, message: st
       // browsers normalise both.
       return `sms:${dialablePhone(b.phone)}?body=${encoded}`;
     case "email": {
-      const addr = email || ""; // mailto: still opens the client even with no address
+      // Gmail compose link — pre-fills To, Subject and Body.
+      // ⚠ Admin must verify the sender is move4u.uk@gmail.com before sending.
+      const addr = email || "";
       const subject = `Move4U — Booking ${b.bookingReference}`;
-      return `mailto:${addr}?subject=${encodeURIComponent(subject)}&body=${encoded}`;
+      return (
+        `https://mail.google.com/mail/?view=cm&fs=1` +
+        `&to=${encodeURIComponent(addr)}` +
+        `&su=${encodeURIComponent(subject)}` +
+        `&body=${encoded}`
+      );
     }
     case "call":
       return `tel:${dialablePhone(b.phone)}`;
@@ -345,6 +376,7 @@ export default function AdminBookingsPage() {
   const [invoiceErrors, setInvoiceErrors] = useState<Record<string, string>>({});
   const [invoiceModal,  setInvoiceModal]  = useState<string | null>(null); // ref of booking showing options
   const [copiedInvoice, setCopiedInvoice] = useState<string | null>(null);
+  const [confirmBusy,   setConfirmBusy]   = useState<string | null>(null);
 
   const apiFetch = useCallback(
     (path: string, init?: RequestInit) =>
@@ -399,11 +431,12 @@ export default function AdminBookingsPage() {
     setEditForms((prev) => ({ ...prev, [ref]: initEditForm(booking) }));
     // Reset the manual deposit-override flag too, so a new auto-suggested
     // deposit is computed from THIS booking's quote, not a previous one.
-    setDepositOverridden((prev) => {
-      if (!(ref in prev)) return prev;
-      const { [ref]: _drop, ...rest } = prev;
-      return rest;
-    });
+    // Preserve any existing deposit so admin quote changes don't wipe it out.
+    // Only auto-suggest when the booking has no deposit yet.
+    setDepositOverridden((prev) => ({
+      ...prev,
+      [ref]: !!booking.depositAmount,
+    }));
     // Debug trace — confirms which booking the form is bound to.
     if (typeof console !== "undefined") {
       // eslint-disable-next-line no-console
@@ -660,6 +693,63 @@ export default function AdminBookingsPage() {
     }
   }
 
+  function buildConfirmationEmailHref(b: BookingRecord, form: EditForm): string {
+    const email   = parseEmailFromContactMethod(b.contactMethod);
+    const subject = `Updated Booking Confirmation — ${b.bookingReference}`;
+    const date    = form.confirmedDate || b.date     || "TBC";
+    const time    = form.confirmedTime || b.timeWindow || "TBC";
+    const from    = form.pickup  || b.pickup  || "—";
+    const to      = form.dropoff || b.dropoff || "—";
+    const quote   = form.agreedQuote   ? `£${parseFloat(form.agreedQuote).toFixed(2)}`   : b.estimatedPrice || "TBC";
+    const deposit = form.depositAmount ? `£${parseFloat(form.depositAmount).toFixed(2)}` : "—";
+    const name    = b.name || "there";
+
+    const body =
+      `Hi ${name},\n\n` +
+      `Please find your updated booking confirmation below.\n\n` +
+      `Booking Reference: ${b.bookingReference}\n` +
+      `Service: ${b.service}\n\n` +
+      `Date: ${date}\n` +
+      `Time: ${time}\n\n` +
+      `From: ${from}\n` +
+      `To: ${to}\n\n` +
+      `Agreed quote: ${quote}\n` +
+      `Deposit required: ${deposit}\n\n` +
+      `If you have any questions, please don't hesitate to contact us.\n\n` +
+      `Kind regards,\n` +
+      `Move4U\n` +
+      `📞 07541 822561\n` +
+      `🌐 https://move4u.uk`;
+
+    return (
+      `https://mail.google.com/mail/?view=cm&fs=1` +
+      `&to=${encodeURIComponent(email)}` +
+      `&su=${encodeURIComponent(subject)}` +
+      `&body=${encodeURIComponent(body)}`
+    );
+  }
+
+  async function recordConfirmationSent(ref: string, subject: string, sentTo: string) {
+    setConfirmBusy(ref);
+    try {
+      await apiFetch(
+        `/api/admin/bookings/${encodeURIComponent(ref)}/send-confirmation`,
+        { method: "POST", body: JSON.stringify({ subject, sentTo }) },
+      );
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.bookingReference === ref
+            ? { ...b, confirmationSent: "Yes", confirmationSentAt: new Date().toISOString() }
+            : b,
+        ),
+      );
+    } catch {
+      // Best-effort tracking — don't block the admin
+    } finally {
+      setConfirmBusy(null);
+    }
+  }
+
   if (!authed) return <PasswordGate onAuth={handleAuth} />;
 
   const filtered = (() => {
@@ -877,6 +967,28 @@ export default function AdminBookingsPage() {
                           </div>
                         );
                       })()}
+                      {/* Price breakdown — only shown when breakdown data was captured */}
+                      {(booking.baseCharge || booking.duration || booking.stairsCharge || booking.congestionCharge) && (
+                        <div className="mt-3 bg-purple-50/60 border border-purple-100 rounded-xl px-3 py-2.5">
+                          <p className="text-[11px] font-semibold text-purple-700 uppercase tracking-wide mb-1.5">Price breakdown</p>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-gray-700">
+                            {booking.duration     && <span><span className="text-gray-400">Duration: </span>{booking.duration}</span>}
+                            {booking.hourlyRate   && <span><span className="text-gray-400">Rate: </span>{booking.hourlyRate}</span>}
+                            {booking.baseCharge   && <span><span className="text-gray-400">Base: </span>{booking.baseCharge}</span>}
+                            {booking.stairsCharge && <span><span className="text-gray-400">Stairs: </span>+{booking.stairsCharge}</span>}
+                            {booking.extraStopCharge && <span><span className="text-gray-400">Extra stops: </span>+{booking.extraStopCharge}</span>}
+                            {booking.congestionCharge && <span><span className="text-gray-400">CCZ: </span>+{booking.congestionCharge}</span>}
+                            {booking.outsideM25Charge && <span><span className="text-gray-400">M25: </span>+{booking.outsideM25Charge}</span>}
+                          </div>
+                          {(booking.extraStop1 || booking.extraStop2 || booking.extraStop3) && (
+                            <div className="mt-1.5 text-xs text-gray-600 space-y-0.5">
+                              {booking.extraStop1 && <p><span className="text-gray-400">Stop 1: </span>{booking.extraStop1}</p>}
+                              {booking.extraStop2 && <p><span className="text-gray-400">Stop 2: </span>{booking.extraStop2}</p>}
+                              {booking.extraStop3 && <p><span className="text-gray-400">Stop 3: </span>{booking.extraStop3}</p>}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </section>
 
                     {/* Quick contact — shown for NEW bookings so the
@@ -942,6 +1054,19 @@ export default function AdminBookingsPage() {
                             helper="30% of agreed quote"
                           />
                         </div>
+                        {(() => {
+                          const agreedNum  = parseFloat(form.agreedQuote);
+                          const depositNum = parseFloat(form.depositAmount);
+                          const remaining  = !isNaN(agreedNum) && !isNaN(depositNum) && agreedNum > 0
+                            ? Math.max(0, agreedNum - depositNum)
+                            : null;
+                          return remaining !== null ? (
+                            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-sm">
+                              <span className="text-gray-400 text-xs">Remaining balance:</span>
+                              <span className="font-semibold text-gray-800">£{remaining.toFixed(2)}</span>
+                            </div>
+                          ) : null;
+                        })()}
                         <div className="grid grid-cols-2 gap-3">
                           <Field
                             label="Confirmed Date"
@@ -954,6 +1079,36 @@ export default function AdminBookingsPage() {
                             value={form.confirmedTime}
                             type="time"
                             onChange={(v) => updateField(ref, "confirmedTime", v)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Pickup Address</label>
+                          <textarea
+                            value={form.pickup}
+                            onChange={(e) => updateField(ref, "pickup", e.target.value)}
+                            rows={2}
+                            placeholder="Full pickup address…"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-600"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Drop-off Address</label>
+                          <textarea
+                            value={form.dropoff}
+                            onChange={(e) => updateField(ref, "dropoff", e.target.value)}
+                            rows={2}
+                            placeholder="Full drop-off address…"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-600"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Customer Notes</label>
+                          <textarea
+                            value={form.notes}
+                            onChange={(e) => updateField(ref, "notes", e.target.value)}
+                            rows={2}
+                            placeholder="Notes from the customer…"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-600"
                           />
                         </div>
                         <div>
@@ -1095,6 +1250,43 @@ export default function AdminBookingsPage() {
                         </p>
                       )}
                     </section>
+
+                    {/* Send Updated Confirmation section */}
+                    {(() => {
+                      const email = parseEmailFromContactMethod(booking.contactMethod);
+                      if (!email) return null;
+                      const subject       = `Updated Booking Confirmation — ${booking.bookingReference}`;
+                      const confirmHref   = buildConfirmationEmailHref(booking, form);
+                      const alreadySent   = booking.confirmationSent === "Yes";
+                      const isConfirmBusy = confirmBusy === ref;
+                      return (
+                        <section className="border-t border-gray-100 pt-4">
+                          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Send Updated Confirmation</h3>
+                          {alreadySent && (
+                            <p className="text-xs text-green-600 mb-2">
+                              ✓ Confirmation sent{booking.confirmationSentAt ? ` on ${new Date(booking.confirmationSentAt).toLocaleDateString("en-GB")}` : ""}.
+                            </p>
+                          )}
+                          <div className="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-xs text-amber-700 mb-3">
+                            ⚠ This opens Gmail compose. Verify the sender is <strong>move4u.uk@gmail.com</strong> before sending.
+                          </div>
+                          <a
+                            href={confirmHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => {
+                              void recordConfirmationSent(ref, subject, email);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-700 text-white text-sm font-semibold rounded-xl hover:bg-purple-800 transition-colors"
+                          >
+                            {isConfirmBusy
+                              ? <><span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Recording…</>
+                              : <><Mail className="w-3.5 h-3.5" /> {alreadySent ? "Re-send Confirmation" : "Send Updated Confirmation"}</>
+                            }
+                          </a>
+                        </section>
+                      );
+                    })()}
 
                     {/* Invoice section — hidden while ENABLE_STRIPE_INVOICES=false */}
                     {ENABLE_STRIPE_INVOICES && (() => {

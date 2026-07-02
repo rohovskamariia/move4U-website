@@ -58,6 +58,19 @@ export interface TelegramBooking {
   paymentStatus?:  string;
   confirmedDate?:  string;
   confirmedTime?:  string;
+  // Price breakdown — optional, surfaced when available
+  duration?:         string;
+  hourlyRate?:       string;
+  baseCharge?:       string;
+  stairsCharge?:     string;
+  extraStopCharge?:  string;
+  congestionCharge?: string;
+  outsideM25Charge?: string;
+  // Admin-edit context
+  agreedQuote?:      string;
+  depositAmount?:    string;
+  remainingBalance?: string;
+  changedFields?:    string[];
 }
 
 // ── Message builder ───────────────────────────────────────────
@@ -109,6 +122,22 @@ function buildMessage(b: TelegramBooking): string {
     line("People/helpers", b.peopleCount),
     line("Estimated price",b.estimatedPrice),
     line("Estimated time", b.estimatedTime),
+    // Price breakdown block — only shown when breakdown fields are present
+    ...(() => {
+      const bd: string[] = [];
+      if (b.duration)         bd.push(`Duration: ${b.duration}`);
+      if (b.hourlyRate)       bd.push(`Hourly rate: ${b.hourlyRate}`);
+      if (b.baseCharge)       bd.push(`Base charge: ${b.baseCharge}`);
+      if (b.stairsCharge)     bd.push(`Stairs/floor: +${b.stairsCharge}`);
+      if (b.extraStopCharge)  bd.push(`Extra stop fees: +${b.extraStopCharge}`);
+      if (b.congestionCharge) bd.push(`Congestion charge: +${b.congestionCharge}`);
+      if (b.outsideM25Charge) bd.push(`Outside M25 (est.): +${b.outsideM25Charge}`);
+      if (b.agreedQuote)      bd.push(`Agreed quote: £${b.agreedQuote}`);
+      if (b.depositAmount)    bd.push(`Deposit: £${b.depositAmount}`);
+      if (b.remainingBalance) bd.push(`Remaining balance: £${b.remainingBalance}`);
+      if (bd.length === 0) return [];
+      return ["", "💰 Breakdown:", ...bd.map((l) => `   ${l}`)];
+    })(),
     "",
     line("Preferred date", b.preferredDate),
     line("Time window",    b.timeWindow),
@@ -421,6 +450,70 @@ export async function sendInvoicePaymentNotification(p: InvoicePaymentPayload): 
   const { botToken, chatId } = getCredentials();
   if (!botToken || !chatId) return;
   await tgSend(lines);
+}
+
+// ── Admin update notification ─────────────────────────────────
+//
+// Sends a NEW Telegram message (never edits the original) when an admin
+// saves changes to a booking. Shows the full current booking state plus
+// a summary of which fields changed.
+export async function sendBookingUpdateNotification(b: TelegramBooking): Promise<void> {
+  const { botToken, chatId } = getCredentials();
+  if (!botToken || !chatId) return;
+
+  const status  = b.bookingStatus || "New";
+  const payment = b.paymentStatus || "Unpaid";
+  const payIcon = payment.toLowerCase().includes("paid") ? "✅" : "⏳";
+
+  const changedSummary = b.changedFields?.length
+    ? `Changed: ${b.changedFields.join(", ")}`
+    : "";
+
+  const parts: (string | null)[] = [
+    `✏️ Booking Updated — ${b.bookingReference}`,
+    changedSummary ? `\n${changedSummary}` : null,
+    "",
+    line("Service",    b.service),
+    line("Name",       b.name),
+    line("Phone",      b.phone),
+    "",
+    b.pickup  ? `📍 From: ${b.pickup}`  : null,
+    b.dropoff ? `📍 To:   ${b.dropoff}` : null,
+    "",
+    line("Van",  b.vanSize),
+    line("Help", b.helpOption),
+    "",
+    b.estimatedPrice ? `Original estimate: ${b.estimatedPrice}` : null,
+    b.agreedQuote    ? `Agreed quote: £${b.agreedQuote}` : null,
+    b.depositAmount  ? `Deposit: £${b.depositAmount}` : null,
+    b.remainingBalance ? `Remaining: £${b.remainingBalance}` : null,
+    "",
+    `📋 Status: ${status}  |  ${payIcon} Payment: ${payment}`,
+    b.confirmedDate
+      ? `📅 Confirmed: ${b.confirmedDate}${b.confirmedTime ? " at " + b.confirmedTime : ""}`
+      : null,
+    b.notes ? `📝 Notes: ${b.notes}` : null,
+    "",
+    `🔗 Admin panel: ${ADMIN_PANEL_URL}`,
+  ];
+
+  const lines = parts
+    .filter((l): l is string => l !== null)
+    .reduce<string[]>((acc, l) => {
+      if (l === "" && acc.at(-1) === "") return acc;
+      acc.push(l);
+      return acc;
+    }, []);
+
+  while (lines.at(-1) === "") lines.pop();
+  while (lines[0]   === "") lines.shift();
+
+  const result = await tgSend(lines.join("\n"));
+  if (result.ok) {
+    logger.info({ ref: b.bookingReference }, "Admin booking update notification sent to Telegram");
+  } else {
+    logger.warn({ ref: b.bookingReference, error: result.error }, "Admin update Telegram notification failed");
+  }
 }
 
 // Short fallback notification for deposit payments when no stored message_id is available.
