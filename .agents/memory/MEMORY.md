@@ -1,0 +1,1 @@
+- [Admin Pricing Architecture](admin-pricing-architecture.md) — structured charges (stairs/CCZ/M25/extra time) stored in adminExtraCharges JSON with reserved type keys; serializeAdminCharges() combines them with manual charges on save.

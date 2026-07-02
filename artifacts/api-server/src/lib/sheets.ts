@@ -431,9 +431,12 @@ export interface BookingAdminUpdate {
   invoiceUrl?:        string; // Z
   invoiceType?:       string; // AA
   // Admin-editable core fields
+  service?:           string; // B — service type
   notes?:             string; // K — customer notes
   pickup?:            string; // E — pickup address
   dropoff?:           string; // F — drop-off address
+  vanSize?:           string; // G — van size
+  helpOption?:        string; // H — help option
   // Extra detail columns AB–AQ
   pickupFloorDetail?:   string;
   extraStop1?:          string;
@@ -480,9 +483,12 @@ function buildAdminWriteRanges(
   if (fields.invoiceId          !== undefined) updates.push({ range: c("Y"), values: [[fields.invoiceId]] });
   if (fields.invoiceUrl         !== undefined) updates.push({ range: c("Z"),  values: [[fields.invoiceUrl]] });
   if (fields.invoiceType        !== undefined) updates.push({ range: c("AA"), values: [[fields.invoiceType]] });
-  // Admin-editable core fields (existing columns)
+  // Admin-editable core booking fields
+  if (fields.service            !== undefined) updates.push({ range: c("B"),  values: [[fields.service]] });
   if (fields.pickup             !== undefined) updates.push({ range: c("E"),  values: [[fields.pickup]] });
   if (fields.dropoff            !== undefined) updates.push({ range: c("F"),  values: [[fields.dropoff]] });
+  if (fields.vanSize            !== undefined) updates.push({ range: c("G"),  values: [[fields.vanSize]] });
+  if (fields.helpOption         !== undefined) updates.push({ range: c("H"),  values: [[fields.helpOption]] });
   if (fields.notes              !== undefined) updates.push({ range: c("K"),  values: [[fields.notes]] });
   // Extra detail columns AB–AQ
   if (fields.pickupFloorDetail   !== undefined) updates.push({ range: c("AB"), values: [[fields.pickupFloorDetail]] });

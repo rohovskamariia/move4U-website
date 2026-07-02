@@ -1,0 +1,108 @@
+### 5. Editable Booking Fields & Telegram Route Logic
+
+Please improve both the Booking Details editor and the Telegram booking update so they work together.
+
+#### Editable booking fields
+
+Please make these fields editable using dropdowns where appropriate:
+
+* Service type
+* Van size
+* Help option
+* Time slot / Time window
+
+**Van size**
+
+* Small Van
+* Medium Van
+* Large Van
+* Luton Van
+
+**Help option**
+
+* No help needed
+* Driver help
+* Driver + Helper
+
+**Time slot**
+
+* Morning (8am–12pm)
+* Afternoon (12pm–5pm)
+* Evening (5pm–9pm)
+* Custom time
+
+These fields should only exist once inside the Booking Details section.
+
+Do not duplicate them elsewhere in the UI.
+
+The Booking Summary card at the top should remain read-only and automatically display the latest saved values.
+
+---
+
+#### Telegram message order
+
+The Telegram booking update should follow the actual moving journey so it is easy for drivers to read.
+
+Display information in this exact order:
+
+* Booking Reference
+* Customer
+* Phone
+* Date
+* Time Slot
+* Service
+* Van Size
+* Help Option
+* Duration
+
+Then display the route in travel order:
+
+📍 Pickup Address
+
+If pickup has stairs/floors, immediately display:
+
+↳ Pickup Stairs/Floors: X (£XX)
+
+If there are any extra stops, display them between pickup and drop-off in the order they will be visited:
+
+➡️ Extra Stop 1
+
+* Address
+* Charge
+* Notes (only if provided)
+
+➡️ Extra Stop 2
+
+➡️ Extra Stop 3
+
+Finally display:
+
+📍 Drop-off Address
+
+If the drop-off has stairs/floors, immediately display:
+
+↳ Drop-off Stairs/Floors: X (£XX)
+
+Then display the price breakdown:
+
+* Base Price
+* Extra Stops
+* Extra Time
+* Stairs
+* Congestion Charge
+* Outside M25
+* Manual Charges (if any)
+
+Finally display:
+
+* Agreed Total
+* Deposit Paid
+* Remaining Balance
+* Payment Status
+* Driver Notes (if any)
+
+Only include sections that contain values.
+
+Do not display empty fields.
+
+The goal is for drivers to read the Telegram message from top to bottom exactly in the same order they complete the move: **Pickup → Pickup Stairs → Extra Stops → Drop-off → Drop-off Stairs → Price Breakdown → Payment Information**.

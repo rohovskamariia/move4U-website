@@ -88,11 +88,15 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
     "notes", "pickup", "dropoff",
     "duration",
     "adminExtraStops", "adminExtraCharges",
+    // Editable booking core fields
+    "service", "vanSize", "helpOption",
   ];
   const update: Record<string, string> = {};
   for (const key of allowed) {
     if (fields[key] !== undefined) update[key] = fields[key];
   }
+  // timeWindow from request → preferredTime in BookingAdminUpdate (column X)
+  if (fields["timeWindow"] !== undefined) update["preferredTime"] = fields["timeWindow"];
 
   // Deposit-lock: if agreedQuote changes but depositAmount is NOT explicitly sent,
   // strip it so the existing deposit in Sheets is never overwritten.
@@ -143,30 +147,31 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
 
           await sendBookingUpdateNotification({
             bookingReference:  booking.bookingReference,
-            service:           booking.service,
+            service:           update.service    ?? booking.service,
             name:              booking.name,
             phone:             booking.phone,
             contactMethod:     booking.contactMethod,
-            pickup:            update.pickup   ?? booking.pickup,
+            pickup:            update.pickup     ?? booking.pickup,
             pickupDetails:     "",
-            dropoff:           update.dropoff  ?? booking.dropoff,
+            dropoff:           update.dropoff    ?? booking.dropoff,
             dropoffDetails:    "",
             extraAddress:      "",
-            vanSize:           booking.vanSize,
-            helpOption:        booking.helpOption,
+            vanSize:           update.vanSize    ?? booking.vanSize,
+            helpOption:        update.helpOption ?? booking.helpOption,
             peopleCount:       "",
             estimatedPrice:    booking.estimatedPrice,
-            estimatedTime:     update.duration ?? booking.duration ?? "",
+            estimatedTime:     update.duration   ?? booking.duration ?? "",
             preferredDate:     booking.date,
-            timeWindow:        booking.timeWindow,
+            timeWindow:        update.preferredTime ?? booking.timeWindow,
             wasteAddons:       "",
             uploadedFiles:     "",
-            notes:             update.notes ?? booking.notes,
-            bookingStatus:     update.bookingStatus ?? booking.bookingStatus,
-            paymentStatus:     update.paymentStatus ?? booking.paymentStatus,
-            confirmedDate:     update.confirmedDate ?? booking.confirmedDate,
-            confirmedTime:     update.confirmedTime ?? booking.confirmedTime,
-            agreedQuote:       update.agreedQuote   ?? booking.agreedQuote,
+            notes:             update.notes      ?? booking.notes,
+            driverNotes:       update.driverNotes ?? booking.driverNotes,
+            bookingStatus:     update.bookingStatus  ?? booking.bookingStatus,
+            paymentStatus:     update.paymentStatus  ?? booking.paymentStatus,
+            confirmedDate:     update.confirmedDate  ?? booking.confirmedDate,
+            confirmedTime:     update.confirmedTime  ?? booking.confirmedTime,
+            agreedQuote:       update.agreedQuote    ?? booking.agreedQuote,
             depositAmount:     booking.depositAmount,
             remainingBalance:  remaining,
             changedFields,

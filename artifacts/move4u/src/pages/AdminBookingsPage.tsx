@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import { toE164, toWhatsAppDigits } from "@/lib/validators";
 import { useNoIndex } from "@/lib/usePageMeta";
+import { getHourlyRate } from "@/lib/pricing";
+import { CONGESTION_CHARGE, OUTSIDE_M25_RATE, EXTRA_STOP_CHARGE } from "@/data/constants";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -74,16 +76,32 @@ interface BookingRecord {
 interface EditForm {
   bookingStatus:     string;
   paymentStatus:     string;
+  // Editable booking core
+  service:           string;
+  vanSize:           string;
+  helpOption:        string;
+  timeWindow:        string;
+  // Scheduling
   agreedQuote:       string;
   depositAmount:     string;
   confirmedDate:     string;
   confirmedTime:     string;
-  driverNotes:       string;
-  notes:             string;
+  // Addresses & duration
   pickup:            string;
   dropoff:           string;
   duration:          string;
+  // Notes
+  driverNotes:       string;
+  notes:             string;
+  // Extra route stops
   adminExtraStops:   AdminExtraStop[];
+  // Structured pricing fields (serialised to adminExtraCharges on save)
+  pickupFloors:      string;   // floors as string, 0–8
+  dropoffFloors:     string;
+  congestionEntries: string;   // "0" | "1" | "2"
+  outsideM25Miles:   string;   // miles as decimal string
+  extraTimeMinutes:  string;   // "0" | "30" | "60" | "90" | "120" | "180"
+  // Manual freeform charges (non-structured AdminExtraCharge entries)
   adminExtraCharges: AdminExtraCharge[];
 }
 
@@ -93,17 +111,76 @@ interface EditForm {
 // Keep false until the invoice feature is intentionally re-enabled.
 const ENABLE_STRIPE_INVOICES = false;
 
-const BOOKING_STATUSES     = ["New", "Contacted", "Confirmed", "Denied", "Booked", "Completed"];
-const PAYMENT_STATUSES     = ["Unpaid", "Payment link ready", "Invoice created", "Invoice sent", "Deposit paid", "Invoice payment failed", "Fully paid", "Paid"];
-const STATUS_FILTERS       = ["All", "New", "Contacted", "Confirmed", "Booked", "Completed", "Denied"];
-const EXTRA_CHARGE_TYPES   = ["Extra time", "Stairs", "Congestion charge", "Outside M25", "Manual adjustment"];
+const BOOKING_STATUSES   = ["New", "Contacted", "Confirmed", "Denied", "Booked", "Completed"];
+const PAYMENT_STATUSES   = ["Unpaid", "Payment link ready", "Invoice created", "Invoice sent", "Deposit paid", "Invoice payment failed", "Fully paid", "Paid"];
+const STATUS_FILTERS     = ["All", "New", "Contacted", "Confirmed", "Booked", "Completed", "Denied"];
+
+const SERVICE_OPTIONS    = ["House Moving", "Commercial Moving", "Single Item Delivery", "Waste Removal", "International Moving", "Something Else"];
+const VAN_SIZE_OPTIONS   = ["Small Van", "Medium Van", "Large Van", "Luton Van"];
+const HELP_OPTION_OPTIONS = ["No help needed", "Driver help", "Driver + Helper"];
+const TIME_SLOT_OPTIONS  = ["Morning (8am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–9pm)", "Flexible"];
+const FLOOR_OPTIONS      = ["0", "1", "2", "3", "4", "5", "6", "7", "8"];
+const EXTRA_TIME_OPTIONS = [
+  { label: "None",        value: "0"   },
+  { label: "+30 min",     value: "30"  },
+  { label: "+1 hour",     value: "60"  },
+  { label: "+1.5 hours",  value: "90"  },
+  { label: "+2 hours",    value: "120" },
+  { label: "+3 hours",    value: "180" },
+];
+const CONGESTION_OPTIONS = [
+  { label: "None (£0)",       value: "0" },
+  { label: `1 address (£${CONGESTION_CHARGE})`,  value: "1" },
+  { label: `2 addresses (£${CONGESTION_CHARGE * 2})`, value: "2" },
+];
 
 function initEditForm(b: BookingRecord): EditForm {
-  const safeParseStops   = (s: string): AdminExtraStop[]   => { try { return JSON.parse(s || "[]"); } catch { return []; } };
-  const safeParseCharges = (s: string): AdminExtraCharge[] => { try { return JSON.parse(s || "[]"); } catch { return []; } };
+  const safeParse = <T,>(s: string): T[] => { try { return JSON.parse(s || "[]") as T[]; } catch { return []; } };
+
+  const allCharges = safeParse<AdminExtraCharge>(b.adminExtraCharges);
+  const STRUCTURED = new Set(["Stairs - pickup", "Stairs - drop-off", "Congestion charge", "Outside M25", "Extra time"]);
+  const find = (type: string) => allCharges.find((c) => c.type === type);
+
+  const stairsPickup  = find("Stairs - pickup");
+  const stairsDropoff = find("Stairs - drop-off");
+  const congestion    = find("Congestion charge");
+  const m25           = find("Outside M25");
+  const extraTime     = find("Extra time");
+  const manualCharges = allCharges.filter((c) => !STRUCTURED.has(c.type));
+
+  function floorsFromCharge(c?: AdminExtraCharge): string {
+    if (!c) return "0";
+    const fromNotes = (c.notes || "").match(/^(\d+)/)?.[1];
+    if (fromNotes) return String(Math.min(8, parseInt(fromNotes)));
+    return String(Math.max(0, Math.min(8, Math.round(parseFloat(c.amount || "0") / 10))));
+  }
+  function entriesFromCharge(c?: AdminExtraCharge): string {
+    if (!c) return "0";
+    const fromNotes = (c.notes || "").match(/^(\d+)/)?.[1];
+    if (fromNotes) return String(Math.min(2, parseInt(fromNotes)));
+    return String(Math.max(0, Math.min(2, Math.round(parseFloat(c.amount || "0") / CONGESTION_CHARGE))));
+  }
+  function milesFromCharge(c?: AdminExtraCharge): string {
+    if (!c) return "";
+    const fromNotes = (c.notes || "").match(/^(\d+(?:\.\d+)?)/)?.[1];
+    return fromNotes || String(parseFloat(c.amount || "0"));
+  }
+  function minutesFromCharge(c?: AdminExtraCharge): string {
+    if (!c) return "0";
+    const fromNotes = (c.notes || "").match(/\+?(\d+)\s*min/)?.[1];
+    if (!fromNotes) return "0";
+    const v = parseInt(fromNotes);
+    const valid = [30, 60, 90, 120, 180] as const;
+    return String(valid.reduce((a, b) => Math.abs(b - v) < Math.abs(a - v) ? b : a));
+  }
+
   return {
     bookingStatus:     b.bookingStatus  || "New",
     paymentStatus:     b.paymentStatus  || "Unpaid",
+    service:           b.service        || "",
+    vanSize:           b.vanSize        || "",
+    helpOption:        b.helpOption     || "",
+    timeWindow:        b.timeWindow     || "",
     agreedQuote:       b.agreedQuote    || "",
     depositAmount:     b.depositAmount  || "",
     confirmedDate:     b.confirmedDate  || "",
@@ -113,8 +190,13 @@ function initEditForm(b: BookingRecord): EditForm {
     pickup:            b.pickup         || "",
     dropoff:           b.dropoff        || "",
     duration:          b.duration       || "",
-    adminExtraStops:   safeParseStops(b.adminExtraStops),
-    adminExtraCharges: safeParseCharges(b.adminExtraCharges),
+    adminExtraStops:   safeParse<AdminExtraStop>(b.adminExtraStops),
+    pickupFloors:      floorsFromCharge(stairsPickup),
+    dropoffFloors:     floorsFromCharge(stairsDropoff),
+    congestionEntries: entriesFromCharge(congestion),
+    outsideM25Miles:   milesFromCharge(m25),
+    extraTimeMinutes:  minutesFromCharge(extraTime),
+    adminExtraCharges: manualCharges,
   };
 }
 
@@ -215,6 +297,75 @@ function calcSuggestedDeposit(quote: string): string {
   const n = parseFloat(quote);
   if (!n || n <= 0) return "";
   return (Math.round(n * 0.3 * 100) / 100).toFixed(2);
+}
+
+// ── Pricing engine helpers ────────────────────────────────────
+
+function parseDurationToHours(duration: string): number {
+  if (!duration) return 0;
+  const m = duration.match(/(\d+(?:\.\d+)?)/);
+  return m ? parseFloat(m[1]!) : 0;
+}
+
+function getVanPricingKey(vanSizeDisplay: string): string {
+  const s = (vanSizeDisplay || "").toLowerCase();
+  if (s.includes("small")) return "small";
+  if (s.includes("large") || s.includes("luton")) return "large";
+  return "medium";
+}
+
+function getHelpPricingKey(helpOptionDisplay: string): string {
+  const s = (helpOptionDisplay || "").toLowerCase();
+  if (s.includes("driver +") || s.includes("driver+") || s.includes("helper")) return "driver-plus-helper";
+  if (s.includes("driver")) return "driver-help";
+  return "no-help";
+}
+
+function computeAdminPricing(form: EditForm): {
+  base: number; extraTime: number; stairsPickup: number; stairsDropoff: number;
+  ccz: number; m25: number; stopsTotal: number; manualTotal: number;
+  total: number; hourlyRate: number;
+} {
+  const rate = getHourlyRate(getVanPricingKey(form.vanSize), getHelpPricingKey(form.helpOption));
+  const dH   = parseDurationToHours(form.duration);
+  const base = dH > 0 ? Math.max(2, dH) * rate : 0;
+
+  const etMin     = parseInt(form.extraTimeMinutes || "0") || 0;
+  const extraTime = etMin > 0 ? Math.round(rate * etMin / 60 * 100) / 100 : 0;
+
+  const pF = parseInt(form.pickupFloors  || "0") || 0;
+  const dF = parseInt(form.dropoffFloors || "0") || 0;
+  const cE = parseInt(form.congestionEntries || "0") || 0;
+  const miles = parseFloat(form.outsideM25Miles || "0") || 0;
+
+  const stairsPickup  = pF * 10;
+  const stairsDropoff = dF * 10;
+  const ccz = cE * CONGESTION_CHARGE;
+  const m25 = Math.round(miles * OUTSIDE_M25_RATE * 100) / 100;
+  const stopsTotal  = form.adminExtraStops.reduce((s, x) => s + (parseFloat(x.charge) || 0), 0);
+  const manualTotal = form.adminExtraCharges.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
+  const total = base + extraTime + stairsPickup + stairsDropoff + ccz + m25 + stopsTotal + manualTotal;
+  return { base, extraTime, stairsPickup, stairsDropoff, ccz, m25, stopsTotal, manualTotal, total, hourlyRate: rate };
+}
+
+// Serialises all pricing (structured + manual) into the adminExtraCharges JSON that gets saved.
+function serializeAdminCharges(form: EditForm): string {
+  const charges: AdminExtraCharge[] = [];
+  const pF = parseInt(form.pickupFloors  || "0") || 0;
+  if (pF > 0) charges.push({ type: "Stairs - pickup",  amount: String(pF * 10), notes: `${pF} floor${pF !== 1 ? "s" : ""}` });
+  const dF = parseInt(form.dropoffFloors || "0") || 0;
+  if (dF > 0) charges.push({ type: "Stairs - drop-off", amount: String(dF * 10), notes: `${dF} floor${dF !== 1 ? "s" : ""}` });
+  const cE = parseInt(form.congestionEntries || "0") || 0;
+  if (cE > 0) charges.push({ type: "Congestion charge", amount: String(cE * CONGESTION_CHARGE), notes: `${cE} entr${cE === 1 ? "y" : "ies"}` });
+  const miles = parseFloat(form.outsideM25Miles || "0") || 0;
+  if (miles > 0) charges.push({ type: "Outside M25", amount: String(Math.round(miles * OUTSIDE_M25_RATE * 100) / 100), notes: `${miles} miles` });
+  const etMin = parseInt(form.extraTimeMinutes || "0") || 0;
+  if (etMin > 0) {
+    const rate = getHourlyRate(getVanPricingKey(form.vanSize), getHelpPricingKey(form.helpOption));
+    charges.push({ type: "Extra time", amount: String(Math.round(rate * etMin / 60 * 100) / 100), notes: `+${etMin} min` });
+  }
+  charges.push(...form.adminExtraCharges);
+  return JSON.stringify(charges);
 }
 
 function statusBadge(status: string) {
@@ -502,7 +653,7 @@ export default function AdminBookingsPage() {
   function addExtraStop(ref: string) {
     setEditForms((prev) => ({
       ...prev,
-      [ref]: { ...(prev[ref] ?? {}), adminExtraStops: [...(prev[ref]?.adminExtraStops ?? []), { address: "", charge: "", notes: "" }] } as EditForm,
+      [ref]: { ...(prev[ref] ?? {}), adminExtraStops: [...(prev[ref]?.adminExtraStops ?? []), { address: "", charge: String(EXTRA_STOP_CHARGE), notes: "" }] } as EditForm,
     }));
   }
 
@@ -550,13 +701,28 @@ export default function AdminBookingsPage() {
     if (!form) return;
     setSavingRef(ref);
     setSaveErrors((e) => ({ ...e, [ref]: "" }));
+    const serializedCharges = serializeAdminCharges(form);
     try {
       const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}`, {
         method: "PUT",
         body: JSON.stringify({
-          ...form,
+          service:    form.service,
+          vanSize:    form.vanSize,
+          helpOption: form.helpOption,
+          timeWindow: form.timeWindow,
+          bookingStatus:  form.bookingStatus,
+          paymentStatus:  form.paymentStatus,
+          agreedQuote:    form.agreedQuote,
+          depositAmount:  form.depositAmount,
+          confirmedDate:  form.confirmedDate,
+          confirmedTime:  form.confirmedTime,
+          driverNotes:    form.driverNotes,
+          notes:          form.notes,
+          pickup:         form.pickup,
+          dropoff:        form.dropoff,
+          duration:       form.duration,
           adminExtraStops:   JSON.stringify(form.adminExtraStops),
-          adminExtraCharges: JSON.stringify(form.adminExtraCharges),
+          adminExtraCharges: serializedCharges,
           notify: "false",
         }),
       });
@@ -564,7 +730,7 @@ export default function AdminBookingsPage() {
       setBookings((prev) =>
         prev.map((b) =>
           b.bookingReference === ref
-            ? { ...b, ...form, adminExtraStops: JSON.stringify(form.adminExtraStops), adminExtraCharges: JSON.stringify(form.adminExtraCharges) }
+            ? { ...b, ...form, adminExtraStops: JSON.stringify(form.adminExtraStops), adminExtraCharges: serializedCharges }
             : b,
         ),
       );
@@ -581,13 +747,28 @@ export default function AdminBookingsPage() {
     if (!form) return;
     setSavingRef(ref);
     setSaveErrors((e) => ({ ...e, [ref]: "" }));
+    const serializedCharges = serializeAdminCharges(form);
     try {
       const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}`, {
         method: "PUT",
         body: JSON.stringify({
-          ...form,
+          service:    form.service,
+          vanSize:    form.vanSize,
+          helpOption: form.helpOption,
+          timeWindow: form.timeWindow,
+          bookingStatus:  form.bookingStatus,
+          paymentStatus:  form.paymentStatus,
+          agreedQuote:    form.agreedQuote,
+          depositAmount:  form.depositAmount,
+          confirmedDate:  form.confirmedDate,
+          confirmedTime:  form.confirmedTime,
+          driverNotes:    form.driverNotes,
+          notes:          form.notes,
+          pickup:         form.pickup,
+          dropoff:        form.dropoff,
+          duration:       form.duration,
           adminExtraStops:   JSON.stringify(form.adminExtraStops),
-          adminExtraCharges: JSON.stringify(form.adminExtraCharges),
+          adminExtraCharges: serializedCharges,
           notify: "true",
         }),
       });
@@ -595,7 +776,7 @@ export default function AdminBookingsPage() {
       setBookings((prev) =>
         prev.map((b) =>
           b.bookingReference === ref
-            ? { ...b, ...form, adminExtraStops: JSON.stringify(form.adminExtraStops), adminExtraCharges: JSON.stringify(form.adminExtraCharges) }
+            ? { ...b, ...form, adminExtraStops: JSON.stringify(form.adminExtraStops), adminExtraCharges: serializedCharges }
             : b,
         ),
       );
@@ -613,20 +794,35 @@ export default function AdminBookingsPage() {
     setEditForms((prev) => ({ ...prev, [ref]: confirmedForm }));
     setSavingRef(ref);
     setSaveErrors((e) => ({ ...e, [ref]: "" }));
+    const serializedCharges = serializeAdminCharges(confirmedForm);
     try {
       const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}`, {
         method: "PUT",
         body: JSON.stringify({
-          ...confirmedForm,
+          service:    confirmedForm.service,
+          vanSize:    confirmedForm.vanSize,
+          helpOption: confirmedForm.helpOption,
+          timeWindow: confirmedForm.timeWindow,
+          bookingStatus:  confirmedForm.bookingStatus,
+          paymentStatus:  confirmedForm.paymentStatus,
+          agreedQuote:    confirmedForm.agreedQuote,
+          depositAmount:  confirmedForm.depositAmount,
+          confirmedDate:  confirmedForm.confirmedDate,
+          confirmedTime:  confirmedForm.confirmedTime,
+          driverNotes:    confirmedForm.driverNotes,
+          notes:          confirmedForm.notes,
+          pickup:         confirmedForm.pickup,
+          dropoff:        confirmedForm.dropoff,
+          duration:       confirmedForm.duration,
           adminExtraStops:   JSON.stringify(confirmedForm.adminExtraStops),
-          adminExtraCharges: JSON.stringify(confirmedForm.adminExtraCharges),
+          adminExtraCharges: serializedCharges,
           notify: "false",
         }),
       });
       if (!res.ok) throw new Error("save failed");
       setBookings((prev) =>
         prev.map((b) => b.bookingReference === ref
-          ? { ...b, ...confirmedForm, adminExtraStops: JSON.stringify(confirmedForm.adminExtraStops), adminExtraCharges: JSON.stringify(confirmedForm.adminExtraCharges) }
+          ? { ...b, ...confirmedForm, adminExtraStops: JSON.stringify(confirmedForm.adminExtraStops), adminExtraCharges: serializedCharges }
           : b),
       );
       if (confirmedForm.depositAmount) {
@@ -1091,6 +1287,45 @@ export default function AdminBookingsPage() {
                           <Field label="Confirmed Time" value={form.confirmedTime} type="time"
                             onChange={(v) => updateField(ref, "confirmedTime", v)} />
                         </div>
+                        {/* ── Editable booking core ── */}
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Service Type</label>
+                          <select value={form.service}
+                            onChange={(e) => updateField(ref, "service", e.target.value)}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
+                            <option value="">— select —</option>
+                            {SERVICE_OPTIONS.map((s) => <option key={s}>{s}</option>)}
+                          </select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Van Size</label>
+                            <select value={form.vanSize}
+                              onChange={(e) => updateField(ref, "vanSize", e.target.value)}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
+                              <option value="">— select —</option>
+                              {VAN_SIZE_OPTIONS.map((s) => <option key={s}>{s}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Help Option</label>
+                            <select value={form.helpOption}
+                              onChange={(e) => updateField(ref, "helpOption", e.target.value)}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
+                              <option value="">— select —</option>
+                              {HELP_OPTION_OPTIONS.map((s) => <option key={s}>{s}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Time Slot</label>
+                          <select value={form.timeWindow}
+                            onChange={(e) => updateField(ref, "timeWindow", e.target.value)}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
+                            <option value="">— select —</option>
+                            {TIME_SLOT_OPTIONS.map((s) => <option key={s}>{s}</option>)}
+                          </select>
+                        </div>
                         <div>
                           <label className="block text-xs text-gray-500 mb-1">Pickup Address</label>
                           <textarea value={form.pickup} onChange={(e) => updateField(ref, "pickup", e.target.value)}
@@ -1186,113 +1421,200 @@ export default function AdminBookingsPage() {
                       )}
                     </section>
 
-                    {/* ── Extra Charges (collapsible, collapsed by default) ── */}
-                    <section className="border-t border-gray-100 pt-2">
-                      <button onClick={() => toggleSection(ref, "charges")}
-                        className="flex items-center justify-between w-full text-xs font-semibold text-gray-500 uppercase tracking-wide py-2 hover:text-purple-700 transition-colors">
-                        <span className="flex items-center gap-2">
-                          Extra Charges
-                          {form.adminExtraCharges.length > 0 && (
-                            <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-semibold">
-                              {form.adminExtraCharges.length}
+                    {/* ── Pricing (smart engine, collapsible) ── */}
+                    {(() => {
+                      const pricing = computeAdminPricing(form);
+                      const activeStructuredCount = [
+                        form.extraTimeMinutes !== "0" && form.extraTimeMinutes !== "",
+                        form.pickupFloors    !== "0" && form.pickupFloors    !== "",
+                        form.dropoffFloors   !== "0" && form.dropoffFloors   !== "",
+                        form.congestionEntries !== "0" && form.congestionEntries !== "",
+                        (parseFloat(form.outsideM25Miles || "0") || 0) > 0,
+                      ].filter(Boolean).length + form.adminExtraCharges.length;
+                      return (
+                        <section className="border-t border-gray-100 pt-2">
+                          <button onClick={() => toggleSection(ref, "charges")}
+                            className="flex items-center justify-between w-full text-xs font-semibold text-gray-500 uppercase tracking-wide py-2 hover:text-purple-700 transition-colors">
+                            <span className="flex items-center gap-2">
+                              Pricing
+                              {activeStructuredCount > 0 && (
+                                <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-semibold">
+                                  {activeStructuredCount}
+                                </span>
+                              )}
                             </span>
-                          )}
-                        </span>
-                        {isSectionOpen(ref, "charges") ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                      </button>
-                      {isSectionOpen(ref, "charges") && (
-                        <div className="mt-1 space-y-2 pb-2">
-                          {form.adminExtraCharges.map((charge, i) => (
-                            <div key={i} className="flex gap-2 items-start">
-                              <div className="flex-1 space-y-1.5">
-                                <select value={charge.type}
-                                  onChange={(e) => updateExtraCharge(ref, i, "type", e.target.value)}
-                                  className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
-                                  <option value="">Select type…</option>
-                                  {EXTRA_CHARGE_TYPES.map((t) => <option key={t}>{t}</option>)}
-                                </select>
-                                <input value={charge.notes}
-                                  onChange={(e) => updateExtraCharge(ref, i, "notes", e.target.value)}
-                                  placeholder="Notes (optional)"
-                                  className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-600" />
-                              </div>
-                              <input value={charge.amount}
-                                onChange={(e) => updateExtraCharge(ref, i, "amount", e.target.value)}
-                                placeholder="£ amount"
-                                className="w-20 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600" />
-                              <button onClick={() => removeExtraCharge(ref, i)}
-                                className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 mt-0.5">
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ))}
-                          <button onClick={() => addExtraCharge(ref)}
-                            className="flex items-center gap-1.5 text-xs text-purple-700 font-medium hover:text-purple-900 transition-colors px-1 py-1">
-                            <Plus className="w-3.5 h-3.5" /> Add charge
+                            {isSectionOpen(ref, "charges") ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                           </button>
-                        </div>
-                      )}
-                    </section>
-
-                    {/* ── Price Breakdown (collapsible, collapsed by default) ── */}
-                    <section className="border-t border-gray-100 pt-2">
-                      <button onClick={() => toggleSection(ref, "breakdown")}
-                        className="flex items-center justify-between w-full text-xs font-semibold text-gray-500 uppercase tracking-wide py-2 hover:text-purple-700 transition-colors">
-                        <span>Price Breakdown</span>
-                        {isSectionOpen(ref, "breakdown") ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                      </button>
-                      {isSectionOpen(ref, "breakdown") && (() => {
-                        const agreed       = parseFloat(form.agreedQuote) || 0;
-                        const stopsTotal   = form.adminExtraStops.reduce((s, x) => s + (parseFloat(x.charge) || 0), 0);
-                        const chargesTotal = form.adminExtraCharges.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
-                        const base         = Math.max(0, agreed - stopsTotal - chargesTotal);
-                        const deposit      = parseFloat(form.depositAmount) || 0;
-                        const remaining    = Math.max(0, agreed - deposit);
-                        return (
-                          <div className="mt-1 mb-2 bg-purple-50/60 border border-purple-100 rounded-xl px-4 py-3 space-y-1.5">
-                            {/* Original booking data when captured */}
-                            {(booking.baseCharge || booking.duration || booking.stairsCharge || booking.congestionCharge) && (
-                              <div className="pb-2 mb-2 border-b border-purple-100">
-                                <p className="text-[11px] font-semibold text-purple-500 uppercase tracking-wide mb-1.5">Original booking data</p>
-                                <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-gray-600">
-                                  {booking.duration         && <span><span className="text-gray-400">Duration: </span>{booking.duration}</span>}
-                                  {booking.hourlyRate       && <span><span className="text-gray-400">Rate: </span>{booking.hourlyRate}</span>}
-                                  {booking.baseCharge       && <span><span className="text-gray-400">Base: </span>{booking.baseCharge}</span>}
-                                  {booking.stairsCharge     && <span><span className="text-gray-400">Stairs: </span>+{booking.stairsCharge}</span>}
-                                  {booking.extraStopCharge  && <span><span className="text-gray-400">Stops: </span>+{booking.extraStopCharge}</span>}
-                                  {booking.congestionCharge && <span><span className="text-gray-400">CCZ: </span>+{booking.congestionCharge}</span>}
-                                  {booking.outsideM25Charge && <span><span className="text-gray-400">M25: </span>+{booking.outsideM25Charge}</span>}
+                          {isSectionOpen(ref, "charges") && (
+                            <div className="mt-1 pb-3 space-y-3">
+                              {/* Auto-total banner */}
+                              <div className="flex items-center justify-between bg-purple-50 border border-purple-100 rounded-xl px-4 py-2.5">
+                                <div>
+                                  <p className="text-[11px] text-purple-500 font-medium uppercase tracking-wide">Calculated total</p>
+                                  <p className="text-xl font-bold text-purple-800">£{pricing.total.toFixed(2)}</p>
+                                  {pricing.hourlyRate > 0 && <p className="text-[10px] text-purple-400">Rate: £{pricing.hourlyRate}/hr</p>}
                                 </div>
-                                {(booking.extraStop1 || booking.extraStop2 || booking.extraStop3) && (
-                                  <div className="mt-1 text-xs text-gray-500 space-y-0.5">
-                                    {booking.extraStop1 && <p><span className="text-gray-400">Stop 1: </span>{booking.extraStop1}</p>}
-                                    {booking.extraStop2 && <p><span className="text-gray-400">Stop 2: </span>{booking.extraStop2}</p>}
-                                    {booking.extraStop3 && <p><span className="text-gray-400">Stop 3: </span>{booking.extraStop3}</p>}
+                                <button
+                                  onClick={() => updateField(ref, "agreedQuote", pricing.total.toFixed(2))}
+                                  className="text-xs font-semibold text-purple-700 border border-purple-300 rounded-lg px-3 py-1.5 hover:bg-purple-100 transition-colors whitespace-nowrap">
+                                  Use calculated price
+                                </button>
+                              </div>
+
+                              {/* Structured pricing inputs */}
+                              <div className="space-y-2.5">
+                                {/* Extra Time */}
+                                <div className="flex items-center gap-3">
+                                  <label className="w-36 text-xs text-gray-500 shrink-0">Extra time</label>
+                                  <select value={form.extraTimeMinutes}
+                                    onChange={(e) => updateField(ref, "extraTimeMinutes", e.target.value)}
+                                    className="flex-1 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
+                                    {EXTRA_TIME_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                  </select>
+                                  {pricing.extraTime > 0 && <span className="text-sm text-purple-700 font-medium w-14 text-right">+£{pricing.extraTime.toFixed(2)}</span>}
+                                </div>
+                                {/* Pickup Stairs */}
+                                <div className="flex items-center gap-3">
+                                  <label className="w-36 text-xs text-gray-500 shrink-0">Pickup stairs</label>
+                                  <select value={form.pickupFloors}
+                                    onChange={(e) => updateField(ref, "pickupFloors", e.target.value)}
+                                    className="flex-1 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
+                                    {FLOOR_OPTIONS.map((f) => <option key={f} value={f}>{f === "0" ? "None" : `${f} floor${f !== "1" ? "s" : ""}`}</option>)}
+                                  </select>
+                                  {pricing.stairsPickup > 0 && <span className="text-sm text-purple-700 font-medium w-14 text-right">+£{pricing.stairsPickup.toFixed(2)}</span>}
+                                </div>
+                                {/* Drop-off Stairs */}
+                                <div className="flex items-center gap-3">
+                                  <label className="w-36 text-xs text-gray-500 shrink-0">Drop-off stairs</label>
+                                  <select value={form.dropoffFloors}
+                                    onChange={(e) => updateField(ref, "dropoffFloors", e.target.value)}
+                                    className="flex-1 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
+                                    {FLOOR_OPTIONS.map((f) => <option key={f} value={f}>{f === "0" ? "None" : `${f} floor${f !== "1" ? "s" : ""}`}</option>)}
+                                  </select>
+                                  {pricing.stairsDropoff > 0 && <span className="text-sm text-purple-700 font-medium w-14 text-right">+£{pricing.stairsDropoff.toFixed(2)}</span>}
+                                </div>
+                                {/* Congestion */}
+                                <div className="flex items-center gap-3">
+                                  <label className="w-36 text-xs text-gray-500 shrink-0">Congestion (CCZ)</label>
+                                  <select value={form.congestionEntries}
+                                    onChange={(e) => updateField(ref, "congestionEntries", e.target.value)}
+                                    className="flex-1 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
+                                    {CONGESTION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                  </select>
+                                  {pricing.ccz > 0 && <span className="text-sm text-purple-700 font-medium w-14 text-right">+£{pricing.ccz.toFixed(2)}</span>}
+                                </div>
+                                {/* Outside M25 */}
+                                <div className="flex items-center gap-3">
+                                  <label className="w-36 text-xs text-gray-500 shrink-0">Outside M25 (mi)</label>
+                                  <input
+                                    type="number" min="0" step="1"
+                                    value={form.outsideM25Miles}
+                                    onChange={(e) => updateField(ref, "outsideM25Miles", e.target.value)}
+                                    placeholder="miles"
+                                    className="flex-1 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600" />
+                                  {pricing.m25 > 0 && <span className="text-sm text-purple-700 font-medium w-14 text-right">+£{pricing.m25.toFixed(2)}</span>}
+                                </div>
+                              </div>
+
+                              {/* Manual freeform charges */}
+                              {(form.adminExtraCharges.length > 0 || true) && (
+                                <div className="border-t border-gray-100 pt-2 space-y-2">
+                                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Manual charges</p>
+                                  {form.adminExtraCharges.map((charge, i) => (
+                                    <div key={i} className="flex gap-2 items-start">
+                                      <div className="flex-1 space-y-1.5">
+                                        <input value={charge.type}
+                                          onChange={(e) => updateExtraCharge(ref, i, "type", e.target.value)}
+                                          placeholder="Charge description…"
+                                          className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600" />
+                                        <input value={charge.notes}
+                                          onChange={(e) => updateExtraCharge(ref, i, "notes", e.target.value)}
+                                          placeholder="Notes (optional)"
+                                          className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-600" />
+                                      </div>
+                                      <input value={charge.amount}
+                                        onChange={(e) => updateExtraCharge(ref, i, "amount", e.target.value)}
+                                        placeholder="£"
+                                        className="w-16 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600" />
+                                      <button onClick={() => removeExtraCharge(ref, i)}
+                                        className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 mt-0.5">
+                                        <X className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                  <button onClick={() => addExtraCharge(ref)}
+                                    className="flex items-center gap-1.5 text-xs text-purple-700 font-medium hover:text-purple-900 transition-colors px-1 py-1">
+                                    <Plus className="w-3.5 h-3.5" /> Add manual charge
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </section>
+                      );
+                    })()}
+
+                    {/* ── Price Breakdown (collapsible) ── */}
+                    {(() => {
+                      const pricing  = computeAdminPricing(form);
+                      const agreed   = parseFloat(form.agreedQuote) || 0;
+                      const deposit  = parseFloat(form.depositAmount) || 0;
+                      const remaining = Math.max(0, agreed - deposit);
+                      return (
+                        <section className="border-t border-gray-100 pt-2">
+                          <button onClick={() => toggleSection(ref, "breakdown")}
+                            className="flex items-center justify-between w-full text-xs font-semibold text-gray-500 uppercase tracking-wide py-2 hover:text-purple-700 transition-colors">
+                            <span>Price Breakdown</span>
+                            {isSectionOpen(ref, "breakdown") ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                          </button>
+                          {isSectionOpen(ref, "breakdown") && (
+                            <div className="mt-1 mb-2 bg-purple-50/60 border border-purple-100 rounded-xl px-4 py-3 space-y-1.5 text-sm">
+                              {/* Original booking data */}
+                              {(booking.baseCharge || booking.stairsCharge || booking.congestionCharge) && (
+                                <div className="pb-2 mb-2 border-b border-purple-100">
+                                  <p className="text-[11px] font-semibold text-purple-500 uppercase tracking-wide mb-1.5">Original estimate</p>
+                                  <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-gray-600">
+                                    {booking.duration         && <span><span className="text-gray-400">Duration: </span>{booking.duration}</span>}
+                                    {booking.hourlyRate       && <span><span className="text-gray-400">Rate: </span>{booking.hourlyRate}</span>}
+                                    {booking.baseCharge       && <span><span className="text-gray-400">Base: </span>£{booking.baseCharge}</span>}
+                                    {booking.stairsCharge     && <span><span className="text-gray-400">Stairs: </span>+£{booking.stairsCharge}</span>}
+                                    {booking.extraStopCharge  && <span><span className="text-gray-400">Stops: </span>+£{booking.extraStopCharge}</span>}
+                                    {booking.congestionCharge && <span><span className="text-gray-400">CCZ: </span>+£{booking.congestionCharge}</span>}
+                                    {booking.outsideM25Charge && <span><span className="text-gray-400">M25: </span>+£{booking.outsideM25Charge}</span>}
+                                  </div>
+                                </div>
+                              )}
+                              {/* Admin-managed breakdown */}
+                              <p className="text-[11px] font-semibold text-purple-700 uppercase tracking-wide">Confirmed price</p>
+                              <div className="space-y-1">
+                                {pricing.base > 0          && <div className="flex justify-between text-gray-600"><span>Base ({form.duration || "—"})</span><span>£{pricing.base.toFixed(2)}</span></div>}
+                                {pricing.extraTime > 0     && <div className="flex justify-between text-gray-600"><span>Extra time (+{form.extraTimeMinutes} min)</span><span>+£{pricing.extraTime.toFixed(2)}</span></div>}
+                                {pricing.stairsPickup > 0  && <div className="flex justify-between text-gray-600"><span>Pickup stairs ({form.pickupFloors}F)</span><span>+£{pricing.stairsPickup.toFixed(2)}</span></div>}
+                                {pricing.stairsDropoff > 0 && <div className="flex justify-between text-gray-600"><span>Drop-off stairs ({form.dropoffFloors}F)</span><span>+£{pricing.stairsDropoff.toFixed(2)}</span></div>}
+                                {pricing.ccz > 0           && <div className="flex justify-between text-gray-600"><span>Congestion ({form.congestionEntries} addr.)</span><span>+£{pricing.ccz.toFixed(2)}</span></div>}
+                                {pricing.m25 > 0           && <div className="flex justify-between text-gray-600"><span>Outside M25 ({form.outsideM25Miles} mi)</span><span>+£{pricing.m25.toFixed(2)}</span></div>}
+                                {pricing.stopsTotal > 0    && <div className="flex justify-between text-gray-600"><span>Extra stops ({form.adminExtraStops.length})</span><span>+£{pricing.stopsTotal.toFixed(2)}</span></div>}
+                                {pricing.manualTotal > 0   && <div className="flex justify-between text-gray-600"><span>Manual charges</span><span>+£{pricing.manualTotal.toFixed(2)}</span></div>}
+                                <div className="flex justify-between text-purple-600 text-xs border-t border-purple-100 pt-1">
+                                  <span>Calculated</span><span>£{pricing.total.toFixed(2)}</span>
+                                </div>
+                                {agreed > 0 && (
+                                  <div className="flex justify-between font-semibold border-t border-purple-200 pt-1">
+                                    <span>Agreed total</span><span>£{agreed.toFixed(2)}</span>
+                                  </div>
+                                )}
+                                {deposit > 0 && <div className="flex justify-between text-gray-500"><span>Deposit paid</span><span>−£{deposit.toFixed(2)}</span></div>}
+                                {agreed > 0 && deposit > 0 && (
+                                  <div className="flex justify-between font-semibold text-purple-700">
+                                    <span>Remaining</span><span>£{remaining.toFixed(2)}</span>
                                   </div>
                                 )}
                               </div>
-                            )}
-                            <p className="text-[11px] font-semibold text-purple-700 uppercase tracking-wide mb-1">Current total</p>
-                            <div className="space-y-1 text-sm">
-                              {agreed > 0 && <div className="flex justify-between text-gray-600"><span>Base price</span><span>£{base.toFixed(2)}</span></div>}
-                              {stopsTotal > 0   && <div className="flex justify-between text-gray-600"><span>Extra stops</span><span>+£{stopsTotal.toFixed(2)}</span></div>}
-                              {chargesTotal > 0 && <div className="flex justify-between text-gray-600"><span>Extra charges</span><span>+£{chargesTotal.toFixed(2)}</span></div>}
-                              {agreed > 0 && (
-                                <div className="flex justify-between font-semibold border-t border-purple-200 pt-1 mt-0.5">
-                                  <span>Agreed total</span><span>£{agreed.toFixed(2)}</span>
-                                </div>
-                              )}
-                              {deposit > 0 && <div className="flex justify-between text-gray-500"><span>Deposit paid</span><span>−£{deposit.toFixed(2)}</span></div>}
-                              {deposit > 0 && (
-                                <div className="flex justify-between font-semibold text-purple-700">
-                                  <span>Remaining</span><span>£{remaining.toFixed(2)}</span>
-                                </div>
-                              )}
                             </div>
-                          </div>
-                        );
-                      })()}
-                    </section>
+                          )}
+                        </section>
+                      );
+                    })()}
 
                     {/* ── Save buttons ── */}
                     {saveErrors[ref] && (

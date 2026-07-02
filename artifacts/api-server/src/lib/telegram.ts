@@ -71,6 +71,7 @@ export interface TelegramBooking {
   depositAmount?:      string;
   remainingBalance?:   string;
   changedFields?:      string[];
+  driverNotes?:        string;
   // Admin-managed extra stops/charges (JSON strings)
   adminExtraStops?:   string;
   adminExtraCharges?: string;
@@ -457,9 +458,10 @@ export async function sendInvoicePaymentNotification(p: InvoicePaymentPayload): 
 
 // ── Admin update notification ─────────────────────────────────
 //
-// Sends a NEW Telegram message (never edits the original) when an admin
-// saves changes to a booking. Shows the full current booking state plus
-// a summary of which fields changed.
+// Sends a NEW Telegram message when an admin clicks "Save & Notify Driver".
+// Message order mirrors the actual moving journey:
+//   Overview → Pickup → Pickup Stairs → Extra Stops →
+//   Drop-off → Drop-off Stairs → Price Breakdown → Payment → Driver Notes
 export async function sendBookingUpdateNotification(b: TelegramBooking): Promise<void> {
   const { botToken, chatId } = getCredentials();
   if (!botToken || !chatId) return;
@@ -468,80 +470,103 @@ export async function sendBookingUpdateNotification(b: TelegramBooking): Promise
   const payment = b.paymentStatus || "Unpaid";
   const payIcon = payment.toLowerCase().includes("paid") ? "✅" : "⏳";
 
+  // Parse admin-managed extra stops and charges (both stored as JSON in the sheet)
+  type ExtraStop   = { address: string; charge: string; notes: string };
+  type ExtraCharge = { type: string; amount: string; notes: string };
+
+  const extraStops: ExtraStop[] = (() => {
+    try { return JSON.parse(b.adminExtraStops || "[]") as ExtraStop[]; } catch { return []; }
+  })().filter((s) => s.address?.trim());
+
+  const allCharges: ExtraCharge[] = (() => {
+    try { return JSON.parse(b.adminExtraCharges || "[]") as ExtraCharge[]; } catch { return []; }
+  })();
+
+  // Separate structured charges from manual ones
+  const STRUCTURED_TYPES = new Set(["Stairs - pickup", "Stairs - drop-off", "Congestion charge", "Outside M25", "Extra time"]);
+  const findCharge   = (type: string) => allCharges.find((c) => c.type === type);
+  const stairsPickup  = findCharge("Stairs - pickup");
+  const stairsDropoff = findCharge("Stairs - drop-off");
+  const cczCharge     = findCharge("Congestion charge");
+  const m25Charge     = findCharge("Outside M25");
+  const extraTime     = findCharge("Extra time");
+  const manualCharges = allCharges.filter((c) => !STRUCTURED_TYPES.has(c.type) && c.type && parseFloat(c.amount) > 0);
+
+  // Numeric totals for breakdown
+  const agreedNum      = parseFloat(b.agreedQuote    || "0");
+  const depositNum     = parseFloat(b.depositAmount  || "0");
+  const stopsTotal     = extraStops.reduce((s, x) => s + (parseFloat(x.charge   || "0")), 0);
+  const stairsPickupN  = parseFloat(stairsPickup?.amount  || "0");
+  const stairsDropoffN = parseFloat(stairsDropoff?.amount || "0");
+  const cczN           = parseFloat(cczCharge?.amount     || "0");
+  const m25N           = parseFloat(m25Charge?.amount     || "0");
+  const extraTimeN     = parseFloat(extraTime?.amount     || "0");
+  const manualN        = manualCharges.reduce((s, x) => s + parseFloat(x.amount || "0"), 0);
+  const addOns         = stopsTotal + stairsPickupN + stairsDropoffN + cczN + m25N + extraTimeN + manualN;
+  const baseN          = agreedNum > 0 ? Math.max(0, agreedNum - addOns) : 0;
+  const remainingN     = agreedNum > 0 ? Math.max(0, agreedNum - depositNum) : 0;
+
   const changedSummary = b.changedFields?.length
     ? `Changed: ${b.changedFields.join(", ")}`
     : "";
-
-  // Parse admin-managed extra stops and charges (stored as JSON)
-  type ExtraStop   = { address: string; charge: string; notes: string };
-  type ExtraCharge = { type: string; amount: string; notes: string };
-  const extraStops: ExtraStop[] = (() => {
-    try { return JSON.parse(b.adminExtraStops || "[]") as ExtraStop[]; } catch { return []; }
-  })().filter((s) => s.address);
-  const extraCharges: ExtraCharge[] = (() => {
-    try { return JSON.parse(b.adminExtraCharges || "[]") as ExtraCharge[]; } catch { return []; }
-  })().filter((c) => c.type && c.amount);
-
-  // Price breakdown
-  const agreedNum  = parseFloat(b.agreedQuote || "0");
-  const stopsTotal = extraStops.reduce((s, x) => s + parseFloat(x.charge || "0"), 0);
-  const chargesTotal = extraCharges.reduce((s, x) => s + parseFloat(x.amount || "0"), 0);
-  const base = agreedNum > 0 ? agreedNum - stopsTotal - chargesTotal : 0;
 
   const parts: (string | null)[] = [
     `✏️ Booking Updated — ${b.bookingReference}`,
     changedSummary ? `\n${changedSummary}` : null,
     "",
-    line("Service", b.service),
-    line("Name",    b.name),
-    line("Phone",   b.phone),
+    // ── Booking overview ──────────────────────────────────────
+    line("Customer",  b.name),
+    line("Phone",     b.phone),
+    b.confirmedDate
+      ? `Date: ${b.confirmedDate}${b.confirmedTime ? " at " + b.confirmedTime : ""}`
+      : (b.preferredDate ? `Requested date: ${b.preferredDate}` : null),
+    line("Time slot", b.timeWindow),
+    line("Service",   b.service),
+    line("Van size",  b.vanSize),
+    line("Help",      b.helpOption),
+    (b.estimatedTime || b.duration) ? `Duration: ${b.estimatedTime || b.duration}` : null,
     "",
-    b.pickup  ? `📍 From: ${b.pickup}`  : null,
+    // ── Route in travel order ─────────────────────────────────
+    b.pickup  ? `📍 Pickup: ${b.pickup}`  : null,
+    stairsPickup  ? `   ↳ Pickup stairs: ${stairsPickup.notes} (£${parseFloat(stairsPickup.amount).toFixed(2)})` : null,
     // Extra stops between pickup and drop-off
-    ...extraStops.map((s, i) =>
-      `📍 Stop ${i + 1}: ${s.address}${s.charge ? ` (+£${s.charge})` : ""}${s.notes ? ` — ${s.notes}` : ""}`,
-    ),
-    b.dropoff ? `📍 To:   ${b.dropoff}` : null,
+    ...extraStops.flatMap((s, i) => {
+      const rows: string[] = [`➡️ Extra Stop ${i + 1}: ${s.address.trim()}`];
+      if (s.charge && parseFloat(s.charge) > 0) rows.push(`   +£${parseFloat(s.charge).toFixed(2)}`);
+      if (s.notes?.trim()) rows.push(`   ${s.notes.trim()}`);
+      return rows;
+    }),
+    b.dropoff ? `📍 Drop-off: ${b.dropoff}` : null,
+    stairsDropoff ? `   ↳ Drop-off stairs: ${stairsDropoff.notes} (£${parseFloat(stairsDropoff.amount).toFixed(2)})` : null,
     "",
-    line("Van",      b.vanSize),
-    line("Help",     b.helpOption),
-    b.estimatedTime ? `Duration: ${b.estimatedTime}` : null,
-    "",
-    // Price breakdown block
+    // ── Price breakdown ───────────────────────────────────────
     ...(() => {
-      const rows: string[] = [];
-      if (agreedNum > 0) {
-        rows.push("💰 Price breakdown:");
-        if (base > 0)          rows.push(`   Base:         £${base.toFixed(2)}`);
-        if (stopsTotal > 0)    rows.push(`   Extra stops:  £${stopsTotal.toFixed(2)}`);
-        if (chargesTotal > 0)  rows.push(`   Extra charges:£${chargesTotal.toFixed(2)}`);
-        rows.push(`   Agreed total: £${agreedNum.toFixed(2)}`);
-        if (b.depositAmount)   rows.push(`   Deposit paid: £${parseFloat(b.depositAmount).toFixed(2)}`);
-        if (b.remainingBalance) rows.push(`   Remaining:    £${parseFloat(b.remainingBalance).toFixed(2)}`);
-      } else {
-        if (b.depositAmount)    rows.push(`Deposit: £${b.depositAmount}`);
-        if (b.remainingBalance) rows.push(`Remaining: £${b.remainingBalance}`);
-      }
-      // Extra charges detail
-      if (extraCharges.length > 0) {
-        rows.push("💸 Extra charges:");
-        extraCharges.forEach((c) =>
-          rows.push(`   ${c.type}: £${c.amount}${c.notes ? ` (${c.notes})` : ""}`),
-        );
-      }
-      return rows.length ? ["", ...rows] : [];
+      if (agreedNum <= 0 && depositNum <= 0) return [];
+      const rows: string[] = ["💰 Price Breakdown:"];
+      if (baseN     > 0) rows.push(`   Base price:        £${baseN.toFixed(2)}`);
+      if (stopsTotal > 0) rows.push(`   Extra stops:       +£${stopsTotal.toFixed(2)}`);
+      if (extraTimeN > 0) rows.push(`   Extra time${extraTime?.notes ? ` (${extraTime.notes})` : ""}:  +£${extraTimeN.toFixed(2)}`);
+      if (stairsPickupN + stairsDropoffN > 0) rows.push(`   Stairs:            +£${(stairsPickupN + stairsDropoffN).toFixed(2)}`);
+      if (cczN   > 0) rows.push(`   Congestion charge: +£${cczN.toFixed(2)}${cczCharge?.notes ? ` (${cczCharge.notes})` : ""}`);
+      if (m25N   > 0) rows.push(`   Outside M25:       +£${m25N.toFixed(2)}${m25Charge?.notes ? ` (${m25Charge.notes})` : ""}`);
+      manualCharges.forEach((c) =>
+        rows.push(`   ${c.type || "Manual"}:       +£${parseFloat(c.amount).toFixed(2)}${c.notes ? ` (${c.notes})` : ""}`),
+      );
+      rows.push("   ─────────────────────────");
+      if (agreedNum > 0) rows.push(`   Agreed total:      £${agreedNum.toFixed(2)}`);
+      if (depositNum > 0) rows.push(`   Deposit paid:     -£${depositNum.toFixed(2)}`);
+      if (agreedNum > 0 && depositNum > 0) rows.push(`   Remaining:         £${remainingN.toFixed(2)}`);
+      return ["", ...rows];
     })(),
     "",
+    // ── Status & driver notes ─────────────────────────────────
     `📋 Status: ${status}  |  ${payIcon} Payment: ${payment}`,
-    b.confirmedDate
-      ? `📅 Confirmed: ${b.confirmedDate}${b.confirmedTime ? " at " + b.confirmedTime : ""}`
-      : null,
-    b.notes ? `📝 Notes: ${b.notes}` : null,
+    b.driverNotes?.trim() ? `📝 Driver Notes: ${b.driverNotes.trim()}` : null,
     "",
     `🔗 Admin panel: ${ADMIN_PANEL_URL}`,
   ];
 
-  const lines = parts
+  const messageLines = parts
     .filter((l): l is string => l !== null)
     .reduce<string[]>((acc, l) => {
       if (l === "" && acc.at(-1) === "") return acc;
@@ -549,10 +574,10 @@ export async function sendBookingUpdateNotification(b: TelegramBooking): Promise
       return acc;
     }, []);
 
-  while (lines.at(-1) === "") lines.pop();
-  while (lines[0]   === "") lines.shift();
+  while (messageLines.at(-1) === "") messageLines.pop();
+  while (messageLines[0]     === "") messageLines.shift();
 
-  const result = await tgSend(lines.join("\n"));
+  const result = await tgSend(messageLines.join("\n"));
   if (result.ok) {
     logger.info({ ref: b.bookingReference }, "Admin booking update notification sent to Telegram");
   } else {
