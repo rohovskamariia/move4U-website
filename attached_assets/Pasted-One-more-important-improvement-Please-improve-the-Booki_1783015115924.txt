@@ -1,0 +1,96 @@
+One more important improvement.
+
+Please improve the Booking Details section so it becomes the complete operational editor for dispatch, while keeping the UI clean and not overloaded.
+
+### 1. Editable booking fields
+
+Please make these fields editable using dropdowns where appropriate:
+
+* Service type
+* Van size
+* Help option
+* Time slot / time window
+
+Van size:
+
+* Small Van
+* Medium Van
+* Large Van
+* Luton Van
+
+Help option:
+
+* No help needed
+* Driver help
+* Driver + Helper
+
+Time slot:
+
+* Morning (8am–12pm)
+* Afternoon (12pm–5pm)
+* Evening (5pm–9pm)
+* Custom time
+
+Do not duplicate these fields elsewhere in the UI. They should only exist once inside the Booking Details section.
+
+The top summary card should remain read-only and always display the latest saved values.
+
+---
+
+### 2. Admin pricing should use the same pricing engine as the customer booking form
+
+The admin panel should use exactly the same pricing logic as the website.
+
+Please include the existing pricing rules:
+
+* Congestion Charge (£18 per booking)
+* Outside M25 (£1 per mile)
+* Stairs (£10 per floor)
+* Additional Stop (£5 per stop)
+* Extra Time (using the existing pricing logic)
+
+The admin should not need to remember any prices manually.
+
+For every pricing option:
+
+* Enable/disable toggle or checkbox
+* Automatic calculation using the existing pricing engine
+* Manual override when required
+
+Examples:
+
+* Additional Stop → admin adds a stop → automatically adds £5 (editable if needed)
+* Stairs → admin enters number of floors → automatically calculates £10 × floors
+* Outside M25 → use the existing mileage calculation where available, otherwise allow manual mileage entry
+* Congestion Charge → simple on/off toggle
+* Extra Time → select 30, 60, 90 minutes etc. using the existing pricing logic already used by the booking form
+
+---
+
+### 3. Automatic updates
+
+Whenever these values change and are saved:
+
+* Update the Booking Summary card
+* Update Google Sheets
+* Update the Price Breakdown
+* Update Agreed Total
+* Update Remaining Balance
+* Include the updated values in Telegram only when I click **Save & Notify Driver**
+
+Do **not** send anything to the customer automatically.
+
+Deposit logic must remain unchanged:
+
+* Deposit stays locked once paid unless I manually edit it.
+* Remaining Balance = Agreed Total − Deposit Paid.
+
+---
+
+### 4. Single source of truth
+
+Please reuse the existing pricing engine wherever possible.
+
+Do not create a second pricing system for the admin panel.
+
+The website booking flow and the admin panel must always calculate prices using the same logic so prices remain consistent everywhere.
