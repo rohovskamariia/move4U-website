@@ -3,12 +3,24 @@ import { Link } from "wouter";
 import {
   RefreshCw, Copy, Check, ChevronDown, ChevronUp,
   LogOut, Phone, MapPin, ExternalLink, AlertCircle, Loader2,
-  MessageCircle, MessageSquare, Mail, PhoneCall,
+  MessageCircle, MessageSquare, Mail, PhoneCall, Plus, X,
 } from "lucide-react";
 import { toE164, toWhatsAppDigits } from "@/lib/validators";
 import { useNoIndex } from "@/lib/usePageMeta";
 
 // ── Types ─────────────────────────────────────────────────────
+
+interface AdminExtraStop {
+  address: string;
+  charge:  string;
+  notes:   string;
+}
+
+interface AdminExtraCharge {
+  type:   string;
+  amount: string;
+  notes:  string;
+}
 
 interface BookingRecord {
   rowNumber: number;
@@ -55,20 +67,24 @@ interface BookingRecord {
   confirmationSentAt: string;
   confirmationSubject: string;
   confirmationSentBy: string;
+  adminExtraStops:    string; // JSON [{address,charge,notes}]
+  adminExtraCharges:  string; // JSON [{type,amount,notes}]
 }
 
 interface EditForm {
-  bookingStatus: string;
-  paymentStatus: string;
-  agreedQuote: string;
-  depositAmount: string;
-  confirmedDate: string;
-  confirmedTime: string;
-  driverNotes: string;
-  // Admin-editable core fields
-  notes: string;
-  pickup: string;
-  dropoff: string;
+  bookingStatus:     string;
+  paymentStatus:     string;
+  agreedQuote:       string;
+  depositAmount:     string;
+  confirmedDate:     string;
+  confirmedTime:     string;
+  driverNotes:       string;
+  notes:             string;
+  pickup:            string;
+  dropoff:           string;
+  duration:          string;
+  adminExtraStops:   AdminExtraStop[];
+  adminExtraCharges: AdminExtraCharge[];
 }
 
 // ── Constants ─────────────────────────────────────────────────
@@ -77,22 +93,28 @@ interface EditForm {
 // Keep false until the invoice feature is intentionally re-enabled.
 const ENABLE_STRIPE_INVOICES = false;
 
-const BOOKING_STATUSES = ["New", "Contacted", "Confirmed", "Denied", "Booked", "Completed"];
-const PAYMENT_STATUSES = ["Unpaid", "Payment link ready", "Invoice created", "Invoice sent", "Deposit paid", "Invoice payment failed", "Fully paid", "Paid"];
-const STATUS_FILTERS   = ["All", "New", "Contacted", "Confirmed", "Booked", "Completed", "Denied"];
+const BOOKING_STATUSES     = ["New", "Contacted", "Confirmed", "Denied", "Booked", "Completed"];
+const PAYMENT_STATUSES     = ["Unpaid", "Payment link ready", "Invoice created", "Invoice sent", "Deposit paid", "Invoice payment failed", "Fully paid", "Paid"];
+const STATUS_FILTERS       = ["All", "New", "Contacted", "Confirmed", "Booked", "Completed", "Denied"];
+const EXTRA_CHARGE_TYPES   = ["Extra time", "Stairs", "Congestion charge", "Outside M25", "Manual adjustment"];
 
 function initEditForm(b: BookingRecord): EditForm {
+  const safeParseStops   = (s: string): AdminExtraStop[]   => { try { return JSON.parse(s || "[]"); } catch { return []; } };
+  const safeParseCharges = (s: string): AdminExtraCharge[] => { try { return JSON.parse(s || "[]"); } catch { return []; } };
   return {
-    bookingStatus: b.bookingStatus  || "New",
-    paymentStatus: b.paymentStatus  || "Unpaid",
-    agreedQuote:   b.agreedQuote    || "",
-    depositAmount: b.depositAmount  || "",
-    confirmedDate: b.confirmedDate  || "",
-    confirmedTime: b.confirmedTime  || "",
-    driverNotes:   b.driverNotes    || "",
-    notes:         b.notes          || "",
-    pickup:        b.pickup         || "",
-    dropoff:       b.dropoff        || "",
+    bookingStatus:     b.bookingStatus  || "New",
+    paymentStatus:     b.paymentStatus  || "Unpaid",
+    agreedQuote:       b.agreedQuote    || "",
+    depositAmount:     b.depositAmount  || "",
+    confirmedDate:     b.confirmedDate  || "",
+    confirmedTime:     b.confirmedTime  || "",
+    driverNotes:       b.driverNotes    || "",
+    notes:             b.notes          || "",
+    pickup:            b.pickup         || "",
+    dropoff:           b.dropoff        || "",
+    duration:          b.duration       || "",
+    adminExtraStops:   safeParseStops(b.adminExtraStops),
+    adminExtraCharges: safeParseCharges(b.adminExtraCharges),
   };
 }
 
@@ -377,6 +399,7 @@ export default function AdminBookingsPage() {
   const [invoiceModal,  setInvoiceModal]  = useState<string | null>(null); // ref of booking showing options
   const [copiedInvoice, setCopiedInvoice] = useState<string | null>(null);
   const [confirmBusy,   setConfirmBusy]   = useState<string | null>(null);
+  const [expandedSections, setExpandedSections] = useState<Record<string, Set<string>>>({});
 
   const apiFetch = useCallback(
     (path: string, init?: RequestInit) =>
@@ -451,12 +474,10 @@ export default function AdminBookingsPage() {
 
   function updateField(ref: string, field: keyof EditForm, value: string) {
     if (field === "depositAmount") {
-      // Admin is manually typing a deposit — mark it as overridden
       setDepositOverridden((prev) => ({ ...prev, [ref]: true }));
     }
     setEditForms((prev) => {
       const form = { ...(prev[ref] ?? {}), [field]: value } as EditForm;
-      // Auto-recalculate deposit when agreed quote changes, unless admin overrode it
       if (field === "agreedQuote" && !depositOverridden[ref]) {
         form.depositAmount = calcSuggestedDeposit(value);
       }
@@ -464,6 +485,66 @@ export default function AdminBookingsPage() {
     });
   }
 
+  // ── Collapsible section helpers ──────────────────────────────
+  function isSectionOpen(ref: string, name: string) {
+    return expandedSections[ref]?.has(name) ?? false;
+  }
+
+  function toggleSection(ref: string, name: string) {
+    setExpandedSections((prev) => {
+      const s = new Set(prev[ref] ?? []);
+      if (s.has(name)) s.delete(name); else s.add(name);
+      return { ...prev, [ref]: s };
+    });
+  }
+
+  // ── Extra stop helpers ───────────────────────────────────────
+  function addExtraStop(ref: string) {
+    setEditForms((prev) => ({
+      ...prev,
+      [ref]: { ...(prev[ref] ?? {}), adminExtraStops: [...(prev[ref]?.adminExtraStops ?? []), { address: "", charge: "", notes: "" }] } as EditForm,
+    }));
+  }
+
+  function updateExtraStop(ref: string, idx: number, field: keyof AdminExtraStop, value: string) {
+    setEditForms((prev) => {
+      const stops = [...(prev[ref]?.adminExtraStops ?? [])];
+      stops[idx] = { ...stops[idx], [field]: value };
+      return { ...prev, [ref]: { ...(prev[ref] ?? {}), adminExtraStops: stops } as EditForm };
+    });
+  }
+
+  function removeExtraStop(ref: string, idx: number) {
+    setEditForms((prev) => ({
+      ...prev,
+      [ref]: { ...(prev[ref] ?? {}), adminExtraStops: (prev[ref]?.adminExtraStops ?? []).filter((_, i) => i !== idx) } as EditForm,
+    }));
+  }
+
+  // ── Extra charge helpers ─────────────────────────────────────
+  function addExtraCharge(ref: string) {
+    setEditForms((prev) => ({
+      ...prev,
+      [ref]: { ...(prev[ref] ?? {}), adminExtraCharges: [...(prev[ref]?.adminExtraCharges ?? []), { type: "", amount: "", notes: "" }] } as EditForm,
+    }));
+  }
+
+  function updateExtraCharge(ref: string, idx: number, field: keyof AdminExtraCharge, value: string) {
+    setEditForms((prev) => {
+      const charges = [...(prev[ref]?.adminExtraCharges ?? [])];
+      charges[idx] = { ...charges[idx], [field]: value };
+      return { ...prev, [ref]: { ...(prev[ref] ?? {}), adminExtraCharges: charges } as EditForm };
+    });
+  }
+
+  function removeExtraCharge(ref: string, idx: number) {
+    setEditForms((prev) => ({
+      ...prev,
+      [ref]: { ...(prev[ref] ?? {}), adminExtraCharges: (prev[ref]?.adminExtraCharges ?? []).filter((_, i) => i !== idx) } as EditForm,
+    }));
+  }
+
+  // ── Save: silent (no Telegram) ───────────────────────────────
   async function saveChanges(ref: string) {
     const form = editForms[ref];
     if (!form) return;
@@ -472,13 +553,50 @@ export default function AdminBookingsPage() {
     try {
       const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}`, {
         method: "PUT",
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          adminExtraStops:   JSON.stringify(form.adminExtraStops),
+          adminExtraCharges: JSON.stringify(form.adminExtraCharges),
+          notify: "false",
+        }),
       });
       if (!res.ok) throw new Error("save failed");
-      // Update local booking record
       setBookings((prev) =>
         prev.map((b) =>
-          b.bookingReference === ref ? { ...b, ...form } : b,
+          b.bookingReference === ref
+            ? { ...b, ...form, adminExtraStops: JSON.stringify(form.adminExtraStops), adminExtraCharges: JSON.stringify(form.adminExtraCharges) }
+            : b,
+        ),
+      );
+    } catch {
+      setSaveErrors((e) => ({ ...e, [ref]: "Save failed. Please try again." }));
+    } finally {
+      setSavingRef(null);
+    }
+  }
+
+  // ── Save + Notify Driver (sends Telegram) ────────────────────
+  async function saveAndNotify(ref: string) {
+    const form = editForms[ref];
+    if (!form) return;
+    setSavingRef(ref);
+    setSaveErrors((e) => ({ ...e, [ref]: "" }));
+    try {
+      const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          ...form,
+          adminExtraStops:   JSON.stringify(form.adminExtraStops),
+          adminExtraCharges: JSON.stringify(form.adminExtraCharges),
+          notify: "true",
+        }),
+      });
+      if (!res.ok) throw new Error("save failed");
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.bookingReference === ref
+            ? { ...b, ...form, adminExtraStops: JSON.stringify(form.adminExtraStops), adminExtraCharges: JSON.stringify(form.adminExtraCharges) }
+            : b,
         ),
       );
     } catch {
@@ -498,13 +616,19 @@ export default function AdminBookingsPage() {
     try {
       const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}`, {
         method: "PUT",
-        body: JSON.stringify(confirmedForm),
+        body: JSON.stringify({
+          ...confirmedForm,
+          adminExtraStops:   JSON.stringify(confirmedForm.adminExtraStops),
+          adminExtraCharges: JSON.stringify(confirmedForm.adminExtraCharges),
+          notify: "false",
+        }),
       });
       if (!res.ok) throw new Error("save failed");
       setBookings((prev) =>
-        prev.map((b) => b.bookingReference === ref ? { ...b, ...confirmedForm } : b),
+        prev.map((b) => b.bookingReference === ref
+          ? { ...b, ...confirmedForm, adminExtraStops: JSON.stringify(confirmedForm.adminExtraStops), adminExtraCharges: JSON.stringify(confirmedForm.adminExtraCharges) }
+          : b),
       );
-      // Auto-generate payment link if deposit amount is set
       if (confirmedForm.depositAmount) {
         await generatePaymentLink(ref, confirmedForm);
       }
@@ -898,168 +1022,102 @@ export default function AdminBookingsPage() {
 
                 {/* Expanded content */}
                 {isExpanded && form && (
-                  <div className="border-t border-gray-100 px-4 py-4 space-y-5">
+                  <div className="border-t border-gray-100 px-4 py-4 space-y-4">
 
-                    {/* Customer info */}
+                    {/* ── Customer summary (compact, read-only) ── */}
                     <section>
                       <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Customer</h3>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                         <InfoRow label="Contact via" value={booking.contactMethod} />
-                        <InfoRow label="Estimated price" value={booking.estimatedPrice} />
-                        <InfoRow label="Requested date" value={booking.date} />
-                        <InfoRow
-                          label="Preferred time"
-                          value={booking.timeWindow || "—"}
-                        />
-                        <InfoRow label="Van" value={booking.vanSize} />
-                        <InfoRow label="Help" value={booking.helpOption} />
+                        <InfoRow label="Estimate"    value={booking.estimatedPrice} />
+                        <InfoRow label="Van"         value={booking.vanSize} />
+                        <InfoRow label="Help"        value={booking.helpOption} />
+                        <InfoRow label="Requested"   value={booking.date} />
+                        <InfoRow label="Time slot"   value={booking.timeWindow || "—"} />
                       </div>
-                      {(booking.pickup || booking.dropoff) && (
-                        <div className="mt-2 space-y-1 text-sm text-gray-700">
-                          {booking.pickup && (
-                            <p className="flex items-start gap-1.5">
-                              <MapPin className="w-3.5 h-3.5 text-gray-400 mt-0.5 shrink-0" />
-                              <span><span className="text-gray-400 mr-1">From</span>{booking.pickup}</span>
-                            </p>
-                          )}
-                          {booking.dropoff && (
-                            <p className="flex items-start gap-1.5">
-                              <MapPin className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" />
-                              <span><span className="text-gray-400 mr-1">To</span>{booking.dropoff}</span>
-                            </p>
-                          )}
-                        </div>
-                      )}
-                      {booking.notes && (
-                        <p className="mt-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
-                          <span className="text-gray-400 text-xs">Notes: </span>{booking.notes}
-                        </p>
-                      )}
-
-                      {/* Customer-uploaded photos */}
                       {booking.photoUrls && (() => {
                         const urls = booking.photoUrls.split(",").map((u) => u.trim()).filter(Boolean);
                         if (urls.length === 0) return null;
                         return (
                           <div className="mt-3">
-                            <p className="text-xs text-gray-400 mb-2 font-semibold uppercase tracking-wide">
-                              Photos ({urls.length})
-                            </p>
+                            <p className="text-xs text-gray-400 mb-2 font-semibold uppercase tracking-wide">Photos ({urls.length})</p>
                             <div className="grid grid-cols-3 gap-2">
                               {urls.map((url, i) => (
-                                <a
-                                  key={i}
-                                  href={url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="block rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-50 hover:opacity-90 transition-opacity"
-                                  title={`Photo ${i + 1} — click to open full size`}
-                                >
-                                  <img
-                                    src={url}
-                                    alt={`Photo ${i + 1}`}
-                                    className="w-full h-full object-cover"
-                                    loading="lazy"
-                                  />
+                                <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                                   className="block rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-50 hover:opacity-90 transition-opacity"
+                                   title={`Photo ${i + 1} — click to open full size`}>
+                                  <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
                                 </a>
                               ))}
                             </div>
                           </div>
                         );
                       })()}
-                      {/* Price breakdown — only shown when breakdown data was captured */}
-                      {(booking.baseCharge || booking.duration || booking.stairsCharge || booking.congestionCharge) && (
-                        <div className="mt-3 bg-purple-50/60 border border-purple-100 rounded-xl px-3 py-2.5">
-                          <p className="text-[11px] font-semibold text-purple-700 uppercase tracking-wide mb-1.5">Price breakdown</p>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-gray-700">
-                            {booking.duration     && <span><span className="text-gray-400">Duration: </span>{booking.duration}</span>}
-                            {booking.hourlyRate   && <span><span className="text-gray-400">Rate: </span>{booking.hourlyRate}</span>}
-                            {booking.baseCharge   && <span><span className="text-gray-400">Base: </span>{booking.baseCharge}</span>}
-                            {booking.stairsCharge && <span><span className="text-gray-400">Stairs: </span>+{booking.stairsCharge}</span>}
-                            {booking.extraStopCharge && <span><span className="text-gray-400">Extra stops: </span>+{booking.extraStopCharge}</span>}
-                            {booking.congestionCharge && <span><span className="text-gray-400">CCZ: </span>+{booking.congestionCharge}</span>}
-                            {booking.outsideM25Charge && <span><span className="text-gray-400">M25: </span>+{booking.outsideM25Charge}</span>}
-                          </div>
-                          {(booking.extraStop1 || booking.extraStop2 || booking.extraStop3) && (
-                            <div className="mt-1.5 text-xs text-gray-600 space-y-0.5">
-                              {booking.extraStop1 && <p><span className="text-gray-400">Stop 1: </span>{booking.extraStop1}</p>}
-                              {booking.extraStop2 && <p><span className="text-gray-400">Stop 2: </span>{booking.extraStop2}</p>}
-                              {booking.extraStop3 && <p><span className="text-gray-400">Stop 3: </span>{booking.extraStop3}</p>}
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </section>
 
-                    {/* Quick contact — shown for NEW bookings so the
-                        driver can reach the customer in one tap with a
-                        ready-made greeting. Hidden once the booking
-                        moves on to other statuses. */}
+                    {/* ── Quick contact (new bookings only) ── */}
                     {(form.bookingStatus === "New" || !form.bookingStatus) && (
                       <section>
-                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-                          Quick contact
-                        </h3>
-                        <QuickContactSection
-                          booking={booking}
-                          message={buildIntroMessage(booking)}
-                          intent="intro"
-                        />
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Quick contact</h3>
+                        <QuickContactSection booking={booking} message={buildIntroMessage(booking)} intent="intro" />
                       </section>
                     )}
 
-                    {/* Status editors */}
+                    {/* ── Booking details (editable) ── */}
                     <section>
-                      <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Status</h3>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs text-gray-500 mb-1">Booking Status</label>
-                          <select
-                            value={form.bookingStatus}
-                            onChange={(e) => updateField(ref, "bookingStatus", e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
-                          >
-                            {BOOKING_STATUSES.map((s) => <option key={s}>{s}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-500 mb-1">Payment Status</label>
-                          <select
-                            value={form.paymentStatus}
-                            onChange={(e) => updateField(ref, "paymentStatus", e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
-                          >
-                            {PAYMENT_STATUSES.map((s) => <option key={s}>{s}</option>)}
-                          </select>
-                        </div>
-                      </div>
-                    </section>
-
-                    {/* Admin fields */}
-                    <section>
-                      <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Booking Details</h3>
+                      <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Booking Details</h3>
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-3">
-                          <Field
-                            label="Agreed Quote (£)"
-                            value={form.agreedQuote}
-                            type="number"
-                            onChange={(v) => updateField(ref, "agreedQuote", v)}
-                          />
-                          <Field
-                            label="Deposit Amount (£)"
-                            value={form.depositAmount}
-                            type="number"
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Booking Status</label>
+                            <select value={form.bookingStatus}
+                              onChange={(e) => updateField(ref, "bookingStatus", e.target.value)}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
+                              {BOOKING_STATUSES.map((s) => <option key={s}>{s}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Payment Status</label>
+                            <select value={form.paymentStatus}
+                              onChange={(e) => updateField(ref, "paymentStatus", e.target.value)}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
+                              {PAYMENT_STATUSES.map((s) => <option key={s}>{s}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <Field label="Confirmed Date" value={form.confirmedDate} type="date"
+                            onChange={(v) => updateField(ref, "confirmedDate", v)} />
+                          <Field label="Confirmed Time" value={form.confirmedTime} type="time"
+                            onChange={(v) => updateField(ref, "confirmedTime", v)} />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Pickup Address</label>
+                          <textarea value={form.pickup} onChange={(e) => updateField(ref, "pickup", e.target.value)}
+                            rows={2} placeholder="Full pickup address…"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-600" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Drop-off Address</label>
+                          <textarea value={form.dropoff} onChange={(e) => updateField(ref, "dropoff", e.target.value)}
+                            rows={2} placeholder="Full drop-off address…"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-600" />
+                        </div>
+                        <Field label="Duration" value={form.duration}
+                          onChange={(v) => updateField(ref, "duration", v)}
+                          helper="e.g. 2 hours, 3.5 hours" />
+                        <div className="grid grid-cols-2 gap-3">
+                          <Field label="Agreed Total (£)" value={form.agreedQuote} type="number"
+                            onChange={(v) => updateField(ref, "agreedQuote", v)} />
+                          <Field label="Deposit Paid (£)" value={form.depositAmount} type="number"
                             onChange={(v) => updateField(ref, "depositAmount", v)}
-                            helper="30% of agreed quote"
-                          />
+                            helper="Stays locked unless edited" />
                         </div>
                         {(() => {
                           const agreedNum  = parseFloat(form.agreedQuote);
                           const depositNum = parseFloat(form.depositAmount);
                           const remaining  = !isNaN(agreedNum) && !isNaN(depositNum) && agreedNum > 0
-                            ? Math.max(0, agreedNum - depositNum)
-                            : null;
+                            ? Math.max(0, agreedNum - depositNum) : null;
                           return remaining !== null ? (
                             <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-sm">
                               <span className="text-gray-400 text-xs">Remaining balance:</span>
@@ -1067,91 +1125,196 @@ export default function AdminBookingsPage() {
                             </div>
                           ) : null;
                         })()}
-                        <div className="grid grid-cols-2 gap-3">
-                          <Field
-                            label="Confirmed Date"
-                            value={form.confirmedDate}
-                            type="date"
-                            onChange={(v) => updateField(ref, "confirmedDate", v)}
-                          />
-                          <Field
-                            label="Confirmed Time"
-                            value={form.confirmedTime}
-                            type="time"
-                            onChange={(v) => updateField(ref, "confirmedTime", v)}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-500 mb-1">Pickup Address</label>
-                          <textarea
-                            value={form.pickup}
-                            onChange={(e) => updateField(ref, "pickup", e.target.value)}
-                            rows={2}
-                            placeholder="Full pickup address…"
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-600"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-500 mb-1">Drop-off Address</label>
-                          <textarea
-                            value={form.dropoff}
-                            onChange={(e) => updateField(ref, "dropoff", e.target.value)}
-                            rows={2}
-                            placeholder="Full drop-off address…"
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-600"
-                          />
-                        </div>
                         <div>
                           <label className="block text-xs text-gray-500 mb-1">Customer Notes</label>
-                          <textarea
-                            value={form.notes}
-                            onChange={(e) => updateField(ref, "notes", e.target.value)}
-                            rows={2}
-                            placeholder="Notes from the customer…"
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-600"
-                          />
+                          <textarea value={form.notes} onChange={(e) => updateField(ref, "notes", e.target.value)}
+                            rows={2} placeholder="Notes from the customer…"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-600" />
                         </div>
                         <div>
                           <label className="block text-xs text-gray-500 mb-1">Driver Notes</label>
-                          <textarea
-                            value={form.driverNotes}
-                            onChange={(e) => updateField(ref, "driverNotes", e.target.value)}
-                            rows={2}
-                            placeholder="Internal notes about this booking…"
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-600"
-                          />
+                          <textarea value={form.driverNotes} onChange={(e) => updateField(ref, "driverNotes", e.target.value)}
+                            rows={2} placeholder="Internal notes…"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-600" />
                         </div>
                       </div>
                     </section>
 
-                    {/* Action buttons */}
+                    {/* ── Extra Stops (collapsible, collapsed by default) ── */}
+                    <section className="border-t border-gray-100 pt-2">
+                      <button onClick={() => toggleSection(ref, "stops")}
+                        className="flex items-center justify-between w-full text-xs font-semibold text-gray-500 uppercase tracking-wide py-2 hover:text-purple-700 transition-colors">
+                        <span className="flex items-center gap-2">
+                          Extra Stops
+                          {form.adminExtraStops.length > 0 && (
+                            <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-semibold">
+                              {form.adminExtraStops.length}
+                            </span>
+                          )}
+                        </span>
+                        {isSectionOpen(ref, "stops") ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      </button>
+                      {isSectionOpen(ref, "stops") && (
+                        <div className="mt-1 space-y-2 pb-2">
+                          {form.adminExtraStops.map((stop, i) => (
+                            <div key={i} className="flex gap-2 items-start">
+                              <div className="flex-1 space-y-1.5">
+                                <input value={stop.address}
+                                  onChange={(e) => updateExtraStop(ref, i, "address", e.target.value)}
+                                  placeholder="Stop address"
+                                  className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600" />
+                                <input value={stop.notes}
+                                  onChange={(e) => updateExtraStop(ref, i, "notes", e.target.value)}
+                                  placeholder="Notes (optional)"
+                                  className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-600" />
+                              </div>
+                              <input value={stop.charge}
+                                onChange={(e) => updateExtraStop(ref, i, "charge", e.target.value)}
+                                placeholder="£ charge"
+                                className="w-20 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600" />
+                              <button onClick={() => removeExtraStop(ref, i)}
+                                className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 mt-0.5">
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                          <button onClick={() => addExtraStop(ref)}
+                            className="flex items-center gap-1.5 text-xs text-purple-700 font-medium hover:text-purple-900 transition-colors px-1 py-1">
+                            <Plus className="w-3.5 h-3.5" /> Add stop
+                          </button>
+                        </div>
+                      )}
+                    </section>
+
+                    {/* ── Extra Charges (collapsible, collapsed by default) ── */}
+                    <section className="border-t border-gray-100 pt-2">
+                      <button onClick={() => toggleSection(ref, "charges")}
+                        className="flex items-center justify-between w-full text-xs font-semibold text-gray-500 uppercase tracking-wide py-2 hover:text-purple-700 transition-colors">
+                        <span className="flex items-center gap-2">
+                          Extra Charges
+                          {form.adminExtraCharges.length > 0 && (
+                            <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-semibold">
+                              {form.adminExtraCharges.length}
+                            </span>
+                          )}
+                        </span>
+                        {isSectionOpen(ref, "charges") ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      </button>
+                      {isSectionOpen(ref, "charges") && (
+                        <div className="mt-1 space-y-2 pb-2">
+                          {form.adminExtraCharges.map((charge, i) => (
+                            <div key={i} className="flex gap-2 items-start">
+                              <div className="flex-1 space-y-1.5">
+                                <select value={charge.type}
+                                  onChange={(e) => updateExtraCharge(ref, i, "type", e.target.value)}
+                                  className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
+                                  <option value="">Select type…</option>
+                                  {EXTRA_CHARGE_TYPES.map((t) => <option key={t}>{t}</option>)}
+                                </select>
+                                <input value={charge.notes}
+                                  onChange={(e) => updateExtraCharge(ref, i, "notes", e.target.value)}
+                                  placeholder="Notes (optional)"
+                                  className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-600" />
+                              </div>
+                              <input value={charge.amount}
+                                onChange={(e) => updateExtraCharge(ref, i, "amount", e.target.value)}
+                                placeholder="£ amount"
+                                className="w-20 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600" />
+                              <button onClick={() => removeExtraCharge(ref, i)}
+                                className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 mt-0.5">
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                          <button onClick={() => addExtraCharge(ref)}
+                            className="flex items-center gap-1.5 text-xs text-purple-700 font-medium hover:text-purple-900 transition-colors px-1 py-1">
+                            <Plus className="w-3.5 h-3.5" /> Add charge
+                          </button>
+                        </div>
+                      )}
+                    </section>
+
+                    {/* ── Price Breakdown (collapsible, collapsed by default) ── */}
+                    <section className="border-t border-gray-100 pt-2">
+                      <button onClick={() => toggleSection(ref, "breakdown")}
+                        className="flex items-center justify-between w-full text-xs font-semibold text-gray-500 uppercase tracking-wide py-2 hover:text-purple-700 transition-colors">
+                        <span>Price Breakdown</span>
+                        {isSectionOpen(ref, "breakdown") ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      </button>
+                      {isSectionOpen(ref, "breakdown") && (() => {
+                        const agreed       = parseFloat(form.agreedQuote) || 0;
+                        const stopsTotal   = form.adminExtraStops.reduce((s, x) => s + (parseFloat(x.charge) || 0), 0);
+                        const chargesTotal = form.adminExtraCharges.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
+                        const base         = Math.max(0, agreed - stopsTotal - chargesTotal);
+                        const deposit      = parseFloat(form.depositAmount) || 0;
+                        const remaining    = Math.max(0, agreed - deposit);
+                        return (
+                          <div className="mt-1 mb-2 bg-purple-50/60 border border-purple-100 rounded-xl px-4 py-3 space-y-1.5">
+                            {/* Original booking data when captured */}
+                            {(booking.baseCharge || booking.duration || booking.stairsCharge || booking.congestionCharge) && (
+                              <div className="pb-2 mb-2 border-b border-purple-100">
+                                <p className="text-[11px] font-semibold text-purple-500 uppercase tracking-wide mb-1.5">Original booking data</p>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-gray-600">
+                                  {booking.duration         && <span><span className="text-gray-400">Duration: </span>{booking.duration}</span>}
+                                  {booking.hourlyRate       && <span><span className="text-gray-400">Rate: </span>{booking.hourlyRate}</span>}
+                                  {booking.baseCharge       && <span><span className="text-gray-400">Base: </span>{booking.baseCharge}</span>}
+                                  {booking.stairsCharge     && <span><span className="text-gray-400">Stairs: </span>+{booking.stairsCharge}</span>}
+                                  {booking.extraStopCharge  && <span><span className="text-gray-400">Stops: </span>+{booking.extraStopCharge}</span>}
+                                  {booking.congestionCharge && <span><span className="text-gray-400">CCZ: </span>+{booking.congestionCharge}</span>}
+                                  {booking.outsideM25Charge && <span><span className="text-gray-400">M25: </span>+{booking.outsideM25Charge}</span>}
+                                </div>
+                                {(booking.extraStop1 || booking.extraStop2 || booking.extraStop3) && (
+                                  <div className="mt-1 text-xs text-gray-500 space-y-0.5">
+                                    {booking.extraStop1 && <p><span className="text-gray-400">Stop 1: </span>{booking.extraStop1}</p>}
+                                    {booking.extraStop2 && <p><span className="text-gray-400">Stop 2: </span>{booking.extraStop2}</p>}
+                                    {booking.extraStop3 && <p><span className="text-gray-400">Stop 3: </span>{booking.extraStop3}</p>}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            <p className="text-[11px] font-semibold text-purple-700 uppercase tracking-wide mb-1">Current total</p>
+                            <div className="space-y-1 text-sm">
+                              {agreed > 0 && <div className="flex justify-between text-gray-600"><span>Base price</span><span>£{base.toFixed(2)}</span></div>}
+                              {stopsTotal > 0   && <div className="flex justify-between text-gray-600"><span>Extra stops</span><span>+£{stopsTotal.toFixed(2)}</span></div>}
+                              {chargesTotal > 0 && <div className="flex justify-between text-gray-600"><span>Extra charges</span><span>+£{chargesTotal.toFixed(2)}</span></div>}
+                              {agreed > 0 && (
+                                <div className="flex justify-between font-semibold border-t border-purple-200 pt-1 mt-0.5">
+                                  <span>Agreed total</span><span>£{agreed.toFixed(2)}</span>
+                                </div>
+                              )}
+                              {deposit > 0 && <div className="flex justify-between text-gray-500"><span>Deposit paid</span><span>−£{deposit.toFixed(2)}</span></div>}
+                              {deposit > 0 && (
+                                <div className="flex justify-between font-semibold text-purple-700">
+                                  <span>Remaining</span><span>£{remaining.toFixed(2)}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </section>
+
+                    {/* ── Save buttons ── */}
                     {saveErrors[ref] && (
                       <p className="text-sm text-red-600 flex items-center gap-1">
                         <AlertCircle className="w-4 h-4 shrink-0" /> {saveErrors[ref]}
                       </p>
                     )}
-                    <div className="flex flex-wrap gap-2">
-                      <ActionBtn
-                        onClick={() => void saveChanges(ref)}
-                        disabled={isSaving}
-                        loading={isSaving}
-                        variant="primary"
-                      >
-                        Save changes
+                    <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-3">
+                      <ActionBtn onClick={() => void saveChanges(ref)} disabled={isSaving} loading={isSaving} variant="primary">
+                        Save Changes
                       </ActionBtn>
-                      <ActionBtn
-                        onClick={() => void confirmBooking(ref)}
-                        disabled={isSaving}
-                        loading={isSaving}
-                        variant="green"
-                      >
+                      <ActionBtn onClick={() => void saveAndNotify(ref)} disabled={isSaving} loading={isSaving} variant="green">
+                        💬 Save &amp; Notify Driver
+                      </ActionBtn>
+                    </div>
+
+                    {/* Secondary booking actions */}
+                    <div className="flex flex-wrap gap-2">
+                      <ActionBtn onClick={() => void confirmBooking(ref)} disabled={isSaving} loading={isSaving} variant="primary">
                         Confirm booking
                       </ActionBtn>
-                      <ActionBtn
-                        onClick={() => void denyBooking(ref)}
-                        disabled={isSaving}
-                        variant="red"
-                      >
+                      <ActionBtn onClick={() => void denyBooking(ref)} disabled={isSaving} variant="red">
                         Deny
                       </ActionBtn>
                     </div>

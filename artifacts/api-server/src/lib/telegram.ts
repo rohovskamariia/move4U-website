@@ -67,10 +67,13 @@ export interface TelegramBooking {
   congestionCharge?: string;
   outsideM25Charge?: string;
   // Admin-edit context
-  agreedQuote?:      string;
-  depositAmount?:    string;
-  remainingBalance?: string;
-  changedFields?:    string[];
+  agreedQuote?:        string;
+  depositAmount?:      string;
+  remainingBalance?:   string;
+  changedFields?:      string[];
+  // Admin-managed extra stops/charges (JSON strings)
+  adminExtraStops?:   string;
+  adminExtraCharges?: string;
 }
 
 // ── Message builder ───────────────────────────────────────────
@@ -469,24 +472,65 @@ export async function sendBookingUpdateNotification(b: TelegramBooking): Promise
     ? `Changed: ${b.changedFields.join(", ")}`
     : "";
 
+  // Parse admin-managed extra stops and charges (stored as JSON)
+  type ExtraStop   = { address: string; charge: string; notes: string };
+  type ExtraCharge = { type: string; amount: string; notes: string };
+  const extraStops: ExtraStop[] = (() => {
+    try { return JSON.parse(b.adminExtraStops || "[]") as ExtraStop[]; } catch { return []; }
+  })().filter((s) => s.address);
+  const extraCharges: ExtraCharge[] = (() => {
+    try { return JSON.parse(b.adminExtraCharges || "[]") as ExtraCharge[]; } catch { return []; }
+  })().filter((c) => c.type && c.amount);
+
+  // Price breakdown
+  const agreedNum  = parseFloat(b.agreedQuote || "0");
+  const stopsTotal = extraStops.reduce((s, x) => s + parseFloat(x.charge || "0"), 0);
+  const chargesTotal = extraCharges.reduce((s, x) => s + parseFloat(x.amount || "0"), 0);
+  const base = agreedNum > 0 ? agreedNum - stopsTotal - chargesTotal : 0;
+
   const parts: (string | null)[] = [
     `✏️ Booking Updated — ${b.bookingReference}`,
     changedSummary ? `\n${changedSummary}` : null,
     "",
-    line("Service",    b.service),
-    line("Name",       b.name),
-    line("Phone",      b.phone),
+    line("Service", b.service),
+    line("Name",    b.name),
+    line("Phone",   b.phone),
     "",
     b.pickup  ? `📍 From: ${b.pickup}`  : null,
+    // Extra stops between pickup and drop-off
+    ...extraStops.map((s, i) =>
+      `📍 Stop ${i + 1}: ${s.address}${s.charge ? ` (+£${s.charge})` : ""}${s.notes ? ` — ${s.notes}` : ""}`,
+    ),
     b.dropoff ? `📍 To:   ${b.dropoff}` : null,
     "",
-    line("Van",  b.vanSize),
-    line("Help", b.helpOption),
+    line("Van",      b.vanSize),
+    line("Help",     b.helpOption),
+    b.estimatedTime ? `Duration: ${b.estimatedTime}` : null,
     "",
-    b.estimatedPrice ? `Original estimate: ${b.estimatedPrice}` : null,
-    b.agreedQuote    ? `Agreed quote: £${b.agreedQuote}` : null,
-    b.depositAmount  ? `Deposit: £${b.depositAmount}` : null,
-    b.remainingBalance ? `Remaining: £${b.remainingBalance}` : null,
+    // Price breakdown block
+    ...(() => {
+      const rows: string[] = [];
+      if (agreedNum > 0) {
+        rows.push("💰 Price breakdown:");
+        if (base > 0)          rows.push(`   Base:         £${base.toFixed(2)}`);
+        if (stopsTotal > 0)    rows.push(`   Extra stops:  £${stopsTotal.toFixed(2)}`);
+        if (chargesTotal > 0)  rows.push(`   Extra charges:£${chargesTotal.toFixed(2)}`);
+        rows.push(`   Agreed total: £${agreedNum.toFixed(2)}`);
+        if (b.depositAmount)   rows.push(`   Deposit paid: £${parseFloat(b.depositAmount).toFixed(2)}`);
+        if (b.remainingBalance) rows.push(`   Remaining:    £${parseFloat(b.remainingBalance).toFixed(2)}`);
+      } else {
+        if (b.depositAmount)    rows.push(`Deposit: £${b.depositAmount}`);
+        if (b.remainingBalance) rows.push(`Remaining: £${b.remainingBalance}`);
+      }
+      // Extra charges detail
+      if (extraCharges.length > 0) {
+        rows.push("💸 Extra charges:");
+        extraCharges.forEach((c) =>
+          rows.push(`   ${c.type}: £${c.amount}${c.notes ? ` (${c.notes})` : ""}`),
+        );
+      }
+      return rows.length ? ["", ...rows] : [];
+    })(),
     "",
     `📋 Status: ${status}  |  ${payIcon} Payment: ${payment}`,
     b.confirmedDate

@@ -74,6 +74,11 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
   const bookingRef = req.params.ref as string;
   const fields = req.body as Record<string, string>;
 
+  // Extract notify flag BEFORE building the allowed update — not a storable field.
+  // notify=true → "Save & Notify Driver" → send Telegram after save.
+  // notify=false/absent → "Save Changes" → silent save only.
+  const shouldNotify = fields.notify === "true" || (fields.notify as unknown) === true;
+
   // Only allow known fields through
   const allowed: (keyof typeof fields)[] = [
     "bookingStatus", "paymentStatus",
@@ -81,6 +86,8 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
     "confirmedDate", "confirmedTime",
     "driverNotes", "paymentLink",
     "notes", "pickup", "dropoff",
+    "duration",
+    "adminExtraStops", "adminExtraCharges",
   ];
   const update: Record<string, string> = {};
   for (const key of allowed) {
@@ -104,7 +111,7 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
     }
     res.json({ success: true });
 
-    // Fire-and-forget: audit log + Telegram notifications
+    // Fire-and-forget: audit log + optional Telegram notification
     ;(async () => {
       try {
         const booking = await getBookingByRef(bookingRef);
@@ -114,7 +121,7 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
           (k) => k !== "telegramMessageId" && k !== "paymentLink",
         );
 
-        // 1. Write audit log entries for each changed field
+        // 1. Audit log — always, regardless of notify flag
         if (changedFields.length > 0 && oldBooking) {
           const auditEntries = changedFields.map((key) => ({
             bookingRef,
@@ -126,77 +133,46 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
           await writeAuditLog(auditEntries);
         }
 
-        // 2. Always send a new Telegram update notification (never edits original)
-        const agreedNum  = parseFloat(booking.agreedQuote);
-        const depositNum = parseFloat(booking.depositAmount);
-        const remaining  = !isNaN(agreedNum) && !isNaN(depositNum) && agreedNum > 0
-          ? String(Math.max(0, agreedNum - depositNum).toFixed(2))
-          : "";
+        // 2. Telegram — only when "Save & Notify Driver" was used
+        if (shouldNotify) {
+          const agreedNum  = parseFloat(booking.agreedQuote);
+          const depositNum = parseFloat(booking.depositAmount);
+          const remaining  = !isNaN(agreedNum) && !isNaN(depositNum) && agreedNum > 0
+            ? String(Math.max(0, agreedNum - depositNum).toFixed(2))
+            : "";
 
-        await sendBookingUpdateNotification({
-          bookingReference: booking.bookingReference,
-          service:          booking.service,
-          name:             booking.name,
-          phone:            booking.phone,
-          contactMethod:    booking.contactMethod,
-          pickup:           update.pickup  ?? booking.pickup,
-          pickupDetails:    "",
-          dropoff:          update.dropoff ?? booking.dropoff,
-          dropoffDetails:   "",
-          extraAddress:     "",
-          vanSize:          booking.vanSize,
-          helpOption:       booking.helpOption,
-          peopleCount:      "",
-          estimatedPrice:   booking.estimatedPrice,
-          estimatedTime:    booking.duration ?? "",
-          preferredDate:    booking.date,
-          timeWindow:       booking.timeWindow,
-          wasteAddons:      "",
-          uploadedFiles:    "",
-          notes:            update.notes ?? booking.notes,
-          bookingStatus:    update.bookingStatus ?? booking.bookingStatus,
-          paymentStatus:    update.paymentStatus ?? booking.paymentStatus,
-          confirmedDate:    update.confirmedDate ?? booking.confirmedDate,
-          confirmedTime:    update.confirmedTime ?? booking.confirmedTime,
-          agreedQuote:      update.agreedQuote ?? booking.agreedQuote,
-          depositAmount:    booking.depositAmount,
-          remainingBalance: remaining,
-          changedFields,
-        });
-
-        // 3. Also edit original message when status-related fields change
-        const statusChanged = "bookingStatus" in update || "paymentStatus" in update
-          || "confirmedDate" in update || "confirmedTime" in update;
-        if (statusChanged && booking.telegramMessageId) {
-          const msgId = parseInt(booking.telegramMessageId, 10);
-          if (!isNaN(msgId)) {
-            await editBookingMessage(msgId, {
-              bookingReference: booking.bookingReference,
-              service:          booking.service,
-              name:             booking.name,
-              phone:            booking.phone,
-              contactMethod:    booking.contactMethod,
-              pickup:           update.pickup  ?? booking.pickup,
-              pickupDetails:    "",
-              dropoff:          update.dropoff ?? booking.dropoff,
-              dropoffDetails:   "",
-              extraAddress:     "",
-              vanSize:          booking.vanSize,
-              helpOption:       booking.helpOption,
-              peopleCount:      "",
-              estimatedPrice:   booking.estimatedPrice,
-              estimatedTime:    "",
-              preferredDate:    booking.date,
-              timeWindow:       booking.timeWindow,
-              wasteAddons:      "",
-              uploadedFiles:    "",
-              notes:            update.notes ?? booking.notes,
-              bookingStatus:    update.bookingStatus ?? booking.bookingStatus,
-              paymentStatus:    update.paymentStatus ?? booking.paymentStatus,
-              confirmedDate:    update.confirmedDate ?? booking.confirmedDate,
-              confirmedTime:    update.confirmedTime ?? booking.confirmedTime,
-            });
-          }
+          await sendBookingUpdateNotification({
+            bookingReference:  booking.bookingReference,
+            service:           booking.service,
+            name:              booking.name,
+            phone:             booking.phone,
+            contactMethod:     booking.contactMethod,
+            pickup:            update.pickup   ?? booking.pickup,
+            pickupDetails:     "",
+            dropoff:           update.dropoff  ?? booking.dropoff,
+            dropoffDetails:    "",
+            extraAddress:      "",
+            vanSize:           booking.vanSize,
+            helpOption:        booking.helpOption,
+            peopleCount:       "",
+            estimatedPrice:    booking.estimatedPrice,
+            estimatedTime:     update.duration ?? booking.duration ?? "",
+            preferredDate:     booking.date,
+            timeWindow:        booking.timeWindow,
+            wasteAddons:       "",
+            uploadedFiles:     "",
+            notes:             update.notes ?? booking.notes,
+            bookingStatus:     update.bookingStatus ?? booking.bookingStatus,
+            paymentStatus:     update.paymentStatus ?? booking.paymentStatus,
+            confirmedDate:     update.confirmedDate ?? booking.confirmedDate,
+            confirmedTime:     update.confirmedTime ?? booking.confirmedTime,
+            agreedQuote:       update.agreedQuote   ?? booking.agreedQuote,
+            depositAmount:     booking.depositAmount,
+            remainingBalance:  remaining,
+            changedFields,
+            adminExtraStops:   update.adminExtraStops   ?? booking.adminExtraStops,
+            adminExtraCharges: update.adminExtraCharges ?? booking.adminExtraCharges,
+          });
         }
       } catch (err) {
         logger.error({ err, bookingRef }, "Post-save admin notifications failed");

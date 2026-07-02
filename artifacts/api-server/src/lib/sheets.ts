@@ -250,6 +250,8 @@ const EXTRA_HEADER_ROW = [
   "Confirmation Sent At",   // AO (index 40)
   "Confirmation Subject",   // AP (index 41)
   "Sent By",                // AQ (index 42)
+  "Admin Extra Stops",      // AR (index 43) — JSON array [{address,charge,notes}]
+  "Admin Extra Charges",    // AS (index 44) — JSON array [{type,amount,notes}]
 ];
 
 let extraHeaderPatched = false;
@@ -259,7 +261,7 @@ async function patchExtraHeaders(id: string): Promise<void> {
   try {
     await connectors.proxy(
       "google-sheet",
-      `/v4/spreadsheets/${id}/values/Bookings!AB1:AQ1?valueInputOption=USER_ENTERED`,
+      `/v4/spreadsheets/${id}/values/Bookings!AB1:AS1?valueInputOption=USER_ENTERED`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -341,6 +343,8 @@ export interface BookingRecord {
   confirmationSentAt: string;  // AO
   confirmationSubject: string; // AP
   confirmationSentBy: string;  // AQ
+  adminExtraStops: string;     // AR — JSON [{address,charge,notes}]
+  adminExtraCharges: string;   // AS — JSON [{type,amount,notes}]
 }
 
 export async function getAllBookings(): Promise<BookingRecord[]> {
@@ -350,7 +354,7 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
 
   const res = await connectors.proxy(
     "google-sheet",
-    `/v4/spreadsheets/${id}/values/Bookings!A:AQ`,
+    `/v4/spreadsheets/${id}/values/Bookings!A:AS`,
   );
   const data = (await res.json()) as { values?: string[][] };
   const rows = data.values ?? [];
@@ -404,6 +408,8 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
       confirmationSentAt:   row[40] ?? "",
       confirmationSubject:  row[41] ?? "",
       confirmationSentBy:   row[42] ?? "",
+      adminExtraStops:      row[43] ?? "",
+      adminExtraCharges:    row[44] ?? "",
     }))
     .filter((b) => b.bookingReference)
     .reverse(); // newest first
@@ -445,6 +451,9 @@ export interface BookingAdminUpdate {
   confirmationSentAt?:  string;
   confirmationSubject?: string;
   confirmationSentBy?:  string;
+  // Admin-managed extra stops/charges columns AR–AS
+  adminExtraStops?:    string; // AR — JSON [{address,charge,notes}]
+  adminExtraCharges?:  string; // AS — JSON [{type,amount,notes}]
 }
 
 // Builds the batchUpdate ranges for a known sheet row. Shared by the
@@ -492,6 +501,8 @@ function buildAdminWriteRanges(
   if (fields.confirmationSentAt  !== undefined) updates.push({ range: c("AO"), values: [[fields.confirmationSentAt]] });
   if (fields.confirmationSubject !== undefined) updates.push({ range: c("AP"), values: [[fields.confirmationSubject]] });
   if (fields.confirmationSentBy  !== undefined) updates.push({ range: c("AQ"), values: [[fields.confirmationSentBy]] });
+  if (fields.adminExtraStops     !== undefined) updates.push({ range: c("AR"), values: [[fields.adminExtraStops]] });
+  if (fields.adminExtraCharges   !== undefined) updates.push({ range: c("AS"), values: [[fields.adminExtraCharges]] });
 
   return updates;
 }
