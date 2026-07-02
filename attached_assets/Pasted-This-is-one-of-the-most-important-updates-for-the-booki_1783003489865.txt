@@ -1,0 +1,110 @@
+This is one of the most important updates for the booking system because it affects our operations, drivers and customer communication.
+
+Current problem:
+
+I cannot always see exactly how the booking price was calculated. Every detail selected by the customer must be stored and displayed everywhere.
+
+Sometimes a customer tells me they selected something (for example duration or an extra stop), but I cannot verify it because the information is missing from the admin panel, Telegram notification or Google Sheets.
+
+I need the system to save every selection made by the customer and every part of the price calculation.
+
+Every booking must always include:
+
+* Service
+* Pickup address
+* Pickup floor/stairs
+* Extra stop(s) (if any)
+* Final destination
+* Destination floor/stairs
+* Van size
+* Help option
+* Selected duration
+* Hourly rate
+* Base price calculation
+* Extra stop charge
+* Stairs charge
+* Congestion charge
+* Any additional charges
+* Total booking price
+* Deposit amount
+* Remaining balance
+* Payment status
+* Notes
+
+The same information must be visible in:
+
+* Admin Panel
+* Telegram notifications
+* Google Sheets
+
+Google Sheets should also contain a dedicated column for every extra stop, placed between the pickup address and the final destination, so the route is always clear.
+
+Admin Editing
+
+After a booking is created, customers sometimes request changes (extra stop, longer duration, address updates, etc.).
+
+The admin panel must allow me to edit:
+
+* duration
+* extra stops
+* addresses
+* notes
+* extra charges
+* total price
+* remaining balance
+* payment status
+
+Deposit Logic
+
+This is extremely important.
+
+If the customer has already paid a deposit, the deposit must remain fixed.
+
+Example:
+
+Original booking:
+Total: £100
+Deposit paid: £30
+
+Updated booking:
+Total: £130
+
+The system must NOT recalculate or increase the deposit automatically.
+
+Instead:
+
+Deposit paid: £30
+Remaining balance: £100
+
+The deposit should only change if I manually edit the deposit field.
+
+Telegram Updates
+
+When I save changes in the admin panel, Telegram must receive a new internal notification showing the updated booking.
+
+The notification must contain the complete updated booking details, including the full price breakdown, deposit paid and remaining balance.
+
+Customer Communication
+
+Customers must NOT automatically receive updated booking confirmations.
+
+Instead, the admin panel should include a separate button:
+
+"Send Updated Confirmation to Customer"
+
+Only when I click this button should the updated confirmation email/message be sent.
+
+Booking History
+
+Please also add a simple booking history (audit log).
+
+Every admin edit should be recorded with:
+
+* date and time
+* what fields were changed
+* old value
+* new value
+
+This will help us verify customer requests if there is ever a dispute about what was originally booked and what was changed later.
+
+Please first provide an implementation plan and list every file that will be modified before making any code changes.
