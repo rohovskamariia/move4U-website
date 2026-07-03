@@ -397,29 +397,30 @@ export default function ReviewsSection() {
           </div>
         </div>
 
-        {/* Review links */}
-        <div className="mt-8 sm:mt-10 text-center">
-          <p className="text-[12px] text-gray-400">
-            Review us on:{" "}
+        {/* Trust badge + review pill links */}
+        <div className="mt-8 sm:mt-10 flex flex-col items-center gap-3">
+          <p className="text-[12px] text-gray-400 font-medium tracking-wide">
+            ⭐ Verified reviews on Google &amp; Trustpilot
+          </p>
+          <div className="flex items-center gap-2.5">
             <a
               href="https://share.google/07SIiIndhYOaNFr2G"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-purple-700 hover:text-purple-900 font-medium transition-colors"
+              className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-purple-700 hover:text-purple-900 border border-purple-200 hover:border-purple-300 bg-white hover:bg-purple-50/60 px-3.5 py-1.5 rounded-full transition-all shadow-[0_1px_4px_-2px_rgba(74,49,156,0.18)] hover:-translate-y-px"
             >
-              Google
+              Google Reviews
             </a>
-            {" · "}
-            {/* TODO: replace with live Trustpilot review link when available */}
+            {/* TODO: replace href with live Trustpilot review link when available */}
             <a
               href="https://uk.trustpilot.com/review/move4u.uk"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-purple-700 hover:text-purple-900 font-medium transition-colors"
+              className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-purple-700 hover:text-purple-900 border border-purple-200 hover:border-purple-300 bg-white hover:bg-purple-50/60 px-3.5 py-1.5 rounded-full transition-all shadow-[0_1px_4px_-2px_rgba(74,49,156,0.18)] hover:-translate-y-px"
             >
               Trustpilot
             </a>
-          </p>
+          </div>
         </div>
       </div>
     </section>
