@@ -404,7 +404,7 @@ export default function ReviewsSection() {
           </p>
           <div className="flex items-center gap-2.5">
             <a
-              href="https://share.google/07SIiIndhYOaNFr2G"
+              href="https://g.page/r/CcLgDnAXKxpzEAE/review"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-purple-700 hover:text-purple-900 border border-purple-200 hover:border-purple-300 bg-white hover:bg-purple-50/60 px-3.5 py-1.5 rounded-full transition-all shadow-[0_1px_4px_-2px_rgba(74,49,156,0.18)] hover:-translate-y-px"
