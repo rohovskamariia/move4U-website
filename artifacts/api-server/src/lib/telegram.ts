@@ -508,13 +508,9 @@ export async function sendBookingUpdateNotification(b: TelegramBooking): Promise
   const baseN          = agreedNum > 0 ? Math.max(0, agreedNum - addOns) : 0;
   const remainingN     = agreedNum > 0 ? Math.max(0, agreedNum - depositNum) : 0;
 
-  const changedSummary = b.changedFields?.length
-    ? `Changed: ${b.changedFields.join(", ")}`
-    : "";
-
   const parts: (string | null)[] = [
     `✏️ Booking Updated — ${b.bookingReference}`,
-    changedSummary ? `\n${changedSummary}` : null,
+    "Booking details updated.",
     "",
     // ── Booking overview ──────────────────────────────────────
     line("Customer",  b.name),
