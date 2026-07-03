@@ -397,17 +397,29 @@ export default function ReviewsSection() {
           </div>
         </div>
 
-        {/* Trustpilot CTA */}
+        {/* Review links */}
         <div className="mt-8 sm:mt-10 text-center">
-          <p className="text-[12px] text-gray-400 mb-2.5">Leave a review on Trustpilot</p>
-          <a
-            href="https://uk.trustpilot.com/review/move4u.uk"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-purple-700 hover:text-purple-900 border border-purple-200 hover:border-purple-300 bg-white hover:bg-purple-50 px-5 py-2 rounded-full transition-all shadow-sm hover:-translate-y-0.5"
-          >
-            Leave a Review
-          </a>
+          <p className="text-[12px] text-gray-400">
+            Review us on:{" "}
+            <a
+              href="https://share.google/07SIiIndhYOaNFr2G"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-purple-700 hover:text-purple-900 font-medium transition-colors"
+            >
+              Google
+            </a>
+            {" · "}
+            {/* TODO: replace with live Trustpilot review link when available */}
+            <a
+              href="https://uk.trustpilot.com/review/move4u.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-purple-700 hover:text-purple-900 font-medium transition-colors"
+            >
+              Trustpilot
+            </a>
+          </p>
         </div>
       </div>
     </section>

@@ -144,7 +144,9 @@ function buildMessage(b: TelegramBooking): string {
     })(),
     "",
     line("Preferred date", b.preferredDate),
-    line("Time window",    b.timeWindow),
+    b.confirmedTime
+      ? `Confirmed time: ${b.confirmedTime}`
+      : (b.timeWindow ? `Time slot: ${b.timeWindow}` : null),
     "",
     line("Waste add-ons",  b.wasteAddons),
     line("Notes",          b.notes),
@@ -520,7 +522,9 @@ export async function sendBookingUpdateNotification(b: TelegramBooking): Promise
     b.confirmedDate
       ? `Date: ${b.confirmedDate}${b.confirmedTime ? " at " + b.confirmedTime : ""}`
       : (b.preferredDate ? `Requested date: ${b.preferredDate}` : null),
-    line("Time slot", b.timeWindow),
+    b.confirmedTime
+      ? `Confirmed time: ${b.confirmedTime}`
+      : (b.timeWindow ? `Time slot: ${b.timeWindow}` : null),
     line("Service",   b.service),
     line("Van size",  b.vanSize),
     line("Help",      b.helpOption),
