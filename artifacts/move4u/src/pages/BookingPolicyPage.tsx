@@ -44,8 +44,8 @@ export default function BookingPolicyPage() {
             <p>We round on-site time fairly: anything up to 4 minutes over a half-hour block is free; from 5 minutes onwards we round up to the next 30-minute block.</p>
           </section>
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">7. Stairs &amp; Floor Counting</h2>
-            <p>If a lift is not available, every flight of stairs is charged at £10 per floor. For partial flights, every 4 steps counts as one floor.</p>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">7. Stair Flight Charges</h2>
+            <p>Without a lift, stairs are charged at £10 per stair flight. A stair flight is one continuous set of stairs between two landings. Up to 3 steps are free; 4 or more steps count as 1 chargeable stair flight. Count each stair flight separately — do not use the building floor number.</p>
           </section>
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">8. Congestion Charge</h2>

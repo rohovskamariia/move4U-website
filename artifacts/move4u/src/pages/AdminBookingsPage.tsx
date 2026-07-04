@@ -352,9 +352,9 @@ function computeAdminPricing(form: EditForm): {
 function serializeAdminCharges(form: EditForm): string {
   const charges: AdminExtraCharge[] = [];
   const pF = parseInt(form.pickupFloors  || "0") || 0;
-  if (pF > 0) charges.push({ type: "Stairs - pickup",  amount: String(pF * 10), notes: `${pF} floor${pF !== 1 ? "s" : ""}` });
+  if (pF > 0) charges.push({ type: "Stairs - pickup",  amount: String(pF * 10), notes: `${pF} stair flight${pF !== 1 ? "s" : ""}` });
   const dF = parseInt(form.dropoffFloors || "0") || 0;
-  if (dF > 0) charges.push({ type: "Stairs - drop-off", amount: String(dF * 10), notes: `${dF} floor${dF !== 1 ? "s" : ""}` });
+  if (dF > 0) charges.push({ type: "Stairs - drop-off", amount: String(dF * 10), notes: `${dF} stair flight${dF !== 1 ? "s" : ""}` });
   const cE = parseInt(form.congestionEntries || "0") || 0;
   if (cE > 0) charges.push({ type: "Congestion charge", amount: String(cE * CONGESTION_CHARGE), notes: `${cE} entr${cE === 1 ? "y" : "ies"}` });
   const miles = parseFloat(form.outsideM25Miles || "0") || 0;
@@ -1475,21 +1475,21 @@ export default function AdminBookingsPage() {
                                 </div>
                                 {/* Pickup Stairs */}
                                 <div className="flex items-center gap-3">
-                                  <label className="w-36 text-xs text-gray-500 shrink-0">Pickup stairs</label>
+                                  <label className="w-36 text-xs text-gray-500 shrink-0">Pickup stair flights</label>
                                   <select value={form.pickupFloors}
                                     onChange={(e) => updateField(ref, "pickupFloors", e.target.value)}
                                     className="flex-1 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
-                                    {FLOOR_OPTIONS.map((f) => <option key={f} value={f}>{f === "0" ? "None" : `${f} floor${f !== "1" ? "s" : ""}`}</option>)}
+                                    {FLOOR_OPTIONS.map((f) => <option key={f} value={f}>{f === "0" ? "None" : `${f} stair flight${f !== "1" ? "s" : ""}`}</option>)}
                                   </select>
                                   {pricing.stairsPickup > 0 && <span className="text-sm text-purple-700 font-medium w-14 text-right">+£{pricing.stairsPickup.toFixed(2)}</span>}
                                 </div>
                                 {/* Drop-off Stairs */}
                                 <div className="flex items-center gap-3">
-                                  <label className="w-36 text-xs text-gray-500 shrink-0">Drop-off stairs</label>
+                                  <label className="w-36 text-xs text-gray-500 shrink-0">Drop-off stair flights</label>
                                   <select value={form.dropoffFloors}
                                     onChange={(e) => updateField(ref, "dropoffFloors", e.target.value)}
                                     className="flex-1 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600">
-                                    {FLOOR_OPTIONS.map((f) => <option key={f} value={f}>{f === "0" ? "None" : `${f} floor${f !== "1" ? "s" : ""}`}</option>)}
+                                    {FLOOR_OPTIONS.map((f) => <option key={f} value={f}>{f === "0" ? "None" : `${f} stair flight${f !== "1" ? "s" : ""}`}</option>)}
                                   </select>
                                   {pricing.stairsDropoff > 0 && <span className="text-sm text-purple-700 font-medium w-14 text-right">+£{pricing.stairsDropoff.toFixed(2)}</span>}
                                 </div>
@@ -1589,8 +1589,8 @@ export default function AdminBookingsPage() {
                               <div className="space-y-1">
                                 {pricing.base > 0          && <div className="flex justify-between text-gray-600"><span>Base ({form.duration || "—"})</span><span>£{pricing.base.toFixed(2)}</span></div>}
                                 {pricing.extraTime > 0     && <div className="flex justify-between text-gray-600"><span>Extra time (+{form.extraTimeMinutes} min)</span><span>+£{pricing.extraTime.toFixed(2)}</span></div>}
-                                {pricing.stairsPickup > 0  && <div className="flex justify-between text-gray-600"><span>Pickup stairs ({form.pickupFloors}F)</span><span>+£{pricing.stairsPickup.toFixed(2)}</span></div>}
-                                {pricing.stairsDropoff > 0 && <div className="flex justify-between text-gray-600"><span>Drop-off stairs ({form.dropoffFloors}F)</span><span>+£{pricing.stairsDropoff.toFixed(2)}</span></div>}
+                                {pricing.stairsPickup > 0  && <div className="flex justify-between text-gray-600"><span>Pickup stair flights ({form.pickupFloors})</span><span>+£{pricing.stairsPickup.toFixed(2)}</span></div>}
+                                {pricing.stairsDropoff > 0 && <div className="flex justify-between text-gray-600"><span>Drop-off stair flights ({form.dropoffFloors})</span><span>+£{pricing.stairsDropoff.toFixed(2)}</span></div>}
                                 {pricing.ccz > 0           && <div className="flex justify-between text-gray-600"><span>Congestion ({form.congestionEntries} addr.)</span><span>+£{pricing.ccz.toFixed(2)}</span></div>}
                                 {pricing.m25 > 0           && <div className="flex justify-between text-gray-600"><span>Outside M25 ({form.outsideM25Miles} mi)</span><span>+£{pricing.m25.toFixed(2)}</span></div>}
                                 {pricing.stopsTotal > 0    && <div className="flex justify-between text-gray-600"><span>Extra stops ({form.adminExtraStops.length})</span><span>+£{pricing.stopsTotal.toFixed(2)}</span></div>}

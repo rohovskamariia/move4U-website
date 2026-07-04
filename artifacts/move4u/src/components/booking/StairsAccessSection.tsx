@@ -25,10 +25,10 @@ function StairsAccessInfo() {
       </button>
       {open && (
         <ul className="mt-2 space-y-1 bg-purple-50/70 border border-purple-100 rounded-lg px-3 py-2.5 text-[11.5px] sm:text-[12px] text-gray-700 list-disc pl-5 leading-relaxed">
-          <li>Up to 3 steps are considered ground level (no extra charge)</li>
-          <li>4 steps or more are counted as 1 floor</li>
-          <li>Each additional level is counted as an extra floor</li>
-          <li>Extra charges may apply if there is no lift available</li>
+          <li>Up to 3 steps are free — no extra charge</li>
+          <li>A stair flight is one continuous set of stairs between two landings</li>
+          <li>4 or more steps = 1 chargeable stair flight (£10 per flight)</li>
+          <li>Count each stair flight separately — do not use the building floor number</li>
         </ul>
       )}
     </div>
@@ -112,20 +112,20 @@ export function getFloorLabelFromValue(floorValue: string): string {
   if (!floorValue) return "—";
   if (floorValue === "none") return "No stairs";
   if (floorValue === "lift") return "Lift available";
-  // Backward-compat
+  // Backward-compat with old keyed values
   const legacy: Record<string, string> = {
     ground: "Ground floor",
-    first: "Floor 1",
-    second: "Floor 2",
-    third: "Floor 3",
-    fourth: "Floor 4",
-    fifth_plus: "Floor 5+",
+    first: "1 stair flight",
+    second: "2 stair flights",
+    third: "3 stair flights",
+    fourth: "4 stair flights",
+    fifth_plus: "5+ stair flights",
   };
   if (floorValue in legacy) return legacy[floorValue];
   const n = parseInt(floorValue, 10);
   if (Number.isNaN(n)) return "—";
   if (n === 0) return "Ground floor";
-  return `Floor ${n}`;
+  return `${n} stair flight${n !== 1 ? "s" : ""}`;
 }
 
 interface StairsAccessSectionProps {
@@ -279,10 +279,10 @@ export default function StairsAccessSection({
       {/* Step 3 — Floor stepper (only when stairs = Yes AND lift = No) */}
       {hasStairs === "yes" && liftValue === "no" && (
         <div className="mt-3 sm:mt-4">
-          <p className="text-[12.5px] sm:text-[13px] font-semibold text-gray-700">Floor level</p>
+          <p className="text-[12.5px] sm:text-[13px] font-semibold text-gray-700">Stair flights (no lift)</p>
           <p className="text-[11px] sm:text-[12px] text-gray-500 mt-0.5 sm:mt-1 leading-snug sm:leading-relaxed">
-            Please select the floor. Stairs/flights are charged only when our
-            team helps with carrying: £{FLOOR_PRICE} per flight per worker.
+            Count each set of stairs between landings as 1 stair flight.
+            Charged only when our team helps carry: £{FLOOR_PRICE} per stair flight per worker.
           </p>
 
           <div className="mt-2 sm:mt-3 flex items-center gap-3 bg-purple-50/60 border border-purple-100 rounded-2xl p-2">
@@ -304,7 +304,7 @@ export default function StairsAccessSection({
                 {parsedFloor}
               </p>
               <p className="text-[11px] font-semibold tracking-wider uppercase text-purple-700/70 mt-1">
-                {parsedFloor === 0 ? "Ground floor" : `Floor ${parsedFloor}`}
+                {parsedFloor === 0 ? "No stair flights" : `${parsedFloor} stair flight${parsedFloor !== 1 ? "s" : ""}`}
               </p>
             </div>
             <button
