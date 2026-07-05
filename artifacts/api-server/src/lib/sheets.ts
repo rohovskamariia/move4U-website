@@ -23,10 +23,66 @@ const HEADERS = [
   "Booking Reference",   // O
 ];
 
+// ── Proxy helper ───────────────────────────────────────────────────────────────
+// Thin wrapper around connectors.proxy() that keeps the call signature
+// identical to what the rest of the file expects. All callers check res.ok
+// and throw on failure so errors are never swallowed silently.
+
+async function proxyFetch(
+  path: string,
+  init?: { method?: string; body?: string; headers?: Record<string, string> },
+): Promise<Response> {
+  return connectors.proxy("google-sheet", path, init);
+}
+
+// Expands the "Bookings" sheet to have at least `minColumns` columns.
+// Called before writing to any column beyond the default 26 (A–Z).
+async function ensureColumnCount(spreadsheetId: string, minColumns: number): Promise<void> {
+  try {
+    const metaRes = await proxyFetch(`/v4/spreadsheets/${spreadsheetId}`);
+    if (!metaRes.ok) {
+      logger.warn({ status: metaRes.status }, "Could not read sheet metadata for column expansion");
+      return;
+    }
+    const meta = (await metaRes.json()) as {
+      sheets?: Array<{
+        properties?: {
+          sheetId?: number;
+          title?: string;
+          gridProperties?: { columnCount?: number };
+        };
+      }>;
+    };
+    const bookingsSheet = (meta.sheets ?? []).find((s) => s.properties?.title === "Bookings");
+    if (!bookingsSheet?.properties) {
+      logger.warn("Bookings sheet not found in metadata — skipping column expansion");
+      return;
+    }
+    const sheetId = bookingsSheet.properties.sheetId ?? 0;
+    const currentColumns = bookingsSheet.properties.gridProperties?.columnCount ?? 26;
+    if (currentColumns >= minColumns) return;
+
+    const toAdd = minColumns - currentColumns;
+    const expandRes = await proxyFetch(`/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+      method: "POST",
+      body: JSON.stringify({
+        requests: [{ appendDimension: { sheetId, dimension: "COLUMNS", length: toAdd } }],
+      }),
+    });
+    if (!expandRes.ok) {
+      const errBody = await expandRes.text().catch(() => "");
+      logger.warn({ status: expandRes.status, errBody }, "Could not expand sheet columns");
+    } else {
+      logger.info({ sheetId, addedColumns: toAdd, totalColumns: minColumns }, "Expanded Bookings sheet column count");
+    }
+  } catch (err) {
+    logger.warn({ err }, "ensureColumnCount failed — continuing");
+  }
+}
+
 async function createSheet(): Promise<string> {
-  const res = await connectors.proxy("google-sheet", "/v4/spreadsheets", {
+  const res = await proxyFetch("/v4/spreadsheets", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       properties: { title: "Move4U Bookings" },
       sheets: [
@@ -54,6 +110,11 @@ async function createSheet(): Promise<string> {
     }),
   });
 
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => "");
+    throw new Error(`Failed to create spreadsheet: ${res.status} ${errBody}`);
+  }
+
   const data = (await res.json()) as { spreadsheetId: string; spreadsheetUrl: string };
   logger.info(`Created Move4U Bookings sheet: ${data.spreadsheetUrl}`);
   logger.info(`Set GOOGLE_SHEET_ID=${data.spreadsheetId} to reuse this sheet after restarts`);
@@ -74,18 +135,17 @@ async function ensureSheet(): Promise<string> {
 async function patchNewHeaders(id: string): Promise<void> {
   if (headerPatched) return;
   try {
-    await connectors.proxy(
-      "google-sheet",
+    const res = await proxyFetch(
       `/v4/spreadsheets/${id}/values/Bookings!L1:O1?valueInputOption=USER_ENTERED`,
       {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           values: [["Preferred Contact Method", "Booking Status", "Payment Status", "Booking Reference"]],
         }),
       },
     );
-    logger.info("Patched column headers L–O on existing sheet");
+    if (!res.ok) logger.warn({ status: res.status }, "Could not patch column headers L–O");
+    else logger.info("Patched column headers L–O on existing sheet");
   } catch (err) {
     logger.warn({ err }, "Could not patch column headers — continuing");
   }
@@ -111,10 +171,10 @@ let inflightRefGen: Promise<string> = Promise.resolve("");
 
 async function computeNextBookingRef(id: string): Promise<string> {
   try {
-    const res = await connectors.proxy(
-      "google-sheet",
+    const res = await proxyFetch(
       `/v4/spreadsheets/${id}/values/Bookings!O:O`,
     );
+    if (!res.ok) throw new Error(`Sheets read O:O failed: ${res.status}`);
     const data = (await res.json()) as { values?: string[][] };
     const rows = data.values ?? [];
 
@@ -175,10 +235,10 @@ export async function updatePaymentStatus(bookingRef: string, status: string): P
     const id = await ensureSheet();
 
     // Read all values in column O to find the matching row
-    const res = await connectors.proxy(
-      "google-sheet",
+    const res = await proxyFetch(
       `/v4/spreadsheets/${id}/values/Bookings!O:O`,
     );
+    if (!res.ok) throw new Error(`Sheets read O:O failed: ${res.status}`);
     const data = (await res.json()) as { values?: string[][] };
     const rows = data.values ?? [];
 
@@ -192,15 +252,17 @@ export async function updatePaymentStatus(bookingRef: string, status: string): P
     // Convert to 1-based Sheets row number
     const sheetRow = rowIndex + 1;
 
-    await connectors.proxy(
-      "google-sheet",
+    const writeRes = await proxyFetch(
       `/v4/spreadsheets/${id}/values/Bookings!N${sheetRow}?valueInputOption=USER_ENTERED`,
       {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ values: [[status]] }),
       },
     );
+    if (!writeRes.ok) {
+      const errBody = await writeRes.text().catch(() => "");
+      throw new Error(`Sheets PUT N${sheetRow} failed: ${writeRes.status} ${errBody}`);
+    }
 
     logger.info({ bookingRef, status, sheetRow }, "Payment status updated in Google Sheets");
     return true;
@@ -258,17 +320,20 @@ let extraHeaderPatched = false;
 
 async function patchExtraHeaders(id: string): Promise<void> {
   if (extraHeaderPatched) return;
+  // The sheet starts with 26 columns (A–Z) by default. Columns AB–AS require
+  // at least 45 columns. Expand before writing so batchUpdate never sees
+  // "exceeds grid limits".
+  await ensureColumnCount(id, 45);
   try {
-    await connectors.proxy(
-      "google-sheet",
+    const res = await proxyFetch(
       `/v4/spreadsheets/${id}/values/Bookings!AB1:AS1?valueInputOption=USER_ENTERED`,
       {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ values: [EXTRA_HEADER_ROW] }),
       },
     );
-    logger.info("Patched extra column headers AB–AQ");
+    if (!res.ok) logger.warn({ status: res.status }, "Could not patch extra column headers");
+    else logger.info("Patched extra column headers AB–AQ");
   } catch (err) {
     logger.warn({ err }, "Could not patch extra column headers — continuing");
   }
@@ -280,16 +345,15 @@ let adminHeaderPatched = false;
 async function patchAdminHeaders(id: string): Promise<void> {
   if (adminHeaderPatched) return;
   try {
-    await connectors.proxy(
-      "google-sheet",
+    const res = await proxyFetch(
       `/v4/spreadsheets/${id}/values/Bookings!P1:AA1?valueInputOption=USER_ENTERED`,
       {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ values: [ADMIN_HEADER_ROW] }),
       },
     );
-    logger.info("Patched admin column headers P–AA");
+    if (!res.ok) logger.warn({ status: res.status }, "Could not patch admin column headers");
+    else logger.info("Patched admin column headers P–AA");
   } catch (err) {
     logger.warn({ err }, "Could not patch admin column headers — continuing");
   }
@@ -352,14 +416,13 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
   await patchAdminHeaders(id);
   await patchExtraHeaders(id);
 
-  // Append a timestamp so the connectors-proxy layer never serves a
-  // cached response — admin saves must always be reflected immediately.
-  // Google Sheets API ignores unknown query parameters.
-  const res = await connectors.proxy(
-    "google-sheet",
-    `/v4/spreadsheets/${id}/values/Bookings!A:AS?_=${Date.now()}`,
-    { headers: { "Cache-Control": "no-cache" } },
-  );
+  // Direct HTTPS call to sheets.googleapis.com — bypasses the connector proxy
+  // entirely so no cached data can be served after an admin write.
+  const res = await proxyFetch(`/v4/spreadsheets/${id}/values/Bookings!A:AS`);
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => "");
+    throw new Error(`Sheets read failed: ${res.status} ${errBody}`);
+  }
   const data = (await res.json()) as { values?: string[][] };
   const rows = data.values ?? [];
   if (rows.length <= 1) return [];
@@ -535,15 +598,18 @@ export async function updateBookingByRow(
   if (updates.length === 0) return true;
   try {
     const id = await ensureSheet();
-    await connectors.proxy(
-      "google-sheet",
+    await ensureColumnCount(id, 45);
+    const writeRes = await proxyFetch(
       `/v4/spreadsheets/${id}/values:batchUpdate`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ valueInputOption: "USER_ENTERED", data: updates }),
       },
     );
+    if (!writeRes.ok) {
+      const errBody = await writeRes.text().catch(() => "");
+      throw new Error(`Sheets batchUpdate failed: ${writeRes.status} ${errBody}`);
+    }
     logger.info({ sheetRow, fields: Object.keys(fields) }, "Booking update saved to Sheets by row");
     return true;
   } catch (err) {
@@ -562,15 +628,21 @@ export async function updateBookingAdmin(
 ): Promise<boolean> {
   try {
     const id = await ensureSheet();
+    // Ensure the sheet has at least 45 columns (A–AS) before writing.
+    // This is idempotent — skips if the sheet is already wide enough.
+    await ensureColumnCount(id, 45);
 
     // Locate row via column O. If the same ref ever appears more than once
     // (which should never happen, but is the exact failure mode the user
     // reported), refuse to update rather than risk corrupting an unrelated
     // booking. The duplicate is logged so the team can fix the sheet.
-    const refRes = await connectors.proxy(
-      "google-sheet",
+    const refRes = await proxyFetch(
       `/v4/spreadsheets/${id}/values/Bookings!O:O`,
     );
+    if (!refRes.ok) {
+      const errBody = await refRes.text().catch(() => "");
+      throw new Error(`Sheets read O:O failed: ${refRes.status} ${errBody}`);
+    }
     const refData = (await refRes.json()) as { values?: string[][] };
     const rows = refData.values ?? [];
     const matches: number[] = [];
@@ -593,17 +665,23 @@ export async function updateBookingAdmin(
     const updates = buildAdminWriteRanges(sheetRow, fields);
     if (updates.length === 0) return true;
 
-    await connectors.proxy(
-      "google-sheet",
+    const writeRes = await proxyFetch(
       `/v4/spreadsheets/${id}/values:batchUpdate`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ valueInputOption: "USER_ENTERED", data: updates }),
       },
     );
+    if (!writeRes.ok) {
+      const errBody = await writeRes.text().catch(() => "");
+      throw new Error(`Sheets batchUpdate failed: ${writeRes.status} ${errBody}`);
+    }
 
-    logger.info({ bookingRef, sheetRow, fields: Object.keys(fields) }, "Admin booking update saved to Sheets");
+    const writeData = (await writeRes.json()) as { totalUpdatedCells?: number };
+    logger.info(
+      { bookingRef, sheetRow, fields: Object.keys(fields), updatedCells: writeData.totalUpdatedCells },
+      "Admin booking update saved to Sheets",
+    );
     return true;
   } catch (err) {
     logger.error({ err, bookingRef }, "Failed to save admin booking update");
@@ -675,15 +753,17 @@ export async function appendBooking(row: BookingRow): Promise<AppendResult> {
   // down and drop ours into a brand-new row, even when the table has
   // trailing empty rows. This GUARANTEES we never overwrite an existing
   // booking row, regardless of sheet shape.
-  const appendRes = await connectors.proxy(
-    "google-sheet",
+  const appendRes = await proxyFetch(
     `/v4/spreadsheets/${id}/values/Bookings!A:O:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ values }),
     },
   );
+  if (!appendRes.ok) {
+    const errBody = await appendRes.text().catch(() => "");
+    throw new Error(`Sheets append failed: ${appendRes.status} ${errBody}`);
+  }
 
   // Pull the exact row number Sheets assigned. The response shape is
   // { updates: { updatedRange: "Bookings!A1023:O1023", ... } } — we
@@ -717,10 +797,8 @@ let auditSheetEnsured = false;
 async function ensureAuditSheet(spreadsheetId: string): Promise<void> {
   if (auditSheetEnsured) return;
   try {
-    const metaRes = await connectors.proxy(
-      "google-sheet",
-      `/v4/spreadsheets/${spreadsheetId}`,
-    );
+    const metaRes = await proxyFetch(`/v4/spreadsheets/${spreadsheetId}`);
+    if (!metaRes.ok) throw new Error(`Sheets metadata read failed: ${metaRes.status}`);
     const metaData = (await metaRes.json()) as {
       sheets?: Array<{ properties?: { title?: string } }>;
     };
@@ -729,29 +807,33 @@ async function ensureAuditSheet(spreadsheetId: string): Promise<void> {
     );
 
     if (!exists) {
-      await connectors.proxy(
-        "google-sheet",
+      const addSheetRes = await proxyFetch(
         `/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             requests: [{ addSheet: { properties: { title: "Booking History" } } }],
           }),
         },
       );
-      await connectors.proxy(
-        "google-sheet",
+      if (!addSheetRes.ok) {
+        const errBody = await addSheetRes.text().catch(() => "");
+        logger.warn({ status: addSheetRes.status, errBody }, "Could not add Booking History tab");
+      }
+      const headerRes = await proxyFetch(
         `/v4/spreadsheets/${spreadsheetId}/values/'Booking History'!A1:F1?valueInputOption=USER_ENTERED`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             values: [["Timestamp", "Booking Ref", "Field Changed", "Old Value", "New Value", "Changed By"]],
           }),
         },
       );
-      logger.info("Created Booking History audit log tab");
+      if (!headerRes.ok) {
+        logger.warn({ status: headerRes.status }, "Could not write Booking History headers");
+      } else {
+        logger.info("Created Booking History audit log tab");
+      }
     }
     auditSheetEnsured = true;
   } catch (err) {
@@ -782,15 +864,17 @@ export async function writeAuditLog(
       e.newValue,
       e.changedBy ?? "Admin",
     ]);
-    await connectors.proxy(
-      "google-sheet",
+    const appendRes = await proxyFetch(
       `/v4/spreadsheets/${id}/values/'Booking History'!A:F:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ values }),
       },
     );
+    if (!appendRes.ok) {
+      const errBody = await appendRes.text().catch(() => "");
+      throw new Error(`Audit log append failed: ${appendRes.status} ${errBody}`);
+    }
     logger.info({ count: entries.length }, "Audit log entries written");
   } catch (err) {
     logger.error({ err }, "Failed to write audit log — continuing");
