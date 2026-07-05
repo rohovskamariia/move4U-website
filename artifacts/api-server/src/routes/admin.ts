@@ -58,12 +58,22 @@ function requireAdmin(req: Request, res: Response, next: NextFunction): void {
   next();
 }
 
+// ── No-cache middleware (admin routes must never return 304) ──
+// Express checks If-None-Match / If-Modified-Since independently of
+// Cache-Control, so removing those request headers is the only way to
+// guarantee Express never short-circuits with 304 Not Modified.
+adminRouter.use((req: Request, res: Response, next: NextFunction): void => {
+  delete req.headers["if-none-match"];
+  delete req.headers["if-modified-since"];
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.set("Pragma", "no-cache");
+  next();
+});
+
 // ── GET /api/admin/bookings ───────────────────────────────────
 adminRouter.get("/admin/bookings", requireAdmin, async (_req: Request, res: Response) => {
   try {
     const bookings = await getAllBookings();
-    res.set("Cache-Control", "no-store, no-cache, must-revalidate");
-    res.set("Pragma", "no-cache");
     res.json({ bookings });
   } catch (err) {
     logger.error({ err }, "Failed to load bookings for admin panel");

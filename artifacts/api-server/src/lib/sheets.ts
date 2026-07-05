@@ -352,9 +352,13 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
   await patchAdminHeaders(id);
   await patchExtraHeaders(id);
 
+  // Append a timestamp so the connectors-proxy layer never serves a
+  // cached response — admin saves must always be reflected immediately.
+  // Google Sheets API ignores unknown query parameters.
   const res = await connectors.proxy(
     "google-sheet",
-    `/v4/spreadsheets/${id}/values/Bookings!A:AS`,
+    `/v4/spreadsheets/${id}/values/Bookings!A:AS?_=${Date.now()}`,
+    { headers: { "Cache-Control": "no-cache" } },
   );
   const data = (await res.json()) as { values?: string[][] };
   const rows = data.values ?? [];

@@ -575,7 +575,10 @@ export default function AdminBookingsPage() {
     setLoading(true);
     setFetchError("");
     try {
-      const res = await apiFetch("/api/admin/bookings");
+      // cache: 'no-store' tells the browser to bypass its HTTP cache and never
+      // send If-None-Match, so the server always returns a fresh 200 with
+      // current Sheets data rather than a stale 304.
+      const res = await apiFetch("/api/admin/bookings", { cache: "no-store" });
       if (res.status === 401) { signOut(); return; }
       if (!res.ok) throw new Error("server error");
       const data = (await res.json()) as { bookings: BookingRecord[] };
