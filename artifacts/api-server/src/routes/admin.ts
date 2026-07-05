@@ -62,6 +62,8 @@ function requireAdmin(req: Request, res: Response, next: NextFunction): void {
 adminRouter.get("/admin/bookings", requireAdmin, async (_req: Request, res: Response) => {
   try {
     const bookings = await getAllBookings();
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.set("Pragma", "no-cache");
     res.json({ bookings });
   } catch (err) {
     logger.error({ err }, "Failed to load bookings for admin panel");
@@ -383,15 +385,69 @@ adminRouter.post("/admin/bookings/:ref/payment-link", requireAdmin, async (req: 
     return;
   }
 
-  const { depositAmount = "", agreedQuote = "", customerName = "" } = req.body as Record<string, string>;
+  const {
+    depositAmount = "",
+    agreedQuote   = "",
+    customerName  = "",
+    paymentType   = "deposit",
+  } = req.body as Record<string, string>;
 
-  const depositNum = parseFloat(depositAmount);
-  if (!depositAmount || isNaN(depositNum) || depositNum <= 0) {
-    res.status(400).json({ error: "A valid deposit amount is required to generate a payment link" });
-    return;
+  const validTypes = ["deposit", "remaining", "full"] as const;
+  const pType: "deposit" | "remaining" | "full" = validTypes.includes(
+    paymentType as (typeof validTypes)[number],
+  )
+    ? (paymentType as "deposit" | "remaining" | "full")
+    : "deposit";
+
+  const depositNum = parseFloat(depositAmount) || 0;
+  const agreedNum  = parseFloat(agreedQuote)   || 0;
+
+  let amountNum: number;
+  let productName: string;
+  let productDesc: string;
+
+  if (pType === "full") {
+    if (agreedNum <= 0) {
+      res.status(400).json({ error: "Enter an agreed quote before generating a full-payment link." });
+      return;
+    }
+    amountNum   = agreedNum;
+    productName = `Full Payment — ${bookingRef}`;
+    productDesc = customerName
+      ? `Move4U full payment for ${customerName}. Total: £${agreedNum.toFixed(2)}`
+      : `Move4U full payment. Total: £${agreedNum.toFixed(2)}`;
+  } else if (pType === "remaining") {
+    if (agreedNum <= 0) {
+      res.status(400).json({ error: "Enter an agreed quote before generating a remaining-balance link." });
+      return;
+    }
+    if (depositNum <= 0) {
+      res.status(400).json({ error: "Enter a deposit amount before generating a remaining-balance link." });
+      return;
+    }
+    amountNum = Math.max(0, agreedNum - depositNum);
+    if (amountNum <= 0) {
+      res.status(400).json({ error: "Remaining balance is zero — the deposit already covers the full agreed quote." });
+      return;
+    }
+    productName = `Remaining Balance — ${bookingRef}`;
+    productDesc = customerName
+      ? `Move4U remaining balance for ${customerName}. Total: £${agreedNum.toFixed(2)}, deposit paid: £${depositNum.toFixed(2)}`
+      : `Move4U remaining balance. Total: £${agreedNum.toFixed(2)}, deposit paid: £${depositNum.toFixed(2)}`;
+  } else {
+    // deposit (default)
+    if (depositNum <= 0) {
+      res.status(400).json({ error: "A valid deposit amount is required to generate a payment link." });
+      return;
+    }
+    amountNum   = depositNum;
+    productName = `Booking Deposit — ${bookingRef}`;
+    productDesc = customerName
+      ? `Move4U deposit for ${customerName}. Agreed quote: £${agreedQuote}`
+      : `Move4U deposit. Agreed quote: £${agreedQuote}`;
   }
 
-  const depositPence = Math.round(depositNum * 100); // Stripe expects pence
+  const amountPence = Math.round(amountNum * 100); // Stripe expects pence
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -405,12 +461,10 @@ adminRouter.post("/admin/bookings/:ref/payment-link", requireAdmin, async (req: 
           price_data: {
             currency: "gbp",
             product_data: {
-              name: `Booking Deposit — ${bookingRef}`,
-              description: customerName
-                ? `Move4U deposit for ${customerName}. Agreed quote: £${agreedQuote}`
-                : `Move4U deposit. Agreed quote: £${agreedQuote}`,
+              name: productName,
+              description: productDesc,
             },
-            unit_amount: depositPence,
+            unit_amount: amountPence,
           },
           quantity: 1,
         },
@@ -433,7 +487,7 @@ adminRouter.post("/admin/bookings/:ref/payment-link", requireAdmin, async (req: 
       paymentStatus: "Payment link ready",
     });
 
-    logger.info({ bookingRef, depositPence }, "Stripe Checkout Session created for booking");
+    logger.info({ bookingRef, pType, amountPence }, "Stripe Checkout Session created for booking");
     res.json({ paymentLink });
   } catch (err) {
     logger.error({ err, bookingRef }, "Failed to create Stripe Checkout Session");

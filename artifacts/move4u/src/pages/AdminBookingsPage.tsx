@@ -321,6 +321,13 @@ function getHelpPricingKey(helpOptionDisplay: string): string {
   return "no-help";
 }
 
+function helpWorkerCount(helpOptionDisplay: string): number {
+  const key = getHelpPricingKey(helpOptionDisplay);
+  if (key === "driver-plus-helper") return 2;
+  if (key === "driver-help")        return 1;
+  return 0;
+}
+
 function computeAdminPricing(form: EditForm): {
   base: number; extraTime: number; stairsPickup: number; stairsDropoff: number;
   ccz: number; m25: number; stopsTotal: number; manualTotal: number;
@@ -337,9 +344,10 @@ function computeAdminPricing(form: EditForm): {
   const dF = parseInt(form.dropoffFloors || "0") || 0;
   const cE = parseInt(form.congestionEntries || "0") || 0;
   const miles = parseFloat(form.outsideM25Miles || "0") || 0;
+  const workers = helpWorkerCount(form.helpOption);
 
-  const stairsPickup  = pF * 10;
-  const stairsDropoff = dF * 10;
+  const stairsPickup  = pF * 10 * workers;
+  const stairsDropoff = dF * 10 * workers;
   const ccz = cE * CONGESTION_CHARGE;
   const m25 = Math.round(miles * OUTSIDE_M25_RATE * 100) / 100;
   const stopsTotal  = form.adminExtraStops.reduce((s, x) => s + (parseFloat(x.charge) || 0), 0);
@@ -351,10 +359,11 @@ function computeAdminPricing(form: EditForm): {
 // Serialises all pricing (structured + manual) into the adminExtraCharges JSON that gets saved.
 function serializeAdminCharges(form: EditForm): string {
   const charges: AdminExtraCharge[] = [];
+  const workers = helpWorkerCount(form.helpOption);
   const pF = parseInt(form.pickupFloors  || "0") || 0;
-  if (pF > 0) charges.push({ type: "Stairs - pickup",  amount: String(pF * 10), notes: `${pF} stair flight${pF !== 1 ? "s" : ""}` });
+  if (pF > 0 && workers > 0) charges.push({ type: "Stairs - pickup",  amount: String(pF * 10 * workers), notes: `${pF} stair flight${pF !== 1 ? "s" : ""}${workers > 1 ? ` × ${workers}` : ""}` });
   const dF = parseInt(form.dropoffFloors || "0") || 0;
-  if (dF > 0) charges.push({ type: "Stairs - drop-off", amount: String(dF * 10), notes: `${dF} stair flight${dF !== 1 ? "s" : ""}` });
+  if (dF > 0 && workers > 0) charges.push({ type: "Stairs - drop-off", amount: String(dF * 10 * workers), notes: `${dF} stair flight${dF !== 1 ? "s" : ""}${workers > 1 ? ` × ${workers}` : ""}` });
   const cE = parseInt(form.congestionEntries || "0") || 0;
   if (cE > 0) charges.push({ type: "Congestion charge", amount: String(cE * CONGESTION_CHARGE), notes: `${cE} entr${cE === 1 ? "y" : "ies"}` });
   const miles = parseFloat(form.outsideM25Miles || "0") || 0;
@@ -551,6 +560,7 @@ export default function AdminBookingsPage() {
   const [copiedInvoice, setCopiedInvoice] = useState<string | null>(null);
   const [confirmBusy,   setConfirmBusy]   = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, Set<string>>>({});
+  const [paymentLinkType, setPaymentLinkType] = useState<Record<string, "deposit" | "remaining" | "full">>({});
 
   const apiFetch = useCallback(
     (path: string, init?: RequestInit) =>
@@ -857,11 +867,21 @@ export default function AdminBookingsPage() {
     }
   }
 
-  async function generatePaymentLink(ref: string, formOverride?: EditForm) {
+  async function generatePaymentLink(ref: string, formOverride?: EditForm, typeOverride?: "deposit" | "remaining" | "full") {
     const form = formOverride ?? editForms[ref];
     if (!form) return;
-    if (!form.depositAmount) {
+    const pType = typeOverride ?? paymentLinkType[ref] ?? "deposit";
+    // Validate based on type
+    if (pType === "deposit" && !form.depositAmount) {
       setLinkErrors((e) => ({ ...e, [ref]: "Enter a deposit amount before generating a link." }));
+      return;
+    }
+    if ((pType === "full" || pType === "remaining") && !form.agreedQuote) {
+      setLinkErrors((e) => ({ ...e, [ref]: "Enter an agreed quote before generating this link." }));
+      return;
+    }
+    if (pType === "remaining" && !form.depositAmount) {
+      setLinkErrors((e) => ({ ...e, [ref]: "Enter a deposit amount before generating a remaining-balance link." }));
       return;
     }
     setLinkBusy(ref);
@@ -876,6 +896,7 @@ export default function AdminBookingsPage() {
             depositAmount: form.depositAmount,
             agreedQuote: form.agreedQuote,
             customerName: booking?.name ?? "",
+            paymentType: pType,
           }),
         },
       );
@@ -1166,6 +1187,7 @@ export default function AdminBookingsPage() {
             const isSaving = savingRef === ref;
             const isLinkBusy = linkBusy === ref;
             const payLink = booking.paymentLink;
+            const plType  = paymentLinkType[ref] ?? "deposit";
             const waitInfo = getWaitingInfo(booking.timestamp);
             const needsAttention = NEEDS_ACTION.has(booking.bookingStatus) && waitInfo.minutesAgo > 0;
             const cardBorder = needsAttention ? priorityCardBorder(waitInfo.priority) : "border-gray-200";
@@ -1643,7 +1665,31 @@ export default function AdminBookingsPage() {
 
                     {/* Payment link section */}
                     <section className="border-t border-gray-100 pt-4">
-                      <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Personal Payment Link</h3>
+                      <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Personal Payment Link</h3>
+
+                      {/* Payment type toggle */}
+                      {(() => {
+                        const aQuote = parseFloat(form?.agreedQuote ?? "") || 0;
+                        const aDeposit = parseFloat(form?.depositAmount ?? "") || 0;
+                        const labels: Record<"deposit" | "remaining" | "full", string> = {
+                          deposit:   aDeposit > 0 ? `Deposit £${aDeposit.toFixed(2)}` : "Deposit",
+                          remaining: aQuote > 0 && aDeposit > 0 ? `Remaining £${Math.max(0, aQuote - aDeposit).toFixed(2)}` : "Remaining",
+                          full:      aQuote > 0 ? `Full £${aQuote.toFixed(2)}` : "Full",
+                        };
+                        return (
+                          <div className="flex gap-1.5 mb-3">
+                            {(["deposit", "remaining", "full"] as const).map((t) => (
+                              <button
+                                key={t}
+                                onClick={() => setPaymentLinkType((prev) => ({ ...prev, [ref]: t }))}
+                                className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${plType === t ? "bg-purple-700 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                              >
+                                {labels[t]}
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()}
 
                       {payLink ? (() => {
                         // Short URL must always show the canonical customer-facing
@@ -1706,6 +1752,7 @@ export default function AdminBookingsPage() {
                                 onClick={() => void generatePaymentLink(ref)}
                                 disabled={isLinkBusy}
                                 className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-xl text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                title={`Regenerate as ${plType} link`}
                               >
                                 {isLinkBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                                 Refresh link
@@ -1716,15 +1763,24 @@ export default function AdminBookingsPage() {
                       })() : (
                         <div>
                           <p className="text-xs text-gray-500 mb-3">
-                            No payment link yet. Enter the deposit amount above, then generate a personal Stripe link for this booking.
+                            {plType === "full"
+                              ? "No payment link yet. Enter the agreed quote above, then generate a full-payment Stripe link."
+                              : plType === "remaining"
+                              ? "No payment link yet. Enter the agreed quote and deposit, then generate a remaining-balance Stripe link."
+                              : "No payment link yet. Enter the deposit amount above, then generate a personal Stripe link for this booking."}
                           </p>
                           <button
                             onClick={() => void generatePaymentLink(ref)}
-                            disabled={isLinkBusy || !form.depositAmount}
+                            disabled={
+                              isLinkBusy ||
+                              (plType === "deposit"  && !form.depositAmount) ||
+                              (plType === "full"     && !form.agreedQuote) ||
+                              (plType === "remaining" && (!form.agreedQuote || !form.depositAmount))
+                            }
                             className="flex items-center gap-2 px-4 py-2.5 bg-purple-700 text-white text-sm font-semibold rounded-xl hover:bg-purple-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {isLinkBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                            Generate payment link
+                            Generate {plType === "full" ? "full payment" : plType === "remaining" ? "remaining balance" : "deposit"} link
                           </button>
                         </div>
                       )}
