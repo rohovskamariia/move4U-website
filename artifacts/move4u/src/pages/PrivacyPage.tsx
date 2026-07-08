@@ -21,7 +21,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">1. Who We Are</h2>
             <p>
-              Move4U is a self-employed removal service based in London, UK. We are committed to protecting your personal information and your right to privacy. If you have any questions about this policy, please contact us at move4u.uk@gmail.com.
+              Move4U is a self-employed removal service based in London, UK. We are committed to protecting your personal information and your right to privacy. If you have any questions about this policy, please contact us at info@move4u.uk.
             </p>
           </section>
 
@@ -71,7 +71,7 @@ export default function PrivacyPage() {
               <li>Object to processing of your data</li>
               <li>Request data portability</li>
             </ul>
-            <p className="mt-2">To exercise any of these rights, contact us at move4u.uk@gmail.com.</p>
+            <p className="mt-2">To exercise any of these rights, contact us at info@move4u.uk.</p>
           </section>
 
           <section>
@@ -84,7 +84,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">8. Contact</h2>
             <p>
-              For any privacy-related concerns, please contact us at move4u.uk@gmail.com or +44 7946 259714.
+              For any privacy-related concerns, please contact us at info@move4u.uk or +44 7946 259714.
             </p>
           </section>
         </div>

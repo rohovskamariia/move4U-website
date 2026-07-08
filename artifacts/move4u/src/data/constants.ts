@@ -8,7 +8,7 @@ export const CONTACT = {
   driverDisplay: "+44 7888 355523",
   support: "+447946259714",
   supportDisplay: "+44 7946 259714",
-  email: "move4u.uk@gmail.com",
+  email: "info@move4u.uk",
   whatsapp: "447888355523",
   whatsappDefaultMessage: "Hi Move4U, I need help with my move.",
   viber: "+447888355523", // Viber uses the same phone as the driver line

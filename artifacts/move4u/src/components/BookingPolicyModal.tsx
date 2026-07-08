@@ -73,7 +73,7 @@ const SECTIONS: PolicySection[] = [
   {
     title: "13. Contact",
     body:
-      "For any booking questions, contact us at move4u.uk@gmail.com or call +44 7946 259714.",
+      "For any booking questions, contact us at info@move4u.uk or call +44 7946 259714.",
   },
 ];
 

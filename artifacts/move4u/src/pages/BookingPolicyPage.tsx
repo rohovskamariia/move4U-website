@@ -71,7 +71,7 @@ export default function BookingPolicyPage() {
           </section>
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">13. Contact</h2>
-            <p>For any booking questions, contact us at move4u.uk@gmail.com or call +44 7946 259714.</p>
+            <p>For any booking questions, contact us at info@move4u.uk or call +44 7946 259714.</p>
           </section>
         </div>
       </div>
