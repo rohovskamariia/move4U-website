@@ -162,26 +162,23 @@ bookingsRouter.post("/bookings", async (req, res) => {
       bookingStatus: "New",
       paymentStatus: "Unpaid",
     })
-      .then(async ({ mainMessageId }) => {
-        if (mainMessageId !== null) {
-          try {
-            // Write by row — same safety reasoning as photo URLs above.
-            if (sheetRow >= 2) {
-              await updateBookingByRow(sheetRow, {
-                telegramMessageId: String(mainMessageId),
-              });
-            } else {
-              await updateBookingAdmin(bookingReference, {
-                telegramMessageId: String(mainMessageId),
-              });
-            }
-            logger.info(
-              { bookingReference, sheetRow, messageId: mainMessageId },
-              "Telegram message ID saved to Sheets",
-            );
-          } catch (err) {
-            logger.error({ err, bookingReference }, "Failed to save Telegram message ID");
+      .then(async ({ mainMessageId, newBookingsMessageId }) => {
+        const updates: Parameters<typeof updateBookingByRow>[1] = {};
+        if (mainMessageId         !== null) updates.telegramMessageId             = String(mainMessageId);
+        if (newBookingsMessageId  !== null) updates.telegramNewBookingsMessageId  = String(newBookingsMessageId);
+        if (Object.keys(updates).length === 0) return;
+        try {
+          if (sheetRow >= 2) {
+            await updateBookingByRow(sheetRow, updates);
+          } else {
+            await updateBookingAdmin(bookingReference, updates);
           }
+          logger.info(
+            { bookingReference, sheetRow, mainMessageId, newBookingsMessageId },
+            "Telegram message IDs saved to Sheets",
+          );
+        } catch (err) {
+          logger.error({ err, bookingReference }, "Failed to save Telegram message IDs");
         }
       })
       .catch((err) => {

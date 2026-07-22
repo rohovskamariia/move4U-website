@@ -1,1 +1,2 @@
 - [Admin Pricing Architecture](admin-pricing-architecture.md) — structured charges (stairs/CCZ/M25/extra time) stored in adminExtraCharges JSON with reserved type keys; serializeAdminCharges() combines them with manual charges on save.
+- [Telegram Topic Message IDs](telegram-topic-columns.md) — 5 Telegram msg ID columns across V, AT, AY, AZ, BA; backfill/discovery endpoints in admin.ts; all topic functions return number|null.

@@ -318,26 +318,29 @@ const EXTRA_HEADER_ROW = [
   "Is Deleted",              // AU (index 46)
   "Deleted At",              // AV (index 47)
   "Deleted By",              // AW (index 48)
-  "Previous Booking Status", // AX (index 49)
+  "Previous Booking Status",            // AX (index 49)
+  "Telegram New Bookings Msg ID",       // AY (index 50)
+  "Telegram Booking Updates Msg ID",    // AZ (index 51)
+  "Telegram Completed Jobs Msg ID",     // BA (index 52)
 ];
 
 let extraHeaderPatched = false;
 
 async function patchExtraHeaders(id: string): Promise<void> {
   if (extraHeaderPatched) return;
-  // Columns AB–AX require at least 50 columns. Expand before writing so
+  // Columns AB–BA require at least 53 columns. Expand before writing so
   // batchUpdate never sees "exceeds grid limits".
-  await ensureColumnCount(id, 50);
+  await ensureColumnCount(id, 53);
   try {
     const res = await proxyFetch(
-      `/v4/spreadsheets/${id}/values/Bookings!AB1:AX1?valueInputOption=USER_ENTERED`,
+      `/v4/spreadsheets/${id}/values/Bookings!AB1:BA1?valueInputOption=USER_ENTERED`,
       {
         method: "PUT",
         body: JSON.stringify({ values: [EXTRA_HEADER_ROW] }),
       },
     );
     if (!res.ok) logger.warn({ status: res.status }, "Could not patch extra column headers");
-    else logger.info("Patched extra column headers AB–AX");
+    else logger.info("Patched extra column headers AB–BA");
   } catch (err) {
     logger.warn({ err }, "Could not patch extra column headers — continuing");
   }
@@ -418,6 +421,9 @@ export interface BookingRecord {
   deletedAt: string;              // AV
   deletedBy: string;              // AW
   previousBookingStatus: string;  // AX
+  telegramNewBookingsMessageId: string;      // AY
+  telegramBookingUpdatesMessageId: string;   // AZ
+  telegramCompletedJobsMessageId: string;    // BA
 }
 
 function normalizePaymentStatus(raw: string): string {
@@ -437,7 +443,7 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
 
   // Direct HTTPS call to sheets.googleapis.com — bypasses the connector proxy
   // entirely so no cached data can be served after an admin write.
-  const res = await proxyFetch(`/v4/spreadsheets/${id}/values/Bookings!A:AX`);
+  const res = await proxyFetch(`/v4/spreadsheets/${id}/values/Bookings!A:BA`);
   if (!res.ok) {
     const errBody = await res.text().catch(() => "");
     throw new Error(`Sheets read failed: ${res.status} ${errBody}`);
@@ -505,6 +511,9 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
       deletedAt:              row[47] ?? "",
       deletedBy:              row[48] ?? "",
       previousBookingStatus:  row[49] ?? "",
+      telegramNewBookingsMessageId:      row[50] ?? "",
+      telegramBookingUpdatesMessageId:   row[51] ?? "",
+      telegramCompletedJobsMessageId:    row[52] ?? "",
     }))
     .filter((b) => b.name || b.service || b.phone); // skip genuinely blank rows
 
@@ -615,6 +624,9 @@ export interface BookingAdminUpdate {
   deletedAt?:             string; // AV
   deletedBy?:             string; // AW
   previousBookingStatus?: string; // AX
+  telegramNewBookingsMessageId?:      string; // AY
+  telegramBookingUpdatesMessageId?:   string; // AZ
+  telegramCompletedJobsMessageId?:    string; // BA
 }
 
 // Builds the batchUpdate ranges for a known sheet row. Shared by the
@@ -672,6 +684,9 @@ function buildAdminWriteRanges(
   if (fields.deletedAt             !== undefined) updates.push({ range: c("AV"), values: [[fields.deletedAt]] });
   if (fields.deletedBy             !== undefined) updates.push({ range: c("AW"), values: [[fields.deletedBy]] });
   if (fields.previousBookingStatus !== undefined) updates.push({ range: c("AX"), values: [[fields.previousBookingStatus]] });
+  if (fields.telegramNewBookingsMessageId      !== undefined) updates.push({ range: c("AY"), values: [[fields.telegramNewBookingsMessageId]] });
+  if (fields.telegramBookingUpdatesMessageId   !== undefined) updates.push({ range: c("AZ"), values: [[fields.telegramBookingUpdatesMessageId]] });
+  if (fields.telegramCompletedJobsMessageId    !== undefined) updates.push({ range: c("BA"), values: [[fields.telegramCompletedJobsMessageId]] });
 
   return updates;
 }
@@ -694,7 +709,7 @@ export async function updateBookingByRow(
   if (updates.length === 0) return true;
   try {
     const id = await ensureSheet();
-    await ensureColumnCount(id, 50);
+    await ensureColumnCount(id, 53);
     const writeRes = await proxyFetch(
       `/v4/spreadsheets/${id}/values:batchUpdate`,
       {
@@ -724,9 +739,9 @@ export async function updateBookingAdmin(
 ): Promise<boolean> {
   try {
     const id = await ensureSheet();
-    // Ensure the sheet has at least 50 columns (A–AX) before writing.
+    // Ensure the sheet has at least 53 columns (A–BA) before writing.
     // This is idempotent — skips if the sheet is already wide enough.
-    await ensureColumnCount(id, 50);
+    await ensureColumnCount(id, 53);
 
     // Locate row via column O. If the same ref ever appears more than once
     // (which should never happen, but is the exact failure mode the user

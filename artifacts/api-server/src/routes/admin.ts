@@ -14,7 +14,7 @@ import { Router, type Request, type Response, type NextFunction } from "express"
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Stripe = require("stripe").default ?? require("stripe");
 import { getAllBookings, updateBookingAdmin, getBookingByRef, writeAuditLog, permanentDeleteBooking, type BookingRecord } from "../lib/sheets";
-import { editBookingMessage, sendBookingUpdateNotification, sendInvoiceCreatedNotification, sendOrEditPaymentsTopic, sendCompletedJobsTopic, type TelegramBooking } from "../lib/telegram";
+import { editBookingMessage, sendBookingUpdateNotification, sendInvoiceCreatedNotification, sendOrEditPaymentsTopic, sendCompletedJobsTopic, sendBookingToTopic, type TelegramBooking } from "../lib/telegram";
 import { sendEmail } from "../lib/email";
 import { logger } from "../lib/logger";
 
@@ -222,7 +222,7 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
             ? String(Math.max(0, agreedNum - depositNum).toFixed(2))
             : "";
 
-          await sendBookingUpdateNotification({
+          const bookingUpdatesMsgId = await sendBookingUpdateNotification({
             bookingReference:  booking.bookingReference,
             service:           update.service    ?? booking.service,
             name:              booking.name,
@@ -255,9 +255,16 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
             adminExtraStops:   update.adminExtraStops   ?? booking.adminExtraStops,
             adminExtraCharges: update.adminExtraCharges ?? booking.adminExtraCharges,
           });
-          // Completed Jobs topic: fire a copy when status is now Completed
-          if (booking.bookingStatus === "Completed") {
-            await sendCompletedJobsTopic(toTelegramPayload(booking));
+          // Store the Booking Updates topic message ID (overwrites previous — latest wins)
+          if (bookingUpdatesMsgId != null) {
+            await updateBookingAdmin(bookingRef, { telegramBookingUpdatesMessageId: String(bookingUpdatesMsgId) });
+          }
+          // Completed Jobs topic: fire a copy when status is now Completed (only once)
+          if (booking.bookingStatus === "Completed" && !booking.telegramCompletedJobsMessageId) {
+            const completedMsgId = await sendCompletedJobsTopic(toTelegramPayload(booking));
+            if (completedMsgId != null) {
+              await updateBookingAdmin(bookingRef, { telegramCompletedJobsMessageId: String(completedMsgId) });
+            }
           }
         } else if (Object.keys(update).some((k) => PAYMENT_ONLY_FIELDS.has(k))) {
           // Silent save with payment-field changes → edit existing Main message, and
@@ -276,6 +283,20 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
           );
           if (newPaymentsMsgId != null && String(newPaymentsMsgId) !== booking.telegramPaymentsMessageId) {
             await updateBookingAdmin(bookingRef, { telegramPaymentsMessageId: String(newPaymentsMsgId) });
+          }
+        }
+
+        // Completed Jobs on silent save: fire when bookingStatus explicitly set to "Completed"
+        // and we haven't yet sent a Completed Jobs copy for this booking.
+        if (
+          !shouldNotify &&
+          update.bookingStatus === "Completed" &&
+          booking.bookingStatus === "Completed" &&
+          !booking.telegramCompletedJobsMessageId
+        ) {
+          const completedMsgId = await sendCompletedJobsTopic(toTelegramPayload(booking));
+          if (completedMsgId != null) {
+            await updateBookingAdmin(bookingRef, { telegramCompletedJobsMessageId: String(completedMsgId) });
           }
         }
       } catch (err) {
@@ -748,6 +769,235 @@ adminRouter.post("/admin/bookings/:ref/send-confirmation", requireAdmin, async (
   } catch (err) {
     logger.error({ err, bookingRef }, "Failed to send confirmation email");
     res.status(500).json({ error: "Failed to send confirmation email" });
+  }
+});
+
+// ── Telegram admin utilities ──────────────────────────────────
+//
+// These endpoints help discover topic IDs, verify routing,
+// and backfill existing bookings into the correct forum topics.
+
+// GET /api/admin/telegram/topics
+// Calls Telegram getForumTopics to list all topics with their IDs.
+// Also returns which topic IDs are currently configured in env vars.
+adminRouter.get("/admin/telegram/topics", requireAdmin, async (_req: Request, res: Response) => {
+  const botToken = process.env["TELEGRAM_BOT_TOKEN"];
+  const chatId   = process.env["TELEGRAM_CHAT_ID"];
+  if (!botToken || !chatId) {
+    res.status(503).json({ error: "TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set" });
+    return;
+  }
+  try {
+    const r = await fetch(
+      `https://api.telegram.org/bot${botToken}/getForumTopics?chat_id=${encodeURIComponent(chatId)}`,
+    );
+    const body = (await r.json()) as unknown;
+    const configured = {
+      TELEGRAM_TOPIC_MAIN_ID:            process.env["TELEGRAM_TOPIC_MAIN_ID"]            ?? null,
+      TELEGRAM_TOPIC_NEW_BOOKINGS_ID:    process.env["TELEGRAM_TOPIC_NEW_BOOKINGS_ID"]    ?? null,
+      TELEGRAM_TOPIC_BOOKING_UPDATES_ID: process.env["TELEGRAM_TOPIC_BOOKING_UPDATES_ID"] ?? null,
+      TELEGRAM_TOPIC_PAYMENTS_ID:        process.env["TELEGRAM_TOPIC_PAYMENTS_ID"]        ?? null,
+      TELEGRAM_TOPIC_COMPLETED_JOBS_ID:  process.env["TELEGRAM_TOPIC_COMPLETED_JOBS_ID"]  ?? null,
+    };
+    logger.info({ configured }, "Telegram topics discovery called");
+    res.json({ telegramResponse: body, configured });
+  } catch (err) {
+    logger.error({ err }, "Failed to discover Telegram topics");
+    res.status(500).json({ error: "Failed to call Telegram getForumTopics" });
+  }
+});
+
+// POST /api/admin/telegram/test-topics
+// Sends a clearly-labelled test message to each configured topic.
+adminRouter.post("/admin/telegram/test-topics", requireAdmin, async (_req: Request, res: Response) => {
+  const botToken = process.env["TELEGRAM_BOT_TOKEN"];
+  const chatId   = process.env["TELEGRAM_CHAT_ID"];
+  if (!botToken || !chatId) {
+    res.status(503).json({ error: "TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set" });
+    return;
+  }
+
+  function parseTopicId(key: string): number | null {
+    const v = process.env[key];
+    if (!v?.trim()) return null;
+    const n = parseInt(v, 10);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  async function sendTestMsg(label: string, threadId: number | null): Promise<{ ok: boolean; messageId: number | null; error: string | null }> {
+    const body: Record<string, unknown> = {
+      chat_id: chatId,
+      text: `🔧 [ADMIN TEST] ${label} — routing test from Move4U admin panel. Please ignore.`,
+      disable_web_page_preview: true,
+    };
+    if (threadId != null) body["message_thread_id"] = threadId;
+    try {
+      const r = await fetch(`https://api.telegram.org/bot${botToken!}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const rb = (await r.json()) as { result?: { message_id?: number }; description?: string };
+      return { ok: r.ok, messageId: rb.result?.message_id ?? null, error: rb.description ?? null };
+    } catch (err) {
+      return { ok: false, messageId: null, error: err instanceof Error ? err.message : String(err) };
+    }
+  }
+
+  const results = {
+    main:           await sendTestMsg("Main",           parseTopicId("TELEGRAM_TOPIC_MAIN_ID")),
+    newBookings:    await sendTestMsg("New Bookings",    parseTopicId("TELEGRAM_TOPIC_NEW_BOOKINGS_ID")),
+    bookingUpdates: await sendTestMsg("Booking Updates", parseTopicId("TELEGRAM_TOPIC_BOOKING_UPDATES_ID")),
+    payments:       await sendTestMsg("Payments",        parseTopicId("TELEGRAM_TOPIC_PAYMENTS_ID")),
+    completedJobs:  await sendTestMsg("Completed Jobs",  parseTopicId("TELEGRAM_TOPIC_COMPLETED_JOBS_ID")),
+  };
+
+  logger.info({ results }, "Telegram test-topics messages sent");
+  res.json({ results });
+});
+
+// ── Backfill helpers ──────────────────────────────────────────
+// Names that indicate test/dummy rows — exclude from backfill.
+const BACKFILL_EXCLUDE_NAMES = new Set(["test customer", "column mapping test"]);
+
+function isGenuineBooking(b: BookingRecord): boolean {
+  if (b.isDeleted === "true") return false;
+  if (b.bookingStatus === "Denied") return false;
+  const nameLower = (b.name ?? "").toLowerCase().trim();
+  if (BACKFILL_EXCLUDE_NAMES.has(nameLower)) return false;
+  return true;
+}
+
+// GET /api/admin/telegram/backfill-preview
+// Returns a list of genuine bookings and which topics each would be sent to.
+// Nothing is sent — this is purely a dry-run preview for approval.
+adminRouter.get("/admin/telegram/backfill-preview", requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    const all     = await getAllBookings();
+    const genuine = all.filter(isGenuineBooking);
+
+    const preview = genuine.map((b) => ({
+      ref:           b.bookingReference,
+      name:          b.name,
+      service:       b.service,
+      bookingStatus: b.bookingStatus,
+      paymentStatus: b.paymentStatus,
+      date:          b.date,
+      // What WILL be sent (missing IDs)
+      willSendToNewBookings:   !b.telegramNewBookingsMessageId,
+      willSendToPayments:      !b.telegramPaymentsMessageId,
+      willSendToCompletedJobs: b.bookingStatus === "Completed" && !b.telegramCompletedJobsMessageId,
+      // What is ALREADY stored
+      alreadyInMain:          !!b.telegramMessageId,
+      alreadyInNewBookings:   !!b.telegramNewBookingsMessageId,
+      alreadyInPayments:      !!b.telegramPaymentsMessageId,
+      alreadyInCompletedJobs: !!b.telegramCompletedJobsMessageId,
+    }));
+
+    const totals = {
+      total:         preview.length,
+      newBookings:   preview.filter((b) => b.willSendToNewBookings).length,
+      payments:      preview.filter((b) => b.willSendToPayments).length,
+      completedJobs: preview.filter((b) => b.willSendToCompletedJobs).length,
+    };
+
+    res.json({ preview, totals });
+  } catch (err) {
+    logger.error({ err }, "Failed to build Telegram backfill preview");
+    res.status(500).json({ error: "Failed to build backfill preview" });
+  }
+});
+
+// POST /api/admin/telegram/backfill-execute
+// For each genuine booking, sends the full booking message to any topic that
+// doesn't yet have a stored message ID for that booking, then saves the ID.
+// Idempotent: bookings with an existing ID for a given topic are skipped.
+adminRouter.post("/admin/telegram/backfill-execute", requireAdmin, async (_req: Request, res: Response) => {
+  function parseTopicIdBF(key: string): number | null {
+    const v = process.env[key];
+    if (!v?.trim()) return null;
+    const n = parseInt(v, 10);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  const newBookingsTopicId   = parseTopicIdBF("TELEGRAM_TOPIC_NEW_BOOKINGS_ID");
+  const paymentsTopicId      = parseTopicIdBF("TELEGRAM_TOPIC_PAYMENTS_ID");
+  const completedJobsTopicId = parseTopicIdBF("TELEGRAM_TOPIC_COMPLETED_JOBS_ID");
+
+  try {
+    const all     = await getAllBookings();
+    const genuine = all.filter(isGenuineBooking);
+
+    const results: Array<{
+      ref: string;
+      newBookings: { skipped: boolean; ok: boolean; messageId: number | null };
+      payments:    { skipped: boolean; ok: boolean; messageId: number | null };
+      completedJobs: { skipped: boolean; ok: boolean; messageId: number | null };
+    }> = [];
+
+    for (const b of genuine) {
+      const payload = toTelegramPayload(b);
+
+      // New Bookings topic
+      let nbResult: { skipped: boolean; ok: boolean; messageId: number | null };
+      if (b.telegramNewBookingsMessageId) {
+        nbResult = { skipped: true, ok: true, messageId: parseInt(b.telegramNewBookingsMessageId, 10) };
+      } else if (newBookingsTopicId != null) {
+        const msgId = await sendBookingToTopic(payload, newBookingsTopicId);
+        nbResult = { skipped: false, ok: msgId != null, messageId: msgId };
+        if (msgId != null) {
+          await updateBookingAdmin(b.bookingReference, { telegramNewBookingsMessageId: String(msgId) });
+        }
+      } else {
+        nbResult = { skipped: true, ok: false, messageId: null };
+      }
+
+      // Payments topic
+      let pmResult: { skipped: boolean; ok: boolean; messageId: number | null };
+      if (b.telegramPaymentsMessageId) {
+        pmResult = { skipped: true, ok: true, messageId: parseInt(b.telegramPaymentsMessageId, 10) };
+      } else if (paymentsTopicId != null) {
+        const existingId = b.telegramPaymentsMessageId ? parseInt(b.telegramPaymentsMessageId, 10) : null;
+        const msgId = await sendOrEditPaymentsTopic(payload, existingId);
+        pmResult = { skipped: false, ok: msgId != null, messageId: msgId };
+        if (msgId != null && String(msgId) !== b.telegramPaymentsMessageId) {
+          await updateBookingAdmin(b.bookingReference, { telegramPaymentsMessageId: String(msgId) });
+        }
+      } else {
+        pmResult = { skipped: true, ok: false, messageId: null };
+      }
+
+      // Completed Jobs topic (only for Completed bookings, only once)
+      let cjResult: { skipped: boolean; ok: boolean; messageId: number | null };
+      if (b.bookingStatus !== "Completed") {
+        cjResult = { skipped: true, ok: true, messageId: null };
+      } else if (b.telegramCompletedJobsMessageId) {
+        cjResult = { skipped: true, ok: true, messageId: parseInt(b.telegramCompletedJobsMessageId, 10) };
+      } else if (completedJobsTopicId != null) {
+        const msgId = await sendCompletedJobsTopic(payload);
+        cjResult = { skipped: false, ok: msgId != null, messageId: msgId };
+        if (msgId != null) {
+          await updateBookingAdmin(b.bookingReference, { telegramCompletedJobsMessageId: String(msgId) });
+        }
+      } else {
+        cjResult = { skipped: true, ok: false, messageId: null };
+      }
+
+      results.push({ ref: b.bookingReference, newBookings: nbResult, payments: pmResult, completedJobs: cjResult });
+    }
+
+    const summary = {
+      total: results.length,
+      newBookings:   { sent: results.filter((r) => !r.newBookings.skipped && r.newBookings.ok).length, failed: results.filter((r) => !r.newBookings.skipped && !r.newBookings.ok).length },
+      payments:      { sent: results.filter((r) => !r.payments.skipped && r.payments.ok).length, failed: results.filter((r) => !r.payments.skipped && !r.payments.ok).length },
+      completedJobs: { sent: results.filter((r) => !r.completedJobs.skipped && r.completedJobs.ok).length, failed: results.filter((r) => !r.completedJobs.skipped && !r.completedJobs.ok).length },
+    };
+
+    logger.info({ summary }, "Telegram backfill-execute completed");
+    res.json({ summary, results });
+  } catch (err) {
+    logger.error({ err }, "Telegram backfill-execute failed");
+    res.status(500).json({ error: "Failed to execute backfill" });
   }
 });
 

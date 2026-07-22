@@ -522,9 +522,9 @@ export async function sendInvoicePaymentNotification(p: InvoicePaymentPayload): 
 // Message order mirrors the actual moving journey:
 //   Overview → Pickup → Pickup Stairs → Extra Stops →
 //   Drop-off → Drop-off Stairs → Price Breakdown → Payment → Driver Notes
-export async function sendBookingUpdateNotification(b: TelegramBooking): Promise<void> {
+export async function sendBookingUpdateNotification(b: TelegramBooking): Promise<number | null> {
   const { botToken, chatId } = getCredentials();
-  if (!botToken || !chatId) return;
+  if (!botToken || !chatId) return null;
 
   const status  = b.bookingStatus || "New";
   const payment = b.paymentStatus || "Unpaid";
@@ -647,16 +647,19 @@ export async function sendBookingUpdateNotification(b: TelegramBooking): Promise
   }
 
   // ── Booking Updates topic (filtered copy) ─────────────────────
+  let bookingUpdatesMsgId: number | null = null;
   if (topics.bookingUpdates != null) {
     const r2 = await tgSend(messageText, topics.bookingUpdates);
-    if (r2.ok) {
-      logger.info({ ref: b.bookingReference }, "Admin update copy sent to Booking Updates topic");
+    if (r2.ok && r2.messageId != null) {
+      bookingUpdatesMsgId = r2.messageId;
+      logger.info({ ref: b.bookingReference, messageId: r2.messageId }, "Admin update copy sent to Booking Updates topic");
     } else {
       logger.warn({ ref: b.bookingReference, error: r2.error }, "Booking Updates topic copy failed — continuing");
     }
   } else {
     logger.warn({ ref: b.bookingReference }, "TELEGRAM_TOPIC_BOOKING_UPDATES_ID not set — skipping Booking Updates topic");
   }
+  return bookingUpdatesMsgId;
 }
 
 // Short fallback notification for deposit payments when no stored message_id is available.
@@ -745,21 +748,35 @@ export async function sendOrEditPaymentsTopic(
 // Sends a copy of the full booking message to the Completed Jobs forum topic.
 // Only called when bookingStatus explicitly transitions to "Completed".
 // No message ID is stored because completed-job entries are never edited.
-export async function sendCompletedJobsTopic(b: TelegramBooking): Promise<void> {
+export async function sendCompletedJobsTopic(b: TelegramBooking): Promise<number | null> {
   const { botToken, chatId } = getCredentials();
-  if (!botToken || !chatId) return;
+  if (!botToken || !chatId) return null;
 
   const topicId = getTopicId("TELEGRAM_TOPIC_COMPLETED_JOBS_ID");
   if (topicId == null) {
     logger.warn({ ref: b.bookingReference }, "TELEGRAM_TOPIC_COMPLETED_JOBS_ID not set — skipping Completed Jobs topic");
-    return;
+    return null;
   }
 
   const text   = buildMessage(b);
   const result = await tgSend(text, topicId);
-  if (result.ok) {
-    logger.info({ ref: b.bookingReference }, "Booking copy sent to Completed Jobs topic");
-  } else {
-    logger.warn({ ref: b.bookingReference, error: result.error }, "Failed to send to Completed Jobs topic");
+  if (result.ok && result.messageId != null) {
+    logger.info({ ref: b.bookingReference, messageId: result.messageId }, "Booking copy sent to Completed Jobs topic");
+    return result.messageId;
   }
+  logger.warn({ ref: b.bookingReference, error: result.error }, "Failed to send to Completed Jobs topic");
+  return null;
+}
+
+// Sends the full booking message to a specific forum topic by numeric topic ID.
+// Used for backfill operations. Returns the message_id or null on failure.
+export async function sendBookingToTopic(b: TelegramBooking, topicId: number): Promise<number | null> {
+  const text   = buildMessage(b);
+  const result = await tgSend(text, topicId);
+  if (result.ok && result.messageId != null) {
+    logger.info({ ref: b.bookingReference, topicId, messageId: result.messageId }, "Booking sent to topic (backfill)");
+    return result.messageId;
+  }
+  logger.warn({ ref: b.bookingReference, topicId, error: result.error }, "Failed to send booking to topic (backfill)");
+  return null;
 }
