@@ -22,6 +22,27 @@ function getCredentials(): { botToken: string | undefined; chatId: string | unde
   };
 }
 
+// ── Forum topic IDs ───────────────────────────────────────────
+// Read lazily so env vars set after module load are always picked up.
+// Returns null when a variable is absent or non-numeric — callers skip
+// that topic and log a warning rather than failing the entire notification.
+function getTopicId(envKey: string): number | null {
+  const v = process.env[envKey];
+  if (!v?.trim()) return null;
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) ? n : null;
+}
+
+function getTopicIds() {
+  return {
+    main:           getTopicId("TELEGRAM_TOPIC_MAIN_ID"),
+    newBookings:    getTopicId("TELEGRAM_TOPIC_NEW_BOOKINGS_ID"),
+    bookingUpdates: getTopicId("TELEGRAM_TOPIC_BOOKING_UPDATES_ID"),
+    payments:       getTopicId("TELEGRAM_TOPIC_PAYMENTS_ID"),
+    completedJobs:  getTopicId("TELEGRAM_TOPIC_COMPLETED_JOBS_ID"),
+  };
+}
+
 // Must match the deployed domain. Set SITE_URL env var to override.
 // Do NOT fall back to REPLIT_DEV_DOMAIN — that is the dev-preview URL.
 const SITE_URL = process.env["SITE_URL"] ?? "https://move4u.uk";
@@ -196,8 +217,9 @@ export interface TgSendResult {
   error: string | null;
 }
 
-// Sends a new message. Returns a rich result object for debugging.
-async function tgSend(text: string): Promise<TgSendResult> {
+// Sends a new message. Pass threadId to target a specific forum topic.
+// Omit or pass null/undefined to send to the general chat / Main topic.
+async function tgSend(text: string, threadId?: number | null): Promise<TgSendResult> {
   const { botToken, chatId } = getCredentials();
 
   logger.info(
@@ -205,6 +227,7 @@ async function tgSend(text: string): Promise<TgSendResult> {
       botTokenPresent: !!botToken,
       chatIdPresent:   !!chatId,
       chatId:          chatId ?? "(not set)",
+      threadId:        threadId ?? null,
     },
     "tgSend: starting Telegram sendMessage",
   );
@@ -219,16 +242,19 @@ async function tgSend(text: string): Promise<TgSendResult> {
   }
 
   try {
+    const body: Record<string, unknown> = {
+      chat_id: chatId,
+      text,
+      disable_web_page_preview: true,
+    };
+    if (threadId != null) body["message_thread_id"] = threadId;
+
     const res = await fetch(
       `https://api.telegram.org/bot${botToken}/sendMessage`,
       {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text,
-          disable_web_page_preview: true,
-        }),
+        body: JSON.stringify(body),
       },
     );
 
@@ -267,10 +293,17 @@ async function tgSend(text: string): Promise<TgSendResult> {
 
 // ── Public API ────────────────────────────────────────────────
 
-// Sends the full booking notification.
-// Returns the Telegram message_id so callers can store it for later edits.
-// Returns null if Telegram is not configured or the send failed.
-export async function sendBookingNotification(b: TelegramBooking): Promise<number | null> {
+export interface BookingNotificationResult {
+  /** message_id of the Main message (stored in column V for later edits). */
+  mainMessageId:        number | null;
+  /** message_id of the New Bookings topic copy (not edited later, not stored). */
+  newBookingsMessageId: number | null;
+}
+
+// Sends the full booking notification to Main and, if configured, a copy to
+// the New Bookings forum topic.
+// Returns both message IDs. Callers store only mainMessageId (column V).
+export async function sendBookingNotification(b: TelegramBooking): Promise<BookingNotificationResult> {
   const { botToken, chatId } = getCredentials();
 
   logger.info(
@@ -291,25 +324,41 @@ export async function sendBookingNotification(b: TelegramBooking): Promise<numbe
       },
       "sendBookingNotification: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set — skipping",
     );
-    return null;
+    return { mainMessageId: null, newBookingsMessageId: null };
   }
 
-  const text = buildMessage(b);
-  const result = await tgSend(text);
+  const topics = getTopicIds();
+  const text   = buildMessage(b);
 
-  if (result.ok && result.messageId !== null) {
+  // ── Main (master feed) ───────────────────────────────────────
+  const mainResult = await tgSend(text, topics.main ?? undefined);
+  if (mainResult.ok && mainResult.messageId !== null) {
     logger.info(
-      { ref: b.bookingReference, name: b.name, messageId: result.messageId },
-      "sendBookingNotification: Telegram booking notification sent",
+      { ref: b.bookingReference, name: b.name, messageId: mainResult.messageId },
+      "sendBookingNotification: Main notification sent",
     );
   } else {
     logger.warn(
-      { ref: b.bookingReference, error: result.error, responseBody: result.responseBody },
-      "sendBookingNotification: Telegram booking notification failed",
+      { ref: b.bookingReference, error: mainResult.error, responseBody: mainResult.responseBody },
+      "sendBookingNotification: Main notification failed",
     );
   }
 
-  return result.messageId;
+  // ── New Bookings topic (filtered copy) ────────────────────────
+  let newBookingsMessageId: number | null = null;
+  if (topics.newBookings != null) {
+    const r = await tgSend(text, topics.newBookings);
+    if (r.ok && r.messageId !== null) {
+      newBookingsMessageId = r.messageId;
+      logger.info({ ref: b.bookingReference, messageId: r.messageId }, "sendBookingNotification: New Bookings topic copy sent");
+    } else {
+      logger.warn({ ref: b.bookingReference, error: r.error }, "sendBookingNotification: New Bookings topic copy failed");
+    }
+  } else {
+    logger.warn({ ref: b.bookingReference }, "TELEGRAM_TOPIC_NEW_BOOKINGS_ID not set — skipping New Bookings topic");
+  }
+
+  return { mainMessageId: mainResult.messageId, newBookingsMessageId };
 }
 
 // Sends a plain test message. Returns the full result for caller to inspect.
@@ -577,11 +626,27 @@ export async function sendBookingUpdateNotification(b: TelegramBooking): Promise
   while (messageLines.at(-1) === "") messageLines.pop();
   while (messageLines[0]     === "") messageLines.shift();
 
-  const result = await tgSend(messageLines.join("\n"));
+  const messageText = messageLines.join("\n");
+  const topics = getTopicIds();
+
+  // ── Main (master feed) ────────────────────────────────────────
+  const result = await tgSend(messageText, topics.main ?? undefined);
   if (result.ok) {
-    logger.info({ ref: b.bookingReference }, "Admin booking update notification sent to Telegram");
+    logger.info({ ref: b.bookingReference }, "Admin booking update notification sent to Telegram (Main)");
   } else {
-    logger.warn({ ref: b.bookingReference, error: result.error }, "Admin update Telegram notification failed");
+    logger.warn({ ref: b.bookingReference, error: result.error }, "Admin update Telegram notification failed (Main)");
+  }
+
+  // ── Booking Updates topic (filtered copy) ─────────────────────
+  if (topics.bookingUpdates != null) {
+    const r2 = await tgSend(messageText, topics.bookingUpdates);
+    if (r2.ok) {
+      logger.info({ ref: b.bookingReference }, "Admin update copy sent to Booking Updates topic");
+    } else {
+      logger.warn({ ref: b.bookingReference, error: r2.error }, "Booking Updates topic copy failed — continuing");
+    }
+  } else {
+    logger.warn({ ref: b.bookingReference }, "TELEGRAM_TOPIC_BOOKING_UPDATES_ID not set — skipping Booking Updates topic");
   }
 }
 
@@ -597,8 +662,95 @@ export async function sendDepositNotification(
     return;
   }
 
-  const result = await tgSend(`💰 Deposit received — ${bookingRef} | ${amount} | ${name}`);
+  const result = await tgSend(`💰 Deposit received — ${bookingRef} | ${amount} | ${name}`, getTopicIds().main ?? undefined);
   if (result.ok) {
     logger.info({ bookingRef, amount, name }, "Telegram deposit notification sent");
+  }
+}
+
+// ── Payments topic ────────────────────────────────────────────
+//
+// Sends the full booking message to the Payments forum topic, or edits the
+// booking's existing Payments topic message if one was previously stored.
+//
+// Returns the message_id that should now be stored (either the existing one
+// if the edit succeeded, or a new one if a new message was sent). Returns null
+// when the topic is not configured or the Telegram call failed.
+//
+// Callers are responsible for persisting the returned ID to Google Sheets
+// column AT (telegramPaymentsMessageId) when it differs from what was stored.
+export async function sendOrEditPaymentsTopic(
+  b: TelegramBooking,
+  existingMessageId: number | null,
+): Promise<number | null> {
+  const { botToken, chatId } = getCredentials();
+  if (!botToken || !chatId) return null;
+
+  const topicId = getTopicId("TELEGRAM_TOPIC_PAYMENTS_ID");
+  if (topicId == null) {
+    logger.warn({ ref: b.bookingReference }, "TELEGRAM_TOPIC_PAYMENTS_ID not set — skipping Payments topic");
+    return null;
+  }
+
+  const text = buildMessage(b);
+
+  // Try to edit an existing Payments topic message first
+  if (existingMessageId != null) {
+    try {
+      const res = await fetch(
+        `https://api.telegram.org/bot${botToken}/editMessageText`,
+        {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id:    chatId,
+            message_id: existingMessageId,
+            text,
+            disable_web_page_preview: true,
+          }),
+        },
+      );
+      const body = await res.text();
+      if (res.ok || body.includes("message is not modified")) {
+        logger.info({ ref: b.bookingReference, existingMessageId }, "Payments topic message edited");
+        return existingMessageId;
+      }
+      logger.warn({ ref: b.bookingReference, status: res.status, body }, "Payments topic edit failed — sending new message");
+    } catch (err) {
+      logger.warn({ err, ref: b.bookingReference }, "Payments topic edit threw — sending new message");
+    }
+  }
+
+  // Send a new message to the Payments topic
+  const result = await tgSend(text, topicId);
+  if (result.ok && result.messageId != null) {
+    logger.info({ ref: b.bookingReference, messageId: result.messageId }, "New message sent to Payments topic");
+    return result.messageId;
+  }
+  logger.warn({ ref: b.bookingReference, error: result.error }, "Failed to send to Payments topic");
+  return null;
+}
+
+// ── Completed Jobs topic ──────────────────────────────────────
+//
+// Sends a copy of the full booking message to the Completed Jobs forum topic.
+// Only called when bookingStatus explicitly transitions to "Completed".
+// No message ID is stored because completed-job entries are never edited.
+export async function sendCompletedJobsTopic(b: TelegramBooking): Promise<void> {
+  const { botToken, chatId } = getCredentials();
+  if (!botToken || !chatId) return;
+
+  const topicId = getTopicId("TELEGRAM_TOPIC_COMPLETED_JOBS_ID");
+  if (topicId == null) {
+    logger.warn({ ref: b.bookingReference }, "TELEGRAM_TOPIC_COMPLETED_JOBS_ID not set — skipping Completed Jobs topic");
+    return;
+  }
+
+  const text   = buildMessage(b);
+  const result = await tgSend(text, topicId);
+  if (result.ok) {
+    logger.info({ ref: b.bookingReference }, "Booking copy sent to Completed Jobs topic");
+  } else {
+    logger.warn({ ref: b.bookingReference, error: result.error }, "Failed to send to Completed Jobs topic");
   }
 }

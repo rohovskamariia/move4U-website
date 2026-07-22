@@ -14,7 +14,7 @@ import { Router, type Request, type Response, type NextFunction } from "express"
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Stripe = require("stripe").default ?? require("stripe");
 import { getAllBookings, updateBookingAdmin, getBookingByRef, writeAuditLog, type BookingRecord } from "../lib/sheets";
-import { editBookingMessage, sendBookingUpdateNotification, sendInvoiceCreatedNotification, type TelegramBooking } from "../lib/telegram";
+import { editBookingMessage, sendBookingUpdateNotification, sendInvoiceCreatedNotification, sendOrEditPaymentsTopic, sendCompletedJobsTopic, type TelegramBooking } from "../lib/telegram";
 import { sendEmail } from "../lib/email";
 import { logger } from "../lib/logger";
 
@@ -251,12 +251,27 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
             adminExtraStops:   update.adminExtraStops   ?? booking.adminExtraStops,
             adminExtraCharges: update.adminExtraCharges ?? booking.adminExtraCharges,
           });
+          // Completed Jobs topic: fire a copy when status is now Completed
+          if (booking.bookingStatus === "Completed") {
+            await sendCompletedJobsTopic(toTelegramPayload(booking));
+          }
         } else if (Object.keys(update).some((k) => PAYMENT_ONLY_FIELDS.has(k))) {
-          // Silent save with payment-field changes → edit the existing Telegram message
-          // so the driver sees the updated status without a new notification flooding the chat.
+          // Silent save with payment-field changes → edit existing Main message, and
+          // send/edit the Payments forum topic message.
           const edited = await tryEditTelegramMessage(booking);
           if (!edited) {
-            logger.info({ bookingRef }, "No Telegram message ID stored — skipping silent payment edit");
+            logger.info({ bookingRef }, "No Telegram message ID stored — skipping silent payment edit (Main)");
+          }
+          // Payments topic: send or edit
+          const existingPaymentsMsgId = booking.telegramPaymentsMessageId
+            ? parseInt(booking.telegramPaymentsMessageId, 10)
+            : null;
+          const newPaymentsMsgId = await sendOrEditPaymentsTopic(
+            toTelegramPayload(booking),
+            existingPaymentsMsgId,
+          );
+          if (newPaymentsMsgId != null && String(newPaymentsMsgId) !== booking.telegramPaymentsMessageId) {
+            await updateBookingAdmin(bookingRef, { telegramPaymentsMessageId: String(newPaymentsMsgId) });
           }
         }
       } catch (err) {
@@ -441,6 +456,19 @@ adminRouter.post("/admin/bookings/:ref/invoice", requireAdmin, async (req: Reque
             emailSent,
           });
         }
+        // Payments topic: send or edit
+        if (booking) {
+          const existingPaymentsMsgId = booking.telegramPaymentsMessageId
+            ? parseInt(booking.telegramPaymentsMessageId, 10)
+            : null;
+          const newPaymentsMsgId = await sendOrEditPaymentsTopic(
+            toTelegramPayload(booking, { paymentStatus }),
+            existingPaymentsMsgId,
+          );
+          if (newPaymentsMsgId != null && String(newPaymentsMsgId) !== booking.telegramPaymentsMessageId) {
+            await updateBookingAdmin(bookingRef, { telegramPaymentsMessageId: String(newPaymentsMsgId) });
+          }
+        }
       } catch (err) {
         logger.warn({ err, bookingRef }, "Invoice Telegram notification failed");
       }
@@ -581,10 +609,21 @@ adminRouter.post("/admin/bookings/:ref/payment-link", requireAdmin, async (req: 
           paymentStatus: "Payment link ready",
         });
         if (!edited) {
-          logger.info({ bookingRef }, "payment-link: no Telegram message ID — skipping edit");
+          logger.info({ bookingRef }, "payment-link: no Telegram message ID — skipping Main edit");
+        }
+        // Payments topic: send or edit
+        const existingPaymentsMsgId = booking.telegramPaymentsMessageId
+          ? parseInt(booking.telegramPaymentsMessageId, 10)
+          : null;
+        const newPaymentsMsgId = await sendOrEditPaymentsTopic(
+          toTelegramPayload(booking, { paymentStatus: "Payment link ready" }),
+          existingPaymentsMsgId,
+        );
+        if (newPaymentsMsgId != null && String(newPaymentsMsgId) !== booking.telegramPaymentsMessageId) {
+          await updateBookingAdmin(bookingRef, { telegramPaymentsMessageId: String(newPaymentsMsgId) });
         }
       } catch (err) {
-        logger.warn({ err, bookingRef }, "payment-link: Telegram message edit failed");
+        logger.warn({ err, bookingRef }, "payment-link: Telegram notification failed");
       }
     })();
   } catch (err) {

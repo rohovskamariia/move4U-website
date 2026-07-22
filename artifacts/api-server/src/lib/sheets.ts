@@ -312,28 +312,28 @@ const EXTRA_HEADER_ROW = [
   "Confirmation Sent At",   // AO (index 40)
   "Confirmation Subject",   // AP (index 41)
   "Sent By",                // AQ (index 42)
-  "Admin Extra Stops",      // AR (index 43) — JSON array [{address,charge,notes}]
-  "Admin Extra Charges",    // AS (index 44) — JSON array [{type,amount,notes}]
+  "Admin Extra Stops",         // AR (index 43) — JSON array [{address,charge,notes}]
+  "Admin Extra Charges",       // AS (index 44) — JSON array [{type,amount,notes}]
+  "Telegram Payments Msg ID",  // AT (index 45) — message_id of Payments forum topic message
 ];
 
 let extraHeaderPatched = false;
 
 async function patchExtraHeaders(id: string): Promise<void> {
   if (extraHeaderPatched) return;
-  // The sheet starts with 26 columns (A–Z) by default. Columns AB–AS require
-  // at least 45 columns. Expand before writing so batchUpdate never sees
-  // "exceeds grid limits".
-  await ensureColumnCount(id, 45);
+  // Columns AB–AT require at least 46 columns. Expand before writing so
+  // batchUpdate never sees "exceeds grid limits".
+  await ensureColumnCount(id, 46);
   try {
     const res = await proxyFetch(
-      `/v4/spreadsheets/${id}/values/Bookings!AB1:AS1?valueInputOption=USER_ENTERED`,
+      `/v4/spreadsheets/${id}/values/Bookings!AB1:AT1?valueInputOption=USER_ENTERED`,
       {
         method: "PUT",
         body: JSON.stringify({ values: [EXTRA_HEADER_ROW] }),
       },
     );
     if (!res.ok) logger.warn({ status: res.status }, "Could not patch extra column headers");
-    else logger.info("Patched extra column headers AB–AQ");
+    else logger.info("Patched extra column headers AB–AT");
   } catch (err) {
     logger.warn({ err }, "Could not patch extra column headers — continuing");
   }
@@ -407,8 +407,9 @@ export interface BookingRecord {
   confirmationSentAt: string;  // AO
   confirmationSubject: string; // AP
   confirmationSentBy: string;  // AQ
-  adminExtraStops: string;     // AR — JSON [{address,charge,notes}]
-  adminExtraCharges: string;   // AS — JSON [{type,amount,notes}]
+  adminExtraStops: string;              // AR — JSON [{address,charge,notes}]
+  adminExtraCharges: string;            // AS — JSON [{type,amount,notes}]
+  telegramPaymentsMessageId: string;    // AT — message_id of Payments forum topic message
 }
 
 export async function getAllBookings(): Promise<BookingRecord[]> {
@@ -479,8 +480,9 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
       confirmationSentAt:   row[40] ?? "",
       confirmationSubject:  row[41] ?? "",
       confirmationSentBy:   row[42] ?? "",
-      adminExtraStops:      row[43] ?? "",
-      adminExtraCharges:    row[44] ?? "",
+      adminExtraStops:           row[43] ?? "",
+      adminExtraCharges:         row[44] ?? "",
+      telegramPaymentsMessageId: row[45] ?? "",
     }))
     .filter((b) => b.name || b.service || b.phone); // skip genuinely blank rows
 
@@ -584,8 +586,9 @@ export interface BookingAdminUpdate {
   confirmationSubject?: string;
   confirmationSentBy?:  string;
   // Admin-managed extra stops/charges columns AR–AS
-  adminExtraStops?:    string; // AR — JSON [{address,charge,notes}]
-  adminExtraCharges?:  string; // AS — JSON [{type,amount,notes}]
+  adminExtraStops?:             string; // AR — JSON [{address,charge,notes}]
+  adminExtraCharges?:           string; // AS — JSON [{type,amount,notes}]
+  telegramPaymentsMessageId?:   string; // AT — message_id of Payments forum topic message
 }
 
 // Builds the batchUpdate ranges for a known sheet row. Shared by the
@@ -636,8 +639,9 @@ function buildAdminWriteRanges(
   if (fields.confirmationSentAt  !== undefined) updates.push({ range: c("AO"), values: [[fields.confirmationSentAt]] });
   if (fields.confirmationSubject !== undefined) updates.push({ range: c("AP"), values: [[fields.confirmationSubject]] });
   if (fields.confirmationSentBy  !== undefined) updates.push({ range: c("AQ"), values: [[fields.confirmationSentBy]] });
-  if (fields.adminExtraStops     !== undefined) updates.push({ range: c("AR"), values: [[fields.adminExtraStops]] });
-  if (fields.adminExtraCharges   !== undefined) updates.push({ range: c("AS"), values: [[fields.adminExtraCharges]] });
+  if (fields.adminExtraStops            !== undefined) updates.push({ range: c("AR"), values: [[fields.adminExtraStops]] });
+  if (fields.adminExtraCharges          !== undefined) updates.push({ range: c("AS"), values: [[fields.adminExtraCharges]] });
+  if (fields.telegramPaymentsMessageId  !== undefined) updates.push({ range: c("AT"), values: [[fields.telegramPaymentsMessageId]] });
 
   return updates;
 }

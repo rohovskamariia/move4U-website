@@ -1,0 +1,75 @@
+Please add soft-delete functionality to the Move4U Admin bookings.
+
+Current issue:
+Test and incorrect bookings remain visible in the All list and make the admin panel difficult to use.
+
+Required behaviour:
+
+1. Add a Delete button inside each expanded booking.
+2. When Delete is clicked:
+
+* ask for confirmation;
+* mark the booking as deleted;
+* remove it immediately from All;
+* remove it from all normal status tabs such as New, Contacted, Confirmed, Completed;
+* do not permanently delete it from Google Sheets or the backend.
+
+3. Add a separate admin tab:
+
+Deleted
+
+The Deleted tab should show only soft-deleted bookings.
+
+4. Inside Deleted, provide:
+
+* Restore
+* Delete permanently
+
+5. Restore behaviour:
+
+* restore the booking to its previous booking status;
+* make it visible again in All and the correct status tab;
+* preserve all booking data, payments, notes, Telegram IDs and history.
+
+6. Permanent delete:
+
+* require a second confirmation;
+* only then remove the booking permanently from storage / Google Sheets;
+* do not allow accidental permanent deletion.
+
+7. Data structure:
+    Add fields such as:
+
+* isDeleted
+* deletedAt
+* deletedBy
+* previousBookingStatus
+
+8. Filtering:
+
+* normal booking queries must exclude isDeleted = true;
+* the Deleted tab must show only isDeleted = true;
+* the All count must exclude deleted bookings;
+* status counts must exclude deleted bookings.
+
+9. Telegram:
+
+* deleting a booking from admin should not send any Telegram message;
+* restoring a booking should not send any Telegram message;
+* do not alter old Telegram messages automatically.
+
+10. Google Sheets:
+
+* do not remove the row on soft delete;
+* add a Deleted / Archived field;
+* preserve the booking reference and all historical data.
+
+11. Safety:
+
+* do not break existing booking editing;
+* do not break payment logic;
+* do not break Stripe;
+* do not break Telegram;
+* do not break old bookings.
+
+Please implement soft delete first. Do not permanently delete any existing bookings during testing.

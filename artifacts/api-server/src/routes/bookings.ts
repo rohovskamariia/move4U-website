@@ -162,21 +162,21 @@ bookingsRouter.post("/bookings", async (req, res) => {
       bookingStatus: "New",
       paymentStatus: "Unpaid",
     })
-      .then(async (messageId) => {
-        if (messageId !== null) {
+      .then(async ({ mainMessageId }) => {
+        if (mainMessageId !== null) {
           try {
             // Write by row — same safety reasoning as photo URLs above.
             if (sheetRow >= 2) {
               await updateBookingByRow(sheetRow, {
-                telegramMessageId: String(messageId),
+                telegramMessageId: String(mainMessageId),
               });
             } else {
               await updateBookingAdmin(bookingReference, {
-                telegramMessageId: String(messageId),
+                telegramMessageId: String(mainMessageId),
               });
             }
             logger.info(
-              { bookingReference, sheetRow, messageId },
+              { bookingReference, sheetRow, messageId: mainMessageId },
               "Telegram message ID saved to Sheets",
             );
           } catch (err) {

@@ -1,0 +1,161 @@
+We already have an existing Telegram bot integration for Move4U booking notifications.
+
+Until now, all booking-related Telegram messages have been sent into the main/general topic of the Telegram group.
+
+I have now converted the Telegram group “Move4U Jobs” into a forum group and manually created these topics:
+
+* Main
+* New Bookings
+* Booking Updates
+* Payments
+* Completed Jobs
+* Reviews
+* Social Media
+* System & Errors
+* Reports
+* Information
+
+Important context:
+
+The Telegram bot already exists and already sends booking-related messages.
+
+Do not create a new bot.
+
+Do not change the existing Telegram bot token, chat ID, booking logic, admin panel logic, Stripe logic, Google Sheets logic or existing message content unless technically necessary.
+
+This task is only to add Telegram forum-topic routing to the existing bot integration.
+
+Existing behaviour must remain
+
+Keep sending every existing booking-related message to Main exactly as before.
+
+Main must remain the complete master feed containing all booking notifications.
+
+The new topics are only filtered copies for easier navigation.
+
+Additional topic routing
+
+In addition to the existing Main message, send one copy to the matching topic:
+
+New Bookings
+
+Send a copy of every newly created website booking here.
+
+Booking Updates
+
+Send a copy of admin booking updates here when operational details change, including:
+
+* pickup or drop-off address;
+* date or confirmed time;
+* preferred time window;
+* service;
+* van size;
+* help option;
+* duration;
+* stairs;
+* extra stops;
+* extra time or charges;
+* driver notes;
+* agreed total or route details.
+
+Payments
+
+Send or update payment-related information here:
+
+* Payment link ready;
+* Payment link sent;
+* Deposit paid;
+* Fully paid;
+* Unpaid;
+* Payment failed or cancelled, if already supported.
+
+Payment-only changes must continue using the existing payment logic.
+
+Where possible, edit the existing Telegram message instead of creating unnecessary duplicates.
+
+Completed Jobs
+
+Send a copy here when Booking Status changes to Completed.
+
+Manual topics — no automation
+
+Do not automatically send anything to:
+
+* Reviews
+* Social Media
+* System & Errors
+* Reports
+* Information
+
+These topics are for my own manual use for now.
+
+Do not create review detection, marketing automation, reports or error notifications as part of this task.
+
+Technical requirements
+
+1. Use Telegram forum message_thread_id to send messages into topics.
+2. Identify and store the topic IDs for:
+
+* Main
+* New Bookings
+* Booking Updates
+* Payments
+* Completed Jobs
+
+3. Store the IDs in environment variables or a clear configuration object, for example:
+
+* TELEGRAM_TOPIC_MAIN_ID
+* TELEGRAM_TOPIC_NEW_BOOKINGS_ID
+* TELEGRAM_TOPIC_BOOKING_UPDATES_ID
+* TELEGRAM_TOPIC_PAYMENTS_ID
+* TELEGRAM_TOPIC_COMPLETED_JOBS_ID
+
+4. Do not assume topic names alone are enough. Telegram sending must use the numeric message_thread_id.
+5. Prevent duplicate messages inside the same topic:
+
+* one event in Main;
+* one copy in the relevant filtered topic;
+* no additional copies.
+
+6. Keep existing Telegram Message ID storage working for message edits.
+
+Since one booking may now have messages in both Main and another topic, store separate Telegram message IDs if needed, for example:
+
+* Main message ID;
+* New Bookings topic message ID;
+* Booking Updates topic message ID;
+* Payments topic message ID;
+* Completed Jobs topic message ID.
+
+Do not overwrite the original Main Telegram Message ID with the ID from another topic.
+
+7. If a required topic ID is missing:
+
+* continue sending the existing message to Main;
+* do not lose the booking notification;
+* log a clear configuration error;
+* do not send random messages into manual topics.
+
+Safe test
+
+First inspect the current Telegram integration and explain:
+
+* which files/functions currently send Telegram messages;
+* where the bot token and group chat ID are configured;
+* how Telegram message IDs are currently stored;
+* how the new topic IDs will be added without breaking old bookings.
+
+Then implement and test safely.
+
+Do not create a real customer booking and do not contact any customer during testing.
+
+Send clearly labelled internal test messages only, then remove them if possible.
+
+After implementation, confirm:
+
+* Main still receives everything as before;
+* New Bookings receives only new booking copies;
+* Booking Updates receives only update copies;
+* Payments receives payment-related copies/edits;
+* Completed Jobs receives completed-job copies;
+* all manual topics remain untouched.
