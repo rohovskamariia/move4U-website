@@ -57,17 +57,6 @@ export default function HomePage() {
     <div className="min-h-screen bg-[#faf8fd]">
       <Navbar />
 
-      {/* TEMPORARY — design preview link. Remove once approved. */}
-      <div className="bg-amber-400 text-amber-950 text-[13px] font-semibold text-center py-2 px-4 flex items-center justify-center gap-3">
-        <span>🎨 A redesign preview is ready for your review.</span>
-        <button
-          onClick={() => setLocation("/preview")}
-          className="underline underline-offset-2 hover:text-amber-800 transition-colors"
-        >
-          View Redesign Preview →
-        </button>
-      </div>
-
       <main>
       {/* Hero slider */}
       <HeroSlider />
