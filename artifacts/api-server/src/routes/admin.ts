@@ -13,8 +13,8 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Stripe = require("stripe").default ?? require("stripe");
-import { getAllBookings, updateBookingAdmin, getBookingByRef, writeAuditLog } from "../lib/sheets";
-import { editBookingMessage, sendBookingUpdateNotification } from "../lib/telegram";
+import { getAllBookings, updateBookingAdmin, getBookingByRef, writeAuditLog, type BookingRecord } from "../lib/sheets";
+import { editBookingMessage, sendBookingUpdateNotification, sendInvoiceCreatedNotification, type TelegramBooking } from "../lib/telegram";
 import { logger } from "../lib/logger";
 
 const adminRouter = Router();
@@ -39,6 +39,65 @@ if (!process.env["SITE_URL"]) {
 // Feature flag — set ENABLE_STRIPE_INVOICES=true in env to re-enable.
 // Default is false: the /invoice endpoint returns 503 and no invoice is ever created.
 const ENABLE_STRIPE_INVOICES = (process.env["ENABLE_STRIPE_INVOICES"] ?? "false").toLowerCase() === "true";
+
+// ── Telegram helpers ──────────────────────────────────────────
+// Fields whose changes are payment-status-only and should silently
+// edit the existing Telegram booking message rather than send a new one.
+const PAYMENT_ONLY_FIELDS = new Set(["paymentStatus", "agreedQuote", "depositAmount", "paymentLink"]);
+
+// Convert a BookingRecord into a TelegramBooking payload, with optional overrides.
+function toTelegramPayload(booking: BookingRecord, overrides: Partial<TelegramBooking> = {}): TelegramBooking {
+  const agreedNum  = parseFloat(booking.agreedQuote);
+  const depositNum = parseFloat(booking.depositAmount);
+  const remaining  = !isNaN(agreedNum) && !isNaN(depositNum) && agreedNum > 0
+    ? String(Math.max(0, agreedNum - depositNum).toFixed(2))
+    : "";
+
+  return {
+    bookingReference:  booking.bookingReference,
+    service:           booking.service,
+    name:              booking.name,
+    phone:             booking.phone,
+    contactMethod:     booking.contactMethod,
+    pickup:            booking.pickup,
+    pickupDetails:     "",
+    dropoff:           booking.dropoff,
+    dropoffDetails:    "",
+    extraAddress:      "",
+    vanSize:           booking.vanSize,
+    helpOption:        booking.helpOption,
+    peopleCount:       "",
+    estimatedPrice:    booking.estimatedPrice,
+    estimatedTime:     booking.duration ?? "",
+    preferredDate:     booking.date,
+    timeWindow:        booking.timeWindow,
+    wasteAddons:       "",
+    uploadedFiles:     booking.photoUrls ?? "",
+    notes:             booking.notes,
+    driverNotes:       booking.driverNotes,
+    bookingStatus:     booking.bookingStatus,
+    paymentStatus:     booking.paymentStatus,
+    confirmedDate:     booking.confirmedDate,
+    confirmedTime:     booking.confirmedTime,
+    agreedQuote:       booking.agreedQuote,
+    depositAmount:     booking.depositAmount,
+    remainingBalance:  remaining,
+    adminExtraStops:   booking.adminExtraStops,
+    adminExtraCharges: booking.adminExtraCharges,
+    ...overrides,
+  };
+}
+
+// Edit the stored Telegram booking message in-place.
+// Returns true on success, false if no message ID is stored or the edit failed.
+async function tryEditTelegramMessage(
+  booking: BookingRecord,
+  overrides: Partial<TelegramBooking> = {},
+): Promise<boolean> {
+  const msgId = booking.telegramMessageId ? parseInt(booking.telegramMessageId, 10) : NaN;
+  if (isNaN(msgId)) return false;
+  return editBookingMessage(msgId, toTelegramPayload(booking, overrides));
+}
 
 // Lazily initialise Stripe — only if STRIPE_SECRET_KEY is set
 function getStripe() {
@@ -149,8 +208,9 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
           await writeAuditLog(auditEntries);
         }
 
-        // 2. Telegram — only when "Save & Notify Driver" was used
+        // 2. Telegram — depends on what changed
         if (shouldNotify) {
+          // "Save & Notify Driver" → send a new full driver update message
           const agreedNum  = parseFloat(booking.agreedQuote);
           const depositNum = parseFloat(booking.depositAmount);
           const remaining  = !isNaN(agreedNum) && !isNaN(depositNum) && agreedNum > 0
@@ -190,6 +250,13 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
             adminExtraStops:   update.adminExtraStops   ?? booking.adminExtraStops,
             adminExtraCharges: update.adminExtraCharges ?? booking.adminExtraCharges,
           });
+        } else if (Object.keys(update).some((k) => PAYMENT_ONLY_FIELDS.has(k))) {
+          // Silent save with payment-field changes → edit the existing Telegram message
+          // so the driver sees the updated status without a new notification flooding the chat.
+          const edited = await tryEditTelegramMessage(booking);
+          if (!edited) {
+            logger.info({ bookingRef }, "No Telegram message ID stored — skipping silent payment edit");
+          }
         }
       } catch (err) {
         logger.error({ err, bookingRef }, "Post-save admin notifications failed");
@@ -353,22 +420,26 @@ adminRouter.post("/admin/bookings/:ref/invoice", requireAdmin, async (req: Reque
       paymentStatus,
     });
 
-    // Telegram notification (fire-and-forget)
+    // Telegram: edit the existing booking message to reflect invoice status,
+    // falling back to a separate invoice notification if no message ID is stored.
     ;(async () => {
       try {
-        const { sendInvoiceCreatedNotification } = await import("../lib/telegram");
-        await sendInvoiceCreatedNotification({
-          bookingRef,
-          invoiceType,
-          amountFormatted: `£${amountNum.toFixed(2)}`,
-          customerName,
-          agreedQuote: agreedQuote ? `£${agreedNum.toFixed(2)}` : "—",
-          depositAmount: `£${depositNum.toFixed(2)}`,
-          remainingBalance: agreedQuote ? `£${remainingBalance}` : "—",
-          paymentStatus,
-          invoiceUrl: hostedUrl,
-          emailSent,
-        });
+        const booking = await getBookingByRef(bookingRef);
+        const edited = booking ? await tryEditTelegramMessage(booking, { paymentStatus }) : false;
+        if (!edited) {
+          await sendInvoiceCreatedNotification({
+            bookingRef,
+            invoiceType,
+            amountFormatted: `£${amountNum.toFixed(2)}`,
+            customerName,
+            agreedQuote: agreedQuote ? `£${agreedNum.toFixed(2)}` : "—",
+            depositAmount: `£${depositNum.toFixed(2)}`,
+            remainingBalance: agreedQuote ? `£${remainingBalance}` : "—",
+            paymentStatus,
+            invoiceUrl: hostedUrl,
+            emailSent,
+          });
+        }
       } catch (err) {
         logger.warn({ err, bookingRef }, "Invoice Telegram notification failed");
       }
@@ -499,6 +570,22 @@ adminRouter.post("/admin/bookings/:ref/payment-link", requireAdmin, async (req: 
 
     logger.info({ bookingRef, pType, amountPence }, "Stripe Checkout Session created for booking");
     res.json({ paymentLink });
+
+    // Edit the existing Telegram booking message to show "Payment link ready" (fire-and-forget)
+    ;(async () => {
+      try {
+        const booking = await getBookingByRef(bookingRef);
+        if (!booking) return;
+        const edited = await tryEditTelegramMessage(booking, {
+          paymentStatus: "Payment link ready",
+        });
+        if (!edited) {
+          logger.info({ bookingRef }, "payment-link: no Telegram message ID — skipping edit");
+        }
+      } catch (err) {
+        logger.warn({ err, bookingRef }, "payment-link: Telegram message edit failed");
+      }
+    })();
   } catch (err) {
     logger.error({ err, bookingRef }, "Failed to create Stripe Checkout Session");
     res.status(500).json({ error: "Failed to generate payment link" });

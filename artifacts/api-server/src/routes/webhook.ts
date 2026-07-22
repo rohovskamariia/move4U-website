@@ -207,16 +207,59 @@ webhookRouter.post("/stripe-webhook", express.raw({ type: "application/json", li
 
     ;(async () => {
       try {
-        await sendInvoicePaymentNotification({
-          bookingRef,
-          invoiceType,
-          amountFormatted,
-          agreedQuote: agreedQuote !== "—" ? `£${agreedQuote}` : "—",
-          depositAmount: depositAmount !== "—" ? `£${depositAmount}` : "—",
-          remainingBalance: remainingBalance !== "—" ? `£${remainingBalance}` : "—",
-          paymentStatus,
-          paid,
-        });
+        // Try to edit the existing booking message first; fall back to a new
+        // notification if no message ID is stored (e.g. older bookings).
+        const booking = await getBookingByRef(bookingRef);
+        const msgId = booking?.telegramMessageId
+          ? parseInt(booking.telegramMessageId, 10)
+          : NaN;
+
+        let edited = false;
+        if (booking && !isNaN(msgId)) {
+          edited = await editBookingMessage(msgId, {
+            bookingReference:  booking.bookingReference,
+            service:           booking.service,
+            name:              booking.name,
+            phone:             booking.phone,
+            contactMethod:     booking.contactMethod,
+            pickup:            booking.pickup,
+            pickupDetails:     "",
+            dropoff:           booking.dropoff,
+            dropoffDetails:    "",
+            extraAddress:      "",
+            vanSize:           booking.vanSize,
+            helpOption:        booking.helpOption,
+            peopleCount:       "",
+            estimatedPrice:    booking.estimatedPrice,
+            estimatedTime:     booking.duration ?? "",
+            preferredDate:     booking.date,
+            timeWindow:        booking.timeWindow,
+            wasteAddons:       "",
+            uploadedFiles:     booking.photoUrls ?? "",
+            notes:             booking.notes,
+            bookingStatus:     booking.bookingStatus,
+            paymentStatus,
+            confirmedDate:     booking.confirmedDate,
+            confirmedTime:     booking.confirmedTime,
+            agreedQuote:       booking.agreedQuote,
+            depositAmount:     booking.depositAmount,
+            adminExtraStops:   booking.adminExtraStops,
+            adminExtraCharges: booking.adminExtraCharges,
+          });
+        }
+
+        if (!edited) {
+          await sendInvoicePaymentNotification({
+            bookingRef,
+            invoiceType,
+            amountFormatted,
+            agreedQuote: agreedQuote !== "—" ? `£${agreedQuote}` : "—",
+            depositAmount: depositAmount !== "—" ? `£${depositAmount}` : "—",
+            remainingBalance: remainingBalance !== "—" ? `£${remainingBalance}` : "—",
+            paymentStatus,
+            paid,
+          });
+        }
       } catch (err) {
         logger.error({ err, bookingRef }, "Invoice payment Telegram notification failed");
       }
