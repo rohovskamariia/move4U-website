@@ -427,7 +427,11 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
   const rows = data.values ?? [];
   if (rows.length <= 1) return [];
 
-  return rows
+  // Parse every data row. Skip only rows that are entirely blank (no name,
+  // service, or phone) — these are trailing empty rows Google Sheets sometimes
+  // returns. We do NOT filter on bookingReference here; legacy rows that predate
+  // column O will be migrated below.
+  const records: BookingRecord[] = rows
     .slice(1) // skip header
     .map((row, i) => ({
       rowNumber:            i + 2,
@@ -458,7 +462,7 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
       invoiceId:            row[24] ?? "",
       invoiceUrl:           row[25] ?? "",
       invoiceType:          row[26] ?? "",
-      // Extra detail columns AB–AQ (indices 27–42)
+      // Extra detail columns AB–AQ (indices 27–44)
       pickupFloorDetail:    row[27] ?? "",
       extraStop1:           row[28] ?? "",
       extraStop2:           row[29] ?? "",
@@ -478,8 +482,66 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
       adminExtraStops:      row[43] ?? "",
       adminExtraCharges:    row[44] ?? "",
     }))
-    .filter((b) => b.bookingReference)
-    .reverse(); // newest first
+    .filter((b) => b.name || b.service || b.phone); // skip genuinely blank rows
+
+  // ── Auto-migrate legacy rows that have no booking reference ──────────────────
+  //
+  // Rows submitted before column O existed have an empty bookingReference.
+  // We assign real MV4U-* refs to them and write the refs back to column O
+  // in one batchUpdate so every subsequent operation (update, ref lookup,
+  // Telegram, confirmation email) works identically to a freshly-created booking.
+  //
+  // The migration is idempotent: once column O is populated the filter below
+  // finds nothing and the batchUpdate is never issued again.
+
+  // Find the current maximum MV4U-* number across all rows we just parsed,
+  // respecting any refs that were already issued in this process.
+  let maxRef = Math.max(1000, lastIssuedRefNumber);
+  for (const rec of records) {
+    const m = rec.bookingReference.match(/^MV4U-(\d+)$/);
+    if (m) {
+      const n = parseInt(m[1]!, 10);
+      if (Number.isFinite(n) && n > maxRef) maxRef = n;
+    }
+  }
+
+  // Assign sequential refs to rows with no bookingReference and collect the
+  // cell writes so we can flush them all in a single batchUpdate.
+  const migrationWrites: Array<{ range: string; values: string[][] }> = [];
+  for (const rec of records) {
+    if (!rec.bookingReference) {
+      maxRef += 1;
+      lastIssuedRefNumber = maxRef; // keep the in-process counter in sync
+      const newRef = `MV4U-${maxRef}`;
+      rec.bookingReference = newRef;
+      migrationWrites.push({ range: `Bookings!O${rec.rowNumber}`, values: [[newRef]] });
+    }
+  }
+
+  if (migrationWrites.length > 0) {
+    try {
+      const writeRes = await proxyFetch(
+        `/v4/spreadsheets/${id}/values:batchUpdate`,
+        {
+          method: "POST",
+          body: JSON.stringify({ valueInputOption: "USER_ENTERED", data: migrationWrites }),
+        },
+      );
+      if (!writeRes.ok) {
+        const errBody = await writeRes.text().catch(() => "");
+        logger.warn(
+          { status: writeRes.status, errBody, count: migrationWrites.length },
+          "Legacy booking-ref migration write failed — refs applied in memory only this session",
+        );
+      } else {
+        logger.info({ count: migrationWrites.length }, "Migrated legacy booking references to column O");
+      }
+    } catch (err) {
+      logger.warn({ err, count: migrationWrites.length }, "Legacy booking-ref migration failed — refs applied in memory only this session");
+    }
+  }
+
+  return records.reverse(); // newest first
 }
 
 export interface BookingAdminUpdate {
