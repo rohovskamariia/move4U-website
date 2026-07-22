@@ -212,7 +212,7 @@ webhookRouter.post("/stripe-webhook", express.raw({ type: "application/json", li
     }
 
     const paymentStatus = !paid
-      ? "Invoice payment failed"
+      ? "Payment failed"
       : invoiceType === "deposit"
         ? "Deposit paid"
         : "Fully paid";

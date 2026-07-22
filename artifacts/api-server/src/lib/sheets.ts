@@ -315,25 +315,29 @@ const EXTRA_HEADER_ROW = [
   "Admin Extra Stops",         // AR (index 43) — JSON array [{address,charge,notes}]
   "Admin Extra Charges",       // AS (index 44) — JSON array [{type,amount,notes}]
   "Telegram Payments Msg ID",  // AT (index 45) — message_id of Payments forum topic message
+  "Is Deleted",              // AU (index 46)
+  "Deleted At",              // AV (index 47)
+  "Deleted By",              // AW (index 48)
+  "Previous Booking Status", // AX (index 49)
 ];
 
 let extraHeaderPatched = false;
 
 async function patchExtraHeaders(id: string): Promise<void> {
   if (extraHeaderPatched) return;
-  // Columns AB–AT require at least 46 columns. Expand before writing so
+  // Columns AB–AX require at least 50 columns. Expand before writing so
   // batchUpdate never sees "exceeds grid limits".
-  await ensureColumnCount(id, 46);
+  await ensureColumnCount(id, 50);
   try {
     const res = await proxyFetch(
-      `/v4/spreadsheets/${id}/values/Bookings!AB1:AT1?valueInputOption=USER_ENTERED`,
+      `/v4/spreadsheets/${id}/values/Bookings!AB1:AX1?valueInputOption=USER_ENTERED`,
       {
         method: "PUT",
         body: JSON.stringify({ values: [EXTRA_HEADER_ROW] }),
       },
     );
     if (!res.ok) logger.warn({ status: res.status }, "Could not patch extra column headers");
-    else logger.info("Patched extra column headers AB–AT");
+    else logger.info("Patched extra column headers AB–AX");
   } catch (err) {
     logger.warn({ err }, "Could not patch extra column headers — continuing");
   }
@@ -410,6 +414,20 @@ export interface BookingRecord {
   adminExtraStops: string;              // AR — JSON [{address,charge,notes}]
   adminExtraCharges: string;            // AS — JSON [{type,amount,notes}]
   telegramPaymentsMessageId: string;    // AT — message_id of Payments forum topic message
+  isDeleted: string;              // AU
+  deletedAt: string;              // AV
+  deletedBy: string;              // AW
+  previousBookingStatus: string;  // AX
+}
+
+function normalizePaymentStatus(raw: string): string {
+  const legacyMap: Record<string, string> = {
+    "Paid":                   "Fully paid",
+    "Invoice created":        "Payment link ready",
+    "Invoice sent":           "Payment link sent",
+    "Invoice payment failed": "Payment failed",
+  };
+  return legacyMap[raw] ?? raw;
 }
 
 export async function getAllBookings(): Promise<BookingRecord[]> {
@@ -419,7 +437,7 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
 
   // Direct HTTPS call to sheets.googleapis.com — bypasses the connector proxy
   // entirely so no cached data can be served after an admin write.
-  const res = await proxyFetch(`/v4/spreadsheets/${id}/values/Bookings!A:AS`);
+  const res = await proxyFetch(`/v4/spreadsheets/${id}/values/Bookings!A:AX`);
   if (!res.ok) {
     const errBody = await res.text().catch(() => "");
     throw new Error(`Sheets read failed: ${res.status} ${errBody}`);
@@ -449,7 +467,7 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
       notes:                row[10] ?? "",
       contactMethod:        row[11] ?? "",
       bookingStatus:        row[12] ?? "",
-      paymentStatus:        row[13] ?? "",
+      paymentStatus:        normalizePaymentStatus(row[13] ?? ""),
       bookingReference:     row[14] ?? "",
       agreedQuote:          row[15] ?? "",
       depositAmount:        row[16] ?? "",
@@ -483,6 +501,10 @@ export async function getAllBookings(): Promise<BookingRecord[]> {
       adminExtraStops:           row[43] ?? "",
       adminExtraCharges:         row[44] ?? "",
       telegramPaymentsMessageId: row[45] ?? "",
+      isDeleted:              row[46] ?? "",
+      deletedAt:              row[47] ?? "",
+      deletedBy:              row[48] ?? "",
+      previousBookingStatus:  row[49] ?? "",
     }))
     .filter((b) => b.name || b.service || b.phone); // skip genuinely blank rows
 
@@ -589,6 +611,10 @@ export interface BookingAdminUpdate {
   adminExtraStops?:             string; // AR — JSON [{address,charge,notes}]
   adminExtraCharges?:           string; // AS — JSON [{type,amount,notes}]
   telegramPaymentsMessageId?:   string; // AT — message_id of Payments forum topic message
+  isDeleted?:             string; // AU
+  deletedAt?:             string; // AV
+  deletedBy?:             string; // AW
+  previousBookingStatus?: string; // AX
 }
 
 // Builds the batchUpdate ranges for a known sheet row. Shared by the
@@ -642,6 +668,10 @@ function buildAdminWriteRanges(
   if (fields.adminExtraStops            !== undefined) updates.push({ range: c("AR"), values: [[fields.adminExtraStops]] });
   if (fields.adminExtraCharges          !== undefined) updates.push({ range: c("AS"), values: [[fields.adminExtraCharges]] });
   if (fields.telegramPaymentsMessageId  !== undefined) updates.push({ range: c("AT"), values: [[fields.telegramPaymentsMessageId]] });
+  if (fields.isDeleted             !== undefined) updates.push({ range: c("AU"), values: [[fields.isDeleted]] });
+  if (fields.deletedAt             !== undefined) updates.push({ range: c("AV"), values: [[fields.deletedAt]] });
+  if (fields.deletedBy             !== undefined) updates.push({ range: c("AW"), values: [[fields.deletedBy]] });
+  if (fields.previousBookingStatus !== undefined) updates.push({ range: c("AX"), values: [[fields.previousBookingStatus]] });
 
   return updates;
 }
@@ -664,7 +694,7 @@ export async function updateBookingByRow(
   if (updates.length === 0) return true;
   try {
     const id = await ensureSheet();
-    await ensureColumnCount(id, 45);
+    await ensureColumnCount(id, 50);
     const writeRes = await proxyFetch(
       `/v4/spreadsheets/${id}/values:batchUpdate`,
       {
@@ -694,9 +724,9 @@ export async function updateBookingAdmin(
 ): Promise<boolean> {
   try {
     const id = await ensureSheet();
-    // Ensure the sheet has at least 45 columns (A–AS) before writing.
+    // Ensure the sheet has at least 50 columns (A–AX) before writing.
     // This is idempotent — skips if the sheet is already wide enough.
-    await ensureColumnCount(id, 45);
+    await ensureColumnCount(id, 50);
 
     // Locate row via column O. If the same ref ever appears more than once
     // (which should never happen, but is the exact failure mode the user
@@ -944,5 +974,66 @@ export async function writeAuditLog(
     logger.info({ count: entries.length }, "Audit log entries written");
   } catch (err) {
     logger.error({ err }, "Failed to write audit log — continuing");
+  }
+}
+
+// Permanently deletes a booking row from the sheet by deleting the entire row.
+// Returns true if the row was found and deleted, false if the ref was not found.
+export async function permanentDeleteBooking(bookingRef: string): Promise<boolean> {
+  try {
+    const id = await ensureSheet();
+    // Find the row index via column O (booking reference)
+    const refRes = await proxyFetch(`/v4/spreadsheets/${id}/values/Bookings!O:O`);
+    if (!refRes.ok) {
+      const errBody = await refRes.text().catch(() => "");
+      throw new Error(`Sheets read O:O failed: ${refRes.status} ${errBody}`);
+    }
+    const refData = (await refRes.json()) as { values?: string[][] };
+    const rows = refData.values ?? [];
+    let sheetRow = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i]?.[0] === bookingRef) { sheetRow = i + 1; break; } // 1-based
+    }
+    if (sheetRow === -1) {
+      logger.warn({ bookingRef }, "permanentDeleteBooking: ref not found in sheet");
+      return false;
+    }
+
+    // Get the sheet (tab) ID for the Bookings sheet
+    const metaRes = await proxyFetch(`/v4/spreadsheets/${id}`);
+    if (!metaRes.ok) throw new Error(`Sheets metadata read failed: ${metaRes.status}`);
+    const metaData = (await metaRes.json()) as {
+      sheets?: Array<{ properties?: { title?: string; sheetId?: number } }>;
+    };
+    const bookingsSheet = (metaData.sheets ?? []).find(
+      (s) => s.properties?.title === "Bookings",
+    );
+    const sheetId = bookingsSheet?.properties?.sheetId ?? 0;
+
+    // Delete the specific row via batchUpdate deleteDimension
+    const deleteRes = await proxyFetch(`/v4/spreadsheets/${id}:batchUpdate`, {
+      method: "POST",
+      body: JSON.stringify({
+        requests: [{
+          deleteDimension: {
+            range: {
+              sheetId,
+              dimension: "ROWS",
+              startIndex: sheetRow - 1, // 0-based
+              endIndex: sheetRow,        // exclusive
+            },
+          },
+        }],
+      }),
+    });
+    if (!deleteRes.ok) {
+      const errBody = await deleteRes.text().catch(() => "");
+      throw new Error(`Sheets deleteDimension failed: ${deleteRes.status} ${errBody}`);
+    }
+    logger.info({ bookingRef, sheetRow }, "Booking permanently deleted from sheet");
+    return true;
+  } catch (err) {
+    logger.error({ err, bookingRef }, "Failed to permanently delete booking from sheet");
+    return false;
   }
 }

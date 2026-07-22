@@ -13,7 +13,7 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Stripe = require("stripe").default ?? require("stripe");
-import { getAllBookings, updateBookingAdmin, getBookingByRef, writeAuditLog, type BookingRecord } from "../lib/sheets";
+import { getAllBookings, updateBookingAdmin, getBookingByRef, writeAuditLog, permanentDeleteBooking, type BookingRecord } from "../lib/sheets";
 import { editBookingMessage, sendBookingUpdateNotification, sendInvoiceCreatedNotification, sendOrEditPaymentsTopic, sendCompletedJobsTopic, type TelegramBooking } from "../lib/telegram";
 import { sendEmail } from "../lib/email";
 import { logger } from "../lib/logger";
@@ -131,9 +131,13 @@ adminRouter.use((req: Request, res: Response, next: NextFunction): void => {
 });
 
 // ── GET /api/admin/bookings ───────────────────────────────────
-adminRouter.get("/admin/bookings", requireAdmin, async (_req: Request, res: Response) => {
+adminRouter.get("/admin/bookings", requireAdmin, async (req: Request, res: Response) => {
   try {
-    const bookings = await getAllBookings();
+    const all = await getAllBookings();
+    const showDeleted = (req.query as Record<string, string>)["deleted"] === "true";
+    const bookings = showDeleted
+      ? all.filter((b) => b.isDeleted === "true")
+      : all.filter((b) => b.isDeleted !== "true");
     res.json({ bookings });
   } catch (err) {
     logger.error({ err }, "Failed to load bookings for admin panel");
@@ -281,6 +285,69 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
   } catch (err) {
     logger.error({ err, bookingRef }, "Failed to update booking via admin panel");
     res.status(500).json({ error: "Failed to update booking" });
+  }
+});
+
+// ── Soft delete / restore / permanent delete ──────────────────
+// Define /permanent BEFORE /:ref so Express matches it first.
+
+adminRouter.delete("/admin/bookings/:ref/permanent", requireAdmin, async (req: Request, res: Response) => {
+  const bookingRef = req.params.ref as string;
+  try {
+    const removed = await permanentDeleteBooking(bookingRef);
+    if (!removed) {
+      res.status(404).json({ error: "Booking not found or could not be deleted" });
+      return;
+    }
+    logger.info({ bookingRef }, "Booking permanently deleted by admin");
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err, bookingRef }, "Failed to permanently delete booking");
+    res.status(500).json({ error: "Failed to permanently delete booking" });
+  }
+});
+
+adminRouter.delete("/admin/bookings/:ref", requireAdmin, async (req: Request, res: Response) => {
+  const bookingRef = req.params.ref as string;
+  try {
+    const booking = await getBookingByRef(bookingRef);
+    if (!booking) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+    await updateBookingAdmin(bookingRef, {
+      isDeleted:             "true",
+      deletedAt:             new Date().toISOString(),
+      deletedBy:             "admin",
+      previousBookingStatus: booking.bookingStatus,
+    });
+    logger.info({ bookingRef }, "Booking soft-deleted by admin");
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err, bookingRef }, "Failed to soft-delete booking");
+    res.status(500).json({ error: "Failed to soft-delete booking" });
+  }
+});
+
+adminRouter.post("/admin/bookings/:ref/restore", requireAdmin, async (req: Request, res: Response) => {
+  const bookingRef = req.params.ref as string;
+  try {
+    const booking = await getBookingByRef(bookingRef);
+    if (!booking) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+    await updateBookingAdmin(bookingRef, {
+      isDeleted:             "false",
+      deletedAt:             "",
+      deletedBy:             "",
+      previousBookingStatus: "",
+    });
+    logger.info({ bookingRef }, "Booking restored by admin");
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err, bookingRef }, "Failed to restore booking");
+    res.status(500).json({ error: "Failed to restore booking" });
   }
 });
 

@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import {
   RefreshCw, Copy, Check, ChevronDown, ChevronUp,
   LogOut, Phone, MapPin, ExternalLink, AlertCircle, Loader2,
-  MessageCircle, MessageSquare, Mail, PhoneCall, Plus, X,
+  MessageCircle, MessageSquare, Mail, PhoneCall, Plus, X, Trash2,
 } from "lucide-react";
 import { toE164, toWhatsAppDigits } from "@/lib/validators";
 import { useNoIndex } from "@/lib/usePageMeta";
@@ -69,8 +69,13 @@ interface BookingRecord {
   confirmationSentAt: string;
   confirmationSubject: string;
   confirmationSentBy: string;
-  adminExtraStops:    string; // JSON [{address,charge,notes}]
-  adminExtraCharges:  string; // JSON [{type,amount,notes}]
+  adminExtraStops:          string; // JSON [{address,charge,notes}]
+  adminExtraCharges:        string; // JSON [{type,amount,notes}]
+  telegramPaymentsMessageId: string; // AT
+  isDeleted:                string; // AU
+  deletedAt:                string; // AV
+  deletedBy:                string; // AW
+  previousBookingStatus:    string; // AX
 }
 
 interface EditForm {
@@ -112,8 +117,8 @@ interface EditForm {
 const ENABLE_STRIPE_INVOICES = false;
 
 const BOOKING_STATUSES   = ["New", "Contacted", "Confirmed", "Denied", "Booked", "Completed"];
-const PAYMENT_STATUSES   = ["Unpaid", "Payment link ready", "Invoice created", "Invoice sent", "Deposit paid", "Invoice payment failed", "Fully paid", "Paid"];
-const STATUS_FILTERS     = ["All", "New", "Contacted", "Confirmed", "Booked", "Completed", "Denied"];
+const PAYMENT_STATUSES   = ["Unpaid", "Payment link ready", "Payment link sent", "Deposit paid", "Fully paid", "Payment failed", "Refunded"];
+const STATUS_FILTERS     = ["All", "New", "Contacted", "Confirmed", "Booked", "Completed", "Denied", "Deleted"];
 
 const SERVICE_OPTIONS    = ["House Moving", "Commercial Moving", "Single Item Delivery", "Waste Removal", "International Moving", "Something Else"];
 const VAN_SIZE_OPTIONS   = ["Small Van", "Medium Van", "Large Van", "Luton Van"];
@@ -385,8 +390,10 @@ function statusBadge(status: string) {
 }
 
 function payBadge(status: string) {
-  if (status === "Paid" || status === "Deposit paid") return "bg-green-100 text-green-700";
-  if (status === "Payment link ready") return "bg-fuchsia-100 text-fuchsia-700";
+  if (status === "Fully paid" || status === "Deposit paid") return "bg-green-100 text-green-700";
+  if (status === "Payment link ready" || status === "Payment link sent") return "bg-fuchsia-100 text-fuchsia-700";
+  if (status === "Payment failed") return "bg-red-100 text-red-600";
+  if (status === "Refunded") return "bg-amber-100 text-amber-700";
   return "bg-gray-100 text-gray-500";
 }
 
@@ -556,6 +563,14 @@ export default function AdminBookingsPage() {
   const [emailSentRef,  setEmailSentRef]  = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, Set<string>>>({});
   const [paymentLinkType, setPaymentLinkType] = useState<Record<string, "deposit" | "remaining" | "full">>({});
+  const [deletedBookings,           setDeletedBookings]           = useState<BookingRecord[]>([]);
+  const [deletedFetched,            setDeletedFetched]            = useState(false);
+  const [deletedLoading,            setDeletedLoading]            = useState(false);
+  const [deleteConfirmRef,          setDeleteConfirmRef]          = useState<string | null>(null);
+  const [deletingRef,               setDeletingRef]               = useState<string | null>(null);
+  const [permanentDeleteConfirmRef, setPermanentDeleteConfirmRef] = useState<string | null>(null);
+  const [permanentDeletingRef,      setPermanentDeletingRef]      = useState<string | null>(null);
+  const [restoringRef,              setRestoringRef]              = useState<string | null>(null);
 
   const apiFetch = useCallback(
     (path: string, init?: RequestInit) =>
@@ -598,6 +613,79 @@ export default function AdminBookingsPage() {
     sessionStorage.setItem("mv4u_admin_key", key);
     setAdminKey(key);
     setAuthed(true);
+  }
+
+  const fetchDeletedBookings = useCallback(async () => {
+    setDeletedLoading(true);
+    try {
+      const res = await apiFetch("/api/admin/bookings?deleted=true", { cache: "no-store" });
+      if (res.status === 401) { signOut(); return; }
+      if (!res.ok) throw new Error("server error");
+      const data = (await res.json()) as { bookings: BookingRecord[] };
+      setDeletedBookings(data.bookings);
+      setDeletedFetched(true);
+    } catch {
+      setDeletedFetched(true);
+    } finally {
+      setDeletedLoading(false);
+    }
+  }, [apiFetch]);
+
+  useEffect(() => {
+    if (statusFilter === "Deleted" && !deletedFetched) void fetchDeletedBookings();
+  }, [statusFilter, deletedFetched, fetchDeletedBookings]);
+
+  async function handleDeleteBooking(ref: string) {
+    const booking = bookings.find((b) => b.bookingReference === ref);
+    setDeletingRef(ref);
+    try {
+      const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("delete failed");
+      setBookings((prev) => prev.filter((b) => b.bookingReference !== ref));
+      if (booking) {
+        setDeletedBookings((prev) => [...prev, {
+          ...booking, isDeleted: "true",
+          deletedAt: new Date().toISOString(), deletedBy: "admin",
+        }]);
+      }
+      setExpandedRef(null);
+    } catch {
+      // ignore
+    } finally {
+      setDeletingRef(null);
+      setDeleteConfirmRef(null);
+    }
+  }
+
+  async function handleRestoreBooking(ref: string) {
+    const booking = deletedBookings.find((b) => b.bookingReference === ref);
+    setRestoringRef(ref);
+    try {
+      const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}/restore`, { method: "POST" });
+      if (!res.ok) throw new Error("restore failed");
+      setDeletedBookings((prev) => prev.filter((b) => b.bookingReference !== ref));
+      if (booking) {
+        setBookings((prev) => [...prev, { ...booking, isDeleted: "false", deletedAt: "", deletedBy: "" }]);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setRestoringRef(null);
+    }
+  }
+
+  async function handlePermanentDeleteBooking(ref: string) {
+    setPermanentDeletingRef(ref);
+    try {
+      const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}/permanent`, { method: "DELETE" });
+      if (!res.ok) throw new Error("permanent delete failed");
+      setDeletedBookings((prev) => prev.filter((b) => b.bookingReference !== ref));
+    } catch {
+      // ignore
+    } finally {
+      setPermanentDeletingRef(null);
+      setPermanentDeleteConfirmRef(null);
+    }
   }
 
   function toggleExpand(ref: string, booking: BookingRecord) {
@@ -1101,18 +1189,17 @@ export default function AdminBookingsPage() {
   if (!authed) return <PasswordGate onAuth={handleAuth} />;
 
   const filtered = (() => {
-    const base =
-      statusFilter === "All"
-        ? bookings
-        : bookings.filter((b) => b.bookingStatus === statusFilter);
-
-    // Sort by booking-reference number ascending (oldest first, newest last).
-    // Extract the trailing digits from refs like "MV4U-1030" and compare
-    // numerically — string comparison would put "MV4U-1029" after "MV4U-10000".
     const refNum = (ref: string): number => {
       const m = ref.match(/(\d+)\s*$/);
       return m ? parseInt(m[1]!, 10) : Number.MAX_SAFE_INTEGER;
     };
+    if (statusFilter === "Deleted") {
+      return [...deletedBookings].sort((a, b) => refNum(b.bookingReference) - refNum(a.bookingReference));
+    }
+    const base =
+      statusFilter === "All"
+        ? bookings
+        : bookings.filter((b) => b.bookingStatus === statusFilter);
     return [...base].sort((a, b) => refNum(b.bookingReference) - refNum(a.bookingReference));
   })();
 
@@ -1126,8 +1213,8 @@ export default function AdminBookingsPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => void fetchBookings()}
-            disabled={loading}
+            onClick={() => { void fetchBookings(); if (statusFilter === "Deleted") void fetchDeletedBookings(); }}
+            disabled={loading || deletedLoading}
             className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
             title="Refresh"
           >
@@ -1146,7 +1233,7 @@ export default function AdminBookingsPage() {
         {/* Filter bar */}
         <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
           {STATUS_FILTERS.map((f) => {
-            const count = f === "All" ? bookings.length : bookings.filter((b) => b.bookingStatus === f).length;
+            const count = f === "All" ? bookings.length : f === "Deleted" ? deletedBookings.length : bookings.filter((b) => b.bookingStatus === f).length;
             return (
               <button
                 key={f}
@@ -1179,7 +1266,13 @@ export default function AdminBookingsPage() {
         )}
 
         {/* Empty state */}
-        {!loading && filtered.length === 0 && !fetchError && (
+        {statusFilter === "Deleted" && deletedLoading && deletedBookings.length === 0 && (
+          <div className="text-center py-16 text-gray-400">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+            <p className="text-sm">Loading deleted bookings…</p>
+          </div>
+        )}
+        {!loading && !deletedLoading && filtered.length === 0 && !fetchError && (
           <div className="text-center py-16 text-gray-400">
             <p className="text-sm">No bookings found{statusFilter !== "All" ? ` with status "${statusFilter}"` : ""}.</p>
           </div>
@@ -1189,6 +1282,70 @@ export default function AdminBookingsPage() {
         <div className="space-y-3">
           {filtered.map((booking) => {
             const ref = booking.bookingReference;
+
+            // ── Deleted tab: compact card with Restore / Delete forever ──
+            if (statusFilter === "Deleted") {
+              const isRestoring         = restoringRef === ref;
+              const isPermanentDeleting = permanentDeletingRef === ref;
+              return (
+                <div key={ref} className="bg-white border border-red-100 rounded-2xl overflow-hidden">
+                  <div className="px-4 py-3.5 flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span className="font-bold text-gray-400 text-sm line-through">{ref}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-red-50 text-red-500">Deleted</span>
+                      </div>
+                      <p className="text-sm font-medium text-gray-600">{booking.name || "—"}</p>
+                      <p className="text-xs text-gray-400">{booking.service || "—"}{booking.confirmedDate ? ` · ${new Date(booking.confirmedDate).toLocaleDateString("en-GB")}` : ""}</p>
+                      {booking.deletedAt && (
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          Deleted {new Date(booking.deletedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2 shrink-0 items-end">
+                      <button
+                        onClick={() => void handleRestoreBooking(ref)}
+                        disabled={isRestoring || isPermanentDeleting}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                      >
+                        {isRestoring ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                        Restore
+                      </button>
+                      {permanentDeleteConfirmRef === ref ? (
+                        <div className="flex flex-col gap-1.5 items-end">
+                          <span className="text-[11px] text-red-600 font-medium">Delete forever?</span>
+                          <div className="flex gap-1.5">
+                            <button
+                              onClick={() => void handlePermanentDeleteBooking(ref)}
+                              disabled={isPermanentDeleting}
+                              className="px-2.5 py-1 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                            >
+                              {isPermanentDeleting ? "Deleting…" : "Delete forever"}
+                            </button>
+                            <button
+                              onClick={() => setPermanentDeleteConfirmRef(null)}
+                              className="px-2.5 py-1 border border-gray-200 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-50"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setPermanentDeleteConfirmRef(ref)}
+                          disabled={isRestoring || isPermanentDeleting}
+                          className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-500 text-xs font-medium rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+                        >
+                          <Trash2 className="w-3 h-3" /> Delete forever
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
             const isExpanded = expandedRef === ref;
             const form = editForms[ref];
             const isSaving = savingRef === ref;
@@ -1669,6 +1826,26 @@ export default function AdminBookingsPage() {
                         Deny
                       </ActionBtn>
                     </div>
+
+                    {/* ── Delete booking ── */}
+                    {deleteConfirmRef === ref ? (
+                      <div className="flex items-center gap-2 border border-red-200 rounded-xl px-3 py-2 bg-red-50">
+                        <span className="text-xs text-red-700 flex-1">Move to Deleted? This can be restored later.</span>
+                        <button onClick={() => void handleDeleteBooking(ref)} disabled={deletingRef === ref}
+                          className="px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50">
+                          {deletingRef === ref ? "Deleting…" : "Yes, delete"}
+                        </button>
+                        <button onClick={() => setDeleteConfirmRef(null)}
+                          className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setDeleteConfirmRef(ref)}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-colors text-red-500 border border-red-100 bg-white hover:bg-red-50">
+                        <Trash2 className="w-3.5 h-3.5" /> Delete booking
+                      </button>
+                    )}
 
                     {/* Payment link section */}
                     <section className="border-t border-gray-100 pt-4">

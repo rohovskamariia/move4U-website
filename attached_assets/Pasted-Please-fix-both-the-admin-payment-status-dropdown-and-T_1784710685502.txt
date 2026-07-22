@@ -1,0 +1,108 @@
+Please fix both the admin payment-status dropdown and Telegram payment syncing.
+
+1. Clean up the admin Payment Status options
+
+Replace the current confusing list with this exact set:
+
+* Unpaid
+* Payment link ready
+* Payment link sent
+* Deposit paid
+* Fully paid
+* Payment failed
+* Refunded
+
+Remove these duplicate or unclear options:
+
+* Paid
+* Invoice created
+* Invoice sent
+* Invoice payment failed
+
+Map old saved values safely:
+
+* Paid → Fully paid
+* Invoice created → Payment link ready
+* Invoice sent → Payment link sent
+* Invoice payment failed → Payment failed
+
+Existing bookings using old values must continue loading correctly and should display the new canonical value.
+
+2. Payment status behaviour
+
+When I change any payment-related field in the admin panel and click ordinary Save Changes:
+
+* save the new value permanently;
+* update Google Sheets;
+* update the admin card badge;
+* automatically edit the existing Telegram booking message;
+* do not require Save & Notify Driver;
+* do not create a new Telegram message.
+
+Payment-related fields include:
+
+* Payment Status
+* Agreed Total
+* Deposit Paid
+* Remaining Balance
+
+3. Telegram labels
+
+Use these exact labels:
+
+* ⚠️ Payment: Unpaid
+* ⏳ Payment: Payment link ready
+* 📨 Payment: Payment link sent
+* 💰 Payment: Deposit paid
+* ✅ Payment: Fully paid
+* ❌ Payment: Payment failed
+* ↩️ Payment: Refunded
+
+Also refresh:
+
+* Agreed total
+* Deposit paid
+* Remaining balance
+
+4. Message editing
+
+Use the saved Telegram Message ID and editMessageText.
+
+If the booking message exists in both Main and a topic, keep separate message IDs and update both copies.
+
+Do not overwrite the Main message ID with a topic message ID.
+
+5. Important distinction
+
+Payment-only changes:
+
+* ordinary Save Changes;
+* update Telegram automatically;
+* no new message;
+* no Notify Driver required.
+
+Operational changes:
+
+* route;
+* date/time;
+* van;
+* helper;
+* stairs;
+* extra stops;
+* duration;
+* driver notes.
+
+These continue using Save & Notify Driver.
+
+6. Legacy data
+
+Please migrate old payment-status values on read or through a one-time safe migration.
+
+Do not break old bookings, Stripe, admin editing, Google Sheets or existing Telegram messages.
+
+After implementation, show:
+
+* the final dropdown values;
+* the old-to-new mapping;
+* which functions update Telegram;
+* a test confirming that changing Fully paid and clicking Save Changes edits the existing Telegram message.

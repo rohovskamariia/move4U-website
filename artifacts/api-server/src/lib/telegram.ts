@@ -107,7 +107,16 @@ function line(label: string, value: string | undefined): string | null {
 function buildMessage(b: TelegramBooking): string {
   const status  = b.bookingStatus || "New";
   const payment = b.paymentStatus || "Unpaid";
-  const payIcon = (payment.toLowerCase().includes("paid")) ? "✅" : "⏳";
+  const payEmoji: Record<string, string> = {
+    "Unpaid":             "⚠️",
+    "Payment link ready": "⏳",
+    "Payment link sent":  "📨",
+    "Deposit paid":       "💰",
+    "Fully paid":         "✅",
+    "Payment failed":     "❌",
+    "Refunded":           "↩️",
+  };
+  const payIcon = payEmoji[payment] ?? "⏳";
 
   const parts: (string | null)[] = [
     `🚚 New Booking — ${b.bookingReference}`,
