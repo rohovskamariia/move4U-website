@@ -716,47 +716,56 @@ export default function AdminBookingsPage() {
   // ── Bulk executors ────────────────────────────────────────────
   async function executeBulkDelete(refs: string[]) {
     setBulkBusy(true);
-    const now = new Date().toISOString();
-    await Promise.allSettled(refs.map(async (ref) => {
-      const booking = [...bookings, ...deletedBookings].find((b) => b.bookingReference === ref);
-      const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}`, { method: "DELETE" });
-      if (res.ok) {
-        setBookings((prev) => prev.filter((b) => b.bookingReference !== ref));
-        if (booking) setDeletedBookings((prev) => [
-          ...prev.filter((b) => b.bookingReference !== ref),
-          { ...booking, isDeleted: "true", deletedAt: now, deletedBy: "admin" },
-        ]);
-      }
-    }));
-    setSelectedRefs(new Set());
-    setBulkBusy(false);
-    setBulkConfirm(null);
+    try {
+      // Use the bulk endpoint which processes refs SEQUENTIALLY on the server.
+      // Never fire parallel individual deletes — concurrent Sheets API writes
+      // get rate-limited (429) and updateBookingAdmin silently returns false,
+      // causing the endpoint to return 200 even though nothing was persisted.
+      await apiFetch("/api/admin/bookings/bulk-delete", {
+        method: "POST",
+        body: JSON.stringify({ refs }),
+      });
+    } finally {
+      // Always refetch from the server — never rely on optimistic local state
+      // for destructive operations. This ensures the UI matches Sheets truth.
+      setSelectedRefs(new Set());
+      setBulkBusy(false);
+      setBulkConfirm(null);
+      await fetchBookings();
+      await fetchDeletedBookings();
+    }
   }
 
   async function executeBulkRestore(refs: string[]) {
     setBulkBusy(true);
-    await Promise.allSettled(refs.map(async (ref) => {
-      const booking = deletedBookings.find((b) => b.bookingReference === ref);
-      const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}/restore`, { method: "POST" });
-      if (res.ok) {
-        setDeletedBookings((prev) => prev.filter((b) => b.bookingReference !== ref));
-        if (booking) setBookings((prev) => [...prev.filter((b) => b.bookingReference !== ref), { ...booking, isDeleted: "false", deletedAt: "", deletedBy: "" }]);
-      }
-    }));
-    setSelectedRefs(new Set());
-    setBulkBusy(false);
-    setBulkConfirm(null);
+    try {
+      await apiFetch("/api/admin/bookings/bulk-restore", {
+        method: "POST",
+        body: JSON.stringify({ refs }),
+      });
+    } finally {
+      setSelectedRefs(new Set());
+      setBulkBusy(false);
+      setBulkConfirm(null);
+      await fetchBookings();
+      await fetchDeletedBookings();
+    }
   }
 
   async function executeBulkPermanentDelete(refs: string[]) {
     setBulkBusy(true);
-    await Promise.allSettled(refs.map(async (ref) => {
-      const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}/permanent`, { method: "DELETE" });
-      if (res.ok) setDeletedBookings((prev) => prev.filter((b) => b.bookingReference !== ref));
-    }));
-    setSelectedRefs(new Set());
-    setBulkBusy(false);
-    setBulkConfirm(null);
+    try {
+      await apiFetch("/api/admin/bookings/bulk-permanent-delete", {
+        method: "POST",
+        body: JSON.stringify({ refs }),
+      });
+    } finally {
+      setSelectedRefs(new Set());
+      setBulkBusy(false);
+      setBulkConfirm(null);
+      await fetchBookings();
+      await fetchDeletedBookings();
+    }
   }
 
   async function executeBulkStatusChange(refs: string[], bookingStatus: string) {

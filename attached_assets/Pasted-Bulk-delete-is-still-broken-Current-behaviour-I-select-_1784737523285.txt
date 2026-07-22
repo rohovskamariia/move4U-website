@@ -1,0 +1,65 @@
+Bulk delete is still broken.
+
+Current behaviour:
+
+* I select multiple bookings and delete them.
+* Only around 10 appear to be removed.
+* After refresh, the same bookings return again.
+
+This means the bulk delete is not being persisted correctly for every selected booking.
+
+Please investigate and fix the root cause.
+
+Required behaviour:
+
+1. When I select multiple bookings and click Delete Selected:
+
+* every selected booking reference must be processed;
+* every matching Google Sheets row must be updated with isDeleted = true;
+* deletedAt, deletedBy, and previousBookingStatus must also be saved;
+* do not update only the currently visible first page or first 10 records;
+* do not rely only on local React state.
+
+2. Pagination / limits:
+
+* bulk delete must work across all selected items, even if more than 10;
+* check whether the frontend or backend has a default limit=10;
+* check whether only the first page of selected IDs is being sent;
+* remove any hard-coded slice such as .slice(0, 10);
+* ensure the request body contains all selected booking references.
+
+3. Backend verification:
+
+* return a result for every booking reference:
+    * updated
+    * not found
+    * failed
+* do not return success unless all selected rows were actually updated.
+
+4. After bulk delete:
+
+* refetch fresh data from Google Sheets;
+* All/New counts must exclude deleted bookings;
+* Deleted tab must show all deleted bookings;
+* after refresh, reopening the admin panel, server restart, and republish, they must remain deleted.
+
+5. Duplicate/recreation protection:
+
+* deleted bookings must not be recreated with new MV4U IDs;
+* preserve isDeleted = true during all sync, migration, backfill, restart and Telegram processes.
+
+6. Test with more than 10:
+
+* select 15 test bookings;
+* bulk delete all 15;
+* verify all 15 rows in Google Sheets have isDeleted = true;
+* refresh and reopen the page;
+* confirm none return to All or New;
+* confirm all 15 appear only in Deleted.
+
+Please report:
+
+* exact cause of the 10-item limit;
+* whether the frontend sent only 10 IDs or the backend processed only 10;
+* files/functions changed;
+* proof that more than 10 bookings remain deleted after refresh.

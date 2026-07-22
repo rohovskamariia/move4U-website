@@ -315,12 +315,16 @@ adminRouter.delete("/admin/bookings/:ref", requireAdmin, async (req: Request, re
       res.status(404).json({ error: "Booking not found" });
       return;
     }
-    await updateBookingAdmin(bookingRef, {
+    const ok = await updateBookingAdmin(bookingRef, {
       isDeleted:             "true",
       deletedAt:             new Date().toISOString(),
       deletedBy:             "admin",
       previousBookingStatus: booking.bookingStatus,
     });
+    if (!ok) {
+      res.status(500).json({ error: "Failed to update Sheets row" });
+      return;
+    }
     logger.info({ bookingRef }, "Booking soft-deleted by admin");
     res.json({ success: true });
   } catch (err) {
@@ -337,18 +341,137 @@ adminRouter.post("/admin/bookings/:ref/restore", requireAdmin, async (req: Reque
       res.status(404).json({ error: "Booking not found" });
       return;
     }
-    await updateBookingAdmin(bookingRef, {
+    const ok = await updateBookingAdmin(bookingRef, {
       isDeleted:             "false",
       deletedAt:             "",
       deletedBy:             "",
       previousBookingStatus: "",
     });
+    if (!ok) {
+      res.status(500).json({ error: "Failed to update Sheets row" });
+      return;
+    }
     logger.info({ bookingRef }, "Booking restored by admin");
     res.json({ success: true });
   } catch (err) {
     logger.error({ err, bookingRef }, "Failed to restore booking");
     res.status(500).json({ error: "Failed to restore booking" });
   }
+});
+
+// ── Bulk operations (sequential to avoid Sheets API rate-limit) ─────────────
+//
+// IMPORTANT: these process refs one at a time, not concurrently.
+// Concurrent batchUpdate calls to the Sheets API get throttled (429) and
+// updateBookingAdmin swallows the error returning false — which previously
+// made the single-item DELETE endpoint return 200 even when the write failed.
+// Sequential processing is the only reliable approach for bulk Sheets writes.
+
+type BulkResult = { ref: string; status: "deleted" | "restored" | "permanent" | "not_found" | "failed" };
+
+adminRouter.post("/admin/bookings/bulk-delete", requireAdmin, async (req: Request, res: Response) => {
+  const body = req.body as { refs?: unknown };
+  if (!Array.isArray(body.refs) || body.refs.length === 0) {
+    res.status(400).json({ error: "refs must be a non-empty array" });
+    return;
+  }
+  const refs = (body.refs as unknown[]).filter((r): r is string => typeof r === "string");
+  const now  = new Date().toISOString();
+  const results: BulkResult[] = [];
+
+  for (const ref of refs) {
+    try {
+      const booking = await getBookingByRef(ref);
+      if (!booking) {
+        results.push({ ref, status: "not_found" });
+        continue;
+      }
+      const ok = await updateBookingAdmin(ref, {
+        isDeleted:             "true",
+        deletedAt:             now,
+        deletedBy:             "admin",
+        previousBookingStatus: booking.bookingStatus,
+      });
+      results.push({ ref, status: ok ? "deleted" : "failed" });
+    } catch (err) {
+      logger.error({ err, ref }, "bulk-delete: failed for ref");
+      results.push({ ref, status: "failed" });
+    }
+  }
+
+  const summary = {
+    deleted:  results.filter((r) => r.status === "deleted").length,
+    notFound: results.filter((r) => r.status === "not_found").length,
+    failed:   results.filter((r) => r.status === "failed").length,
+  };
+  logger.info({ summary }, "bulk-delete completed");
+  res.json({ results, summary });
+});
+
+adminRouter.post("/admin/bookings/bulk-restore", requireAdmin, async (req: Request, res: Response) => {
+  const body = req.body as { refs?: unknown };
+  if (!Array.isArray(body.refs) || body.refs.length === 0) {
+    res.status(400).json({ error: "refs must be a non-empty array" });
+    return;
+  }
+  const refs = (body.refs as unknown[]).filter((r): r is string => typeof r === "string");
+  const results: BulkResult[] = [];
+
+  for (const ref of refs) {
+    try {
+      const booking = await getBookingByRef(ref);
+      if (!booking) {
+        results.push({ ref, status: "not_found" });
+        continue;
+      }
+      const ok = await updateBookingAdmin(ref, {
+        isDeleted:             "false",
+        deletedAt:             "",
+        deletedBy:             "",
+        previousBookingStatus: "",
+      });
+      results.push({ ref, status: ok ? "restored" : "failed" });
+    } catch (err) {
+      logger.error({ err, ref }, "bulk-restore: failed for ref");
+      results.push({ ref, status: "failed" });
+    }
+  }
+
+  const summary = {
+    restored: results.filter((r) => r.status === "restored").length,
+    notFound: results.filter((r) => r.status === "not_found").length,
+    failed:   results.filter((r) => r.status === "failed").length,
+  };
+  logger.info({ summary }, "bulk-restore completed");
+  res.json({ results, summary });
+});
+
+adminRouter.post("/admin/bookings/bulk-permanent-delete", requireAdmin, async (req: Request, res: Response) => {
+  const body = req.body as { refs?: unknown };
+  if (!Array.isArray(body.refs) || body.refs.length === 0) {
+    res.status(400).json({ error: "refs must be a non-empty array" });
+    return;
+  }
+  const refs = (body.refs as unknown[]).filter((r): r is string => typeof r === "string");
+  const results: BulkResult[] = [];
+
+  for (const ref of refs) {
+    try {
+      const removed = await permanentDeleteBooking(ref);
+      results.push({ ref, status: removed ? "permanent" : "not_found" });
+    } catch (err) {
+      logger.error({ err, ref }, "bulk-permanent-delete: failed for ref");
+      results.push({ ref, status: "failed" });
+    }
+  }
+
+  const summary = {
+    deleted:  results.filter((r) => r.status === "permanent").length,
+    notFound: results.filter((r) => r.status === "not_found").length,
+    failed:   results.filter((r) => r.status === "failed").length,
+  };
+  logger.info({ summary }, "bulk-permanent-delete completed");
+  res.json({ results, summary });
 });
 
 // ── POST /api/admin/bookings/:ref/invoice ────────────────────
