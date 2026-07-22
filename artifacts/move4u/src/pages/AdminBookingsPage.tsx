@@ -552,6 +552,8 @@ export default function AdminBookingsPage() {
   const [invoiceModal,  setInvoiceModal]  = useState<string | null>(null); // ref of booking showing options
   const [copiedInvoice, setCopiedInvoice] = useState<string | null>(null);
   const [confirmBusy,   setConfirmBusy]   = useState<string | null>(null);
+  const [emailPreview,  setEmailPreview]  = useState<{ ref: string; to: string; subject: string; body: string } | null>(null);
+  const [emailSentRef,  setEmailSentRef]  = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, Set<string>>>({});
   const [paymentLinkType, setPaymentLinkType] = useState<Record<string, "deposit" | "remaining" | "full">>({});
 
@@ -1058,17 +1060,28 @@ export default function AdminBookingsPage() {
     );
   }
 
-  async function sendConfirmationEmail(ref: string, b: BookingRecord, form: EditForm) {
-    const email   = parseEmailFromContactMethod(b.contactMethod);
+  function openConfirmationPreview(ref: string, b: BookingRecord, form: EditForm) {
+    const email = parseEmailFromContactMethod(b.contactMethod);
     if (!email) return;
-    const subject = `Updated Booking Confirmation — ${ref}`;
-    const body    = buildConfirmationEmailBody(b, form);
+    setEmailPreview({
+      ref,
+      to:      email,
+      subject: `Updated Booking Confirmation — ${ref}`,
+      body:    buildConfirmationEmailBody(b, form),
+    });
+  }
+
+  async function doSendConfirmation() {
+    if (!emailPreview) return;
+    const { ref, to, subject, body } = emailPreview;
+    setEmailPreview(null);
     setConfirmBusy(ref);
     try {
-      await apiFetch(
+      const res = await apiFetch(
         `/api/admin/bookings/${encodeURIComponent(ref)}/send-confirmation`,
-        { method: "POST", body: JSON.stringify({ subject, sentTo: email, body }) },
+        { method: "POST", body: JSON.stringify({ subject, sentTo: to, body }) },
       );
+      if (!res.ok) throw new Error("send failed");
       setBookings((prev) =>
         prev.map((bk) =>
           bk.bookingReference === ref
@@ -1076,8 +1089,10 @@ export default function AdminBookingsPage() {
             : bk,
         ),
       );
+      setEmailSentRef(ref);
+      setTimeout(() => setEmailSentRef(null), 4000);
     } catch {
-      // Errors are surfaced via apiFetch — don't block the admin UI
+      // apiFetch surfaces errors in the network layer; don't block the admin UI
     } finally {
       setConfirmBusy(null);
     }
@@ -1804,7 +1819,7 @@ export default function AdminBookingsPage() {
                           <button
                             type="button"
                             disabled={isConfirmBusy}
-                            onClick={() => void sendConfirmationEmail(ref, booking, form)}
+                            onClick={() => openConfirmationPreview(ref, booking, form)}
                             className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-700 text-white text-sm font-semibold rounded-xl hover:bg-purple-800 transition-colors disabled:opacity-60"
                           >
                             {isConfirmBusy
@@ -1943,6 +1958,72 @@ export default function AdminBookingsPage() {
           Move4U Admin Panel · {bookings.length} booking{bookings.length !== 1 ? "s" : ""} total
         </p>
       </div>
+
+      {/* ── Email preview modal ───────────────────────────────── */}
+      {emailPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setEmailPreview(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="bg-purple-700 px-5 py-4 flex items-center justify-between">
+              <h2 className="text-white font-semibold text-sm flex items-center gap-2">
+                <Mail className="w-4 h-4" /> Preview Email
+              </h2>
+              <button onClick={() => setEmailPreview(null)} className="text-purple-200 hover:text-white transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Fields */}
+            <div className="p-5 space-y-3 text-sm">
+              <div className="grid grid-cols-[70px_1fr] gap-x-3 gap-y-2 items-baseline">
+                <span className="text-gray-400 font-medium text-xs uppercase tracking-wide">From</span>
+                <span className="text-gray-900 font-medium">info@move4u.uk</span>
+
+                <span className="text-gray-400 font-medium text-xs uppercase tracking-wide">To</span>
+                <span className="text-gray-900">{emailPreview.to}</span>
+
+                <span className="text-gray-400 font-medium text-xs uppercase tracking-wide">Subject</span>
+                <span className="text-gray-900">{emailPreview.subject}</span>
+              </div>
+
+              <div className="border-t border-gray-100 pt-3">
+                <span className="text-gray-400 font-medium text-xs uppercase tracking-wide block mb-2">Body</span>
+                <pre className="whitespace-pre-wrap font-sans text-gray-800 bg-gray-50 rounded-xl p-3.5 text-xs leading-relaxed max-h-60 overflow-y-auto border border-gray-100">
+                  {emailPreview.body}
+                </pre>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="px-5 pb-5 flex gap-3 justify-end border-t border-gray-100 pt-4">
+              <button
+                type="button"
+                onClick={() => setEmailPreview(null)}
+                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={confirmBusy !== null}
+                onClick={() => void doSendConfirmation()}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-700 text-white text-sm font-semibold rounded-xl hover:bg-purple-800 transition-colors disabled:opacity-60"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                Send Email
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Success toast ─────────────────────────────────────── */}
+      {emailSentRef && (
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 bg-green-600 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium animate-in slide-in-from-bottom-2 duration-300">
+          <Check className="w-4 h-4 shrink-0" />
+          Email sent successfully from info@move4u.uk
+        </div>
+      )}
     </div>
   );
 }
