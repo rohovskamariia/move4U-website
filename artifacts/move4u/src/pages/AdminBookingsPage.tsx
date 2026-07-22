@@ -571,6 +571,10 @@ export default function AdminBookingsPage() {
   const [permanentDeleteConfirmRef, setPermanentDeleteConfirmRef] = useState<string | null>(null);
   const [permanentDeletingRef,      setPermanentDeletingRef]      = useState<string | null>(null);
   const [restoringRef,              setRestoringRef]              = useState<string | null>(null);
+  const [selectedRefs,     setSelectedRefs]     = useState<Set<string>>(new Set());
+  const [bulkConfirm,      setBulkConfirm]      = useState<{ label: string; onConfirm: () => Promise<void> } | null>(null);
+  const [bulkBusy,         setBulkBusy]         = useState(false);
+  const [bulkStatusPicker, setBulkStatusPicker] = useState<"status" | "payment" | null>(null);
 
   const apiFetch = useCallback(
     (path: string, init?: RequestInit) =>
@@ -686,6 +690,99 @@ export default function AdminBookingsPage() {
       setPermanentDeletingRef(null);
       setPermanentDeleteConfirmRef(null);
     }
+  }
+
+  // ── Clear selection when filter tab changes ──────────────────
+  useEffect(() => { setSelectedRefs(new Set()); setBulkStatusPicker(null); }, [statusFilter]);
+
+  // ── Selection helpers ─────────────────────────────────────────
+  function toggleSelect(ref: string) {
+    setSelectedRefs((prev) => {
+      const n = new Set(prev);
+      n.has(ref) ? n.delete(ref) : n.add(ref);
+      return n;
+    });
+  }
+
+  function selectAll() {
+    setSelectedRefs(new Set(filtered.map((b) => b.bookingReference)));
+  }
+
+  function clearSelection() {
+    setSelectedRefs(new Set());
+    setBulkStatusPicker(null);
+  }
+
+  // ── Bulk executors ────────────────────────────────────────────
+  async function executeBulkDelete(refs: string[]) {
+    setBulkBusy(true);
+    const now = new Date().toISOString();
+    await Promise.allSettled(refs.map(async (ref) => {
+      const booking = [...bookings, ...deletedBookings].find((b) => b.bookingReference === ref);
+      const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}`, { method: "DELETE" });
+      if (res.ok) {
+        setBookings((prev) => prev.filter((b) => b.bookingReference !== ref));
+        if (booking) setDeletedBookings((prev) => [
+          ...prev.filter((b) => b.bookingReference !== ref),
+          { ...booking, isDeleted: "true", deletedAt: now, deletedBy: "admin" },
+        ]);
+      }
+    }));
+    setSelectedRefs(new Set());
+    setBulkBusy(false);
+    setBulkConfirm(null);
+  }
+
+  async function executeBulkRestore(refs: string[]) {
+    setBulkBusy(true);
+    await Promise.allSettled(refs.map(async (ref) => {
+      const booking = deletedBookings.find((b) => b.bookingReference === ref);
+      const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}/restore`, { method: "POST" });
+      if (res.ok) {
+        setDeletedBookings((prev) => prev.filter((b) => b.bookingReference !== ref));
+        if (booking) setBookings((prev) => [...prev.filter((b) => b.bookingReference !== ref), { ...booking, isDeleted: "false", deletedAt: "", deletedBy: "" }]);
+      }
+    }));
+    setSelectedRefs(new Set());
+    setBulkBusy(false);
+    setBulkConfirm(null);
+  }
+
+  async function executeBulkPermanentDelete(refs: string[]) {
+    setBulkBusy(true);
+    await Promise.allSettled(refs.map(async (ref) => {
+      const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}/permanent`, { method: "DELETE" });
+      if (res.ok) setDeletedBookings((prev) => prev.filter((b) => b.bookingReference !== ref));
+    }));
+    setSelectedRefs(new Set());
+    setBulkBusy(false);
+    setBulkConfirm(null);
+  }
+
+  async function executeBulkStatusChange(refs: string[], bookingStatus: string) {
+    setBulkBusy(true);
+    await Promise.allSettled(refs.map(async (ref) => {
+      const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}`, {
+        method: "PUT", body: JSON.stringify({ bookingStatus, notify: "false" }),
+      });
+      if (res.ok) setBookings((prev) => prev.map((b) => b.bookingReference === ref ? { ...b, bookingStatus } : b));
+    }));
+    setSelectedRefs(new Set());
+    setBulkBusy(false);
+    setBulkStatusPicker(null);
+  }
+
+  async function executeBulkPaymentStatusChange(refs: string[], paymentStatus: string) {
+    setBulkBusy(true);
+    await Promise.allSettled(refs.map(async (ref) => {
+      const res = await apiFetch(`/api/admin/bookings/${encodeURIComponent(ref)}`, {
+        method: "PUT", body: JSON.stringify({ paymentStatus, notify: "false" }),
+      });
+      if (res.ok) setBookings((prev) => prev.map((b) => b.bookingReference === ref ? { ...b, paymentStatus } : b));
+    }));
+    setSelectedRefs(new Set());
+    setBulkBusy(false);
+    setBulkStatusPicker(null);
   }
 
   function toggleExpand(ref: string, booking: BookingRecord) {
@@ -1250,6 +1347,147 @@ export default function AdminBookingsPage() {
           })}
         </div>
 
+        {/* ── Bulk select-all bar ───────────────────────────── */}
+        {filtered.length > 0 && !loading && !deletedLoading && (
+          <div className="flex items-center justify-between mb-3 px-1">
+            <label className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={selectedRefs.size > 0 && selectedRefs.size === filtered.length}
+                ref={(el) => { if (el) el.indeterminate = selectedRefs.size > 0 && selectedRefs.size < filtered.length; }}
+                onChange={() => selectedRefs.size === filtered.length ? clearSelection() : selectAll()}
+                className="w-4 h-4 accent-purple-700 cursor-pointer"
+                aria-label="Select all visible bookings"
+              />
+              <span className="font-medium">
+                {selectedRefs.size > 0
+                  ? `${selectedRefs.size} of ${filtered.length} selected`
+                  : `Select all (${filtered.length})`}
+              </span>
+            </label>
+            {selectedRefs.size > 0 && (
+              <button onClick={clearSelection} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+                Clear
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ── Bulk action toolbar ────────────────────────────── */}
+        {selectedRefs.size > 0 && (
+          <div className="bg-white border border-purple-200 rounded-2xl p-3 mb-4 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-purple-700 shrink-0">
+                {selectedRefs.size} selected
+              </span>
+
+              {statusFilter !== "Deleted" && (
+                <>
+                  <button
+                    onClick={() => setBulkConfirm({
+                      label: `Delete ${selectedRefs.size} selected booking${selectedRefs.size !== 1 ? "s" : ""}?`,
+                      onConfirm: () => executeBulkDelete(Array.from(selectedRefs)),
+                    })}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100 transition-colors border border-red-100"
+                  >
+                    <Trash2 className="w-3 h-3" /> Delete
+                  </button>
+                  <button
+                    onClick={() => setBulkConfirm({
+                      label: `Archive ${selectedRefs.size} booking${selectedRefs.size !== 1 ? "s" : ""} as Completed?`,
+                      onConfirm: () => executeBulkStatusChange(Array.from(selectedRefs), "Completed"),
+                    })}
+                    className="px-3 py-1.5 rounded-lg bg-gray-50 text-gray-700 text-xs font-semibold hover:bg-gray-100 transition-colors border border-gray-200"
+                  >
+                    Archive
+                  </button>
+                  <button
+                    onClick={() => setBulkStatusPicker(bulkStatusPicker === "status" ? null : "status")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${bulkStatusPicker === "status" ? "bg-purple-700 text-white border-purple-700" : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"}`}
+                  >
+                    Status ▾
+                  </button>
+                  <button
+                    onClick={() => setBulkStatusPicker(bulkStatusPicker === "payment" ? null : "payment")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${bulkStatusPicker === "payment" ? "bg-purple-700 text-white border-purple-700" : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"}`}
+                  >
+                    Payment ▾
+                  </button>
+                </>
+              )}
+
+              {statusFilter === "Deleted" && (
+                <>
+                  <button
+                    onClick={() => setBulkConfirm({
+                      label: `Restore ${selectedRefs.size} booking${selectedRefs.size !== 1 ? "s" : ""}?`,
+                      onConfirm: () => executeBulkRestore(Array.from(selectedRefs)),
+                    })}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-50 text-green-700 text-xs font-semibold hover:bg-green-100 transition-colors border border-green-100"
+                  >
+                    Restore
+                  </button>
+                  <button
+                    onClick={() => setBulkConfirm({
+                      label: `Permanently delete ${selectedRefs.size} booking${selectedRefs.size !== 1 ? "s" : ""}? This cannot be undone.`,
+                      onConfirm: () => executeBulkPermanentDelete(Array.from(selectedRefs)),
+                    })}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100 transition-colors border border-red-100"
+                  >
+                    <Trash2 className="w-3 h-3" /> Delete forever
+                  </button>
+                </>
+              )}
+
+              <button
+                onClick={clearSelection}
+                className="ml-auto p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Dismiss selection"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Booking status picker */}
+            {bulkStatusPicker === "status" && (
+              <div className="mt-2.5 pt-2.5 border-t border-gray-100">
+                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide mb-2">Set booking status to:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {BOOKING_STATUSES.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => void executeBulkStatusChange(Array.from(selectedRefs), s)}
+                      disabled={bulkBusy}
+                      className="px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-xs font-medium text-gray-700 hover:border-purple-400 hover:bg-purple-50 transition-colors disabled:opacity-50"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Payment status picker */}
+            {bulkStatusPicker === "payment" && (
+              <div className="mt-2.5 pt-2.5 border-t border-gray-100">
+                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide mb-2">Set payment status to:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {PAYMENT_STATUSES.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => void executeBulkPaymentStatusChange(Array.from(selectedRefs), s)}
+                      disabled={bulkBusy}
+                      className="px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-xs font-medium text-gray-700 hover:border-purple-400 hover:bg-purple-50 transition-colors disabled:opacity-50"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Error state */}
         {fetchError && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-sm text-red-700 flex items-center gap-2">
@@ -1289,7 +1527,17 @@ export default function AdminBookingsPage() {
               const isPermanentDeleting = permanentDeletingRef === ref;
               return (
                 <div key={ref} className="bg-white border border-red-100 rounded-2xl overflow-hidden">
-                  <div className="px-4 py-3.5 flex items-start justify-between gap-3">
+                  <div className="flex items-stretch">
+                    <label className="flex items-center justify-center w-11 shrink-0 cursor-pointer border-r border-red-50 hover:bg-red-50/40 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={selectedRefs.has(ref)}
+                        onChange={() => toggleSelect(ref)}
+                        className="w-4 h-4 accent-purple-700 cursor-pointer"
+                        aria-label={`Select ${ref}`}
+                      />
+                    </label>
+                    <div className="flex-1 px-3 py-3.5 flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span className="font-bold text-gray-400 text-sm line-through">{ref}</span>
@@ -1341,6 +1589,7 @@ export default function AdminBookingsPage() {
                         </button>
                       )}
                     </div>
+                    </div>
                   </div>
                 </div>
               );
@@ -1358,10 +1607,20 @@ export default function AdminBookingsPage() {
 
             return (
               <div key={ref} className={`bg-white border rounded-2xl overflow-hidden ${cardBorder}`}>
+                <div className="flex items-stretch">
+                <label className="flex items-center justify-center w-11 shrink-0 cursor-pointer border-r border-gray-100 hover:bg-gray-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={selectedRefs.has(ref)}
+                    onChange={() => toggleSelect(ref)}
+                    className="w-4 h-4 accent-purple-700 cursor-pointer"
+                    aria-label={`Select ${ref}`}
+                  />
+                </label>
                 {/* Card header — always visible */}
                 <button
                   onClick={() => toggleExpand(ref, booking)}
-                  className="w-full text-left px-4 py-3.5 flex items-start justify-between gap-3 hover:bg-gray-50 transition-colors"
+                  className="flex-1 text-left px-3 py-3.5 flex items-start justify-between gap-3 hover:bg-gray-50 transition-colors min-w-0"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -1401,6 +1660,7 @@ export default function AdminBookingsPage() {
                   </div>
                   {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400 shrink-0 mt-1" /> : <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-1" />}
                 </button>
+                </div>
 
                 {/* Expanded content */}
                 {isExpanded && form && (
@@ -2135,6 +2395,40 @@ export default function AdminBookingsPage() {
           Move4U Admin Panel · {bookings.length} booking{bookings.length !== 1 ? "s" : ""} total
         </p>
       </div>
+
+      {/* ── Bulk confirm modal ────────────────────────────────── */}
+      {bulkConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 px-4 pb-8 sm:pb-0"
+          onClick={() => { if (!bulkBusy) setBulkConfirm(null); }}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-sm font-semibold text-gray-900 leading-snug mb-5">
+              {bulkConfirm.label}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => void bulkConfirm.onConfirm()}
+                disabled={bulkBusy}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {bulkBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                Confirm
+              </button>
+              <button
+                onClick={() => setBulkConfirm(null)}
+                disabled={bulkBusy}
+                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-40"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Email preview modal ───────────────────────────────── */}
       {emailPreview && (

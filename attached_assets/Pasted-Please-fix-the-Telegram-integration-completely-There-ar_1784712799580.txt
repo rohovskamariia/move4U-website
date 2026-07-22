@@ -1,0 +1,216 @@
+Please fix the Telegram integration completely. There are currently two separate problems.
+
+CONTEXT
+
+Move4U already has an existing Telegram bot connected to the “Move4U Jobs” forum group.
+
+The bot already sends booking messages into the Main topic.
+
+I have manually created these Telegram topics:
+
+- Main
+- New Bookings
+- Booking Updates
+- Payments
+- Completed Jobs
+- Reviews
+- Social Media & Emails access
+- System & Errors
+- Reports
+- Information
+
+For now, automation is required only for:
+
+- Main
+- New Bookings
+- Booking Updates
+- Payments
+- Completed Jobs
+
+Do not automatically post anything to the other topics.
+
+MAIN MUST REMAIN THE MASTER FEED
+
+Keep all existing booking messages in Main.
+
+Continue sending all booking-related events to Main exactly as before.
+
+The additional topics are filtered copies for easier organisation. Do not remove or move the original Main messages.
+
+PROBLEM 1 — ADMIN PAYMENT CHANGES DO NOT UPDATE TELEGRAM
+
+When I change Payment Status in the admin panel and click Save Changes, the admin panel and Google Sheets update, but the existing Telegram booking message still shows the old payment status.
+
+Example:
+- Admin panel: Fully paid
+- Telegram: Unpaid
+
+Required behaviour:
+
+When any payment-related field changes through ordinary Save Changes:
+
+- save it permanently;
+- update Google Sheets;
+- update the admin badge;
+- edit the existing Telegram booking message in Main;
+- edit any corresponding copy stored in a Telegram topic;
+- do not require Save & Notify Driver;
+- do not send a new duplicate message.
+
+Payment-related fields:
+
+- Payment Status
+- Agreed Total
+- Deposit Paid
+- Remaining Balance
+
+Use Telegram editMessageText with the correct chat ID and saved message ID.
+
+Payment labels:
+
+- ⚠️ Payment: Unpaid
+- ⏳ Payment: Payment link ready
+- 📨 Payment: Payment link sent
+- 💰 Payment: Deposit paid
+- ✅ Payment: Fully paid
+- ❌ Payment: Payment failed
+- ↩️ Payment: Refunded
+
+Also update these figures in the existing Telegram message:
+
+- Agreed total
+- Deposit paid
+- Remaining balance
+
+Add explicit logging for:
+
+- booking reference
+- Telegram chat ID
+- Telegram topic/thread ID
+- Telegram message ID
+- editMessageText response
+- complete Telegram API error if the edit fails
+
+Do not silently catch Telegram errors.
+
+PROBLEM 2 — TELEGRAM TOPICS ARE EMPTY
+
+The new topics were created manually, but the bot is not routing messages into them.
+
+Use Telegram message_thread_id to send a filtered copy into the correct topic.
+
+Routing for new events:
+
+- New website booking → Main + New Bookings
+- Operational admin update → Main + Booking Updates
+- Payment status/update → edit the existing Main message and the relevant topic copy; use Payments for the filtered payment record if that is the chosen implementation
+- Booking Status changed to Completed → Main + Completed Jobs
+
+Do not automatically send anything to:
+
+- Reviews
+- Social Media & Emails access
+- System & Errors
+- Reports
+- Information
+
+These remain manual.
+
+STORE SEPARATE MESSAGE IDS
+
+Do not use one Telegram Message ID for all topics.
+
+One booking may have:
+
+- Main message ID
+- New Bookings topic message ID
+- Booking Updates topic message ID
+- Payments topic message ID
+- Completed Jobs topic message ID
+
+Store them separately and never overwrite the Main message ID with a topic-copy message ID.
+
+BACKFILL EXISTING REAL BOOKINGS
+
+Please also backfill the existing genuine bookings into the correct Telegram topics.
+
+Do not recreate customer bookings and do not contact customers.
+
+Use current saved booking data from Google Sheets/admin storage.
+
+Only backfill genuine bookings. Exclude:
+
+- Test Customer
+- Column Mapping Test
+- obvious test entries
+- soft-deleted bookings
+- archived bookings
+- denied bookings
+
+For each genuine existing booking:
+
+- create one copy in New Bookings if it represents a genuine submitted booking;
+- create/update a copy in Payments based on its current payment status;
+- create a copy in Completed Jobs only if its current Booking Status is Completed;
+- do not invent historical Booking Updates when no reliable change history exists.
+
+Keep every original Main message unchanged.
+
+Before backfilling, generate a preview list containing:
+
+- Booking Reference
+- Customer Name
+- Current Booking Status
+- Current Payment Status
+- Topics it will be copied to
+
+Do not run the backfill until the preview is shown and approved.
+
+DUPLICATE PROTECTION
+
+Backfill and future routing must be idempotent.
+
+If a booking already has a stored message ID for a topic:
+
+- edit that message;
+- do not create another copy.
+
+If no topic message exists:
+
+- create it once;
+- save its message ID.
+
+SAFE IMPLEMENTATION ORDER
+
+1. Audit the existing Telegram sending and editing functions.
+2. Identify all current Telegram Message ID columns/fields.
+3. Identify the numeric message_thread_id for:
+   - Main
+   - New Bookings
+   - Booking Updates
+   - Payments
+   - Completed Jobs
+4. Show the proposed storage mapping.
+5. Fix payment editMessageText syncing.
+6. Test topic routing with clearly labelled internal test messages only.
+7. Show the genuine-booking backfill preview.
+8. Run backfill only after approval.
+
+Do not change:
+
+- customer booking flow
+- pricing rules
+- Stripe logic
+- admin fields
+- Google Sheets booking content
+- email logic
+
+After implementation, confirm:
+
+- changing Unpaid to Fully paid with Save Changes edits Telegram;
+- Main still contains the master feed;
+- new booking messages appear in New Bookings;
+- payment messages/status appear correctly in Payments;
+- completed bookings appear in Completed Jobs;
+- old genuine bookings can be backfilled without duplicates;
+- manual topics remain empty unless I post there myself.
