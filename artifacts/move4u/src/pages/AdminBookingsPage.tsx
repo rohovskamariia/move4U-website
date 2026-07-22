@@ -271,16 +271,9 @@ function buildContactHref(channel: ContactChannel, b: BookingRecord, message: st
       // browsers normalise both.
       return `sms:${dialablePhone(b.phone)}?body=${encoded}`;
     case "email": {
-      // Gmail compose link — pre-fills To, Subject and Body.
-      // ⚠ Admin must verify the sender is move4u.uk@gmail.com before sending.
       const addr = email || "";
       const subject = `Move4U — Booking ${b.bookingReference}`;
-      return (
-        `https://mail.google.com/mail/?view=cm&fs=1` +
-        `&to=${encodeURIComponent(addr)}` +
-        `&su=${encodeURIComponent(subject)}` +
-        `&body=${encoded}`
-      );
+      return `mailto:${encodeURIComponent(addr)}?subject=${encodeURIComponent(subject)}&body=${encoded}`;
     }
     case "call":
       return `tel:${dialablePhone(b.phone)}`;
@@ -1037,10 +1030,8 @@ export default function AdminBookingsPage() {
     }
   }
 
-  function buildConfirmationEmailHref(b: BookingRecord, form: EditForm): string {
-    const email   = parseEmailFromContactMethod(b.contactMethod);
-    const subject = `Updated Booking Confirmation — ${b.bookingReference}`;
-    const date    = form.confirmedDate || b.date     || "TBC";
+  function buildConfirmationEmailBody(b: BookingRecord, form: EditForm): string {
+    const date    = form.confirmedDate || b.date      || "TBC";
     const time    = form.confirmedTime || b.timeWindow || "TBC";
     const from    = form.pickup  || b.pickup  || "—";
     const to      = form.dropoff || b.dropoff || "—";
@@ -1048,7 +1039,7 @@ export default function AdminBookingsPage() {
     const deposit = form.depositAmount ? `£${parseFloat(form.depositAmount).toFixed(2)}` : "—";
     const name    = b.name || "there";
 
-    const body =
+    return (
       `Hi ${name},\n\n` +
       `Please find your updated booking confirmation below.\n\n` +
       `Booking Reference: ${b.bookingReference}\n` +
@@ -1063,32 +1054,30 @@ export default function AdminBookingsPage() {
       `Kind regards,\n` +
       `Move4U\n` +
       `📞 07541 822561\n` +
-      `🌐 https://move4u.uk`;
-
-    return (
-      `https://mail.google.com/mail/?view=cm&fs=1` +
-      `&to=${encodeURIComponent(email)}` +
-      `&su=${encodeURIComponent(subject)}` +
-      `&body=${encodeURIComponent(body)}`
+      `🌐 https://move4u.uk`
     );
   }
 
-  async function recordConfirmationSent(ref: string, subject: string, sentTo: string) {
+  async function sendConfirmationEmail(ref: string, b: BookingRecord, form: EditForm) {
+    const email   = parseEmailFromContactMethod(b.contactMethod);
+    if (!email) return;
+    const subject = `Updated Booking Confirmation — ${ref}`;
+    const body    = buildConfirmationEmailBody(b, form);
     setConfirmBusy(ref);
     try {
       await apiFetch(
         `/api/admin/bookings/${encodeURIComponent(ref)}/send-confirmation`,
-        { method: "POST", body: JSON.stringify({ subject, sentTo }) },
+        { method: "POST", body: JSON.stringify({ subject, sentTo: email, body }) },
       );
       setBookings((prev) =>
-        prev.map((b) =>
-          b.bookingReference === ref
-            ? { ...b, confirmationSent: "Yes", confirmationSentAt: new Date().toISOString() }
-            : b,
+        prev.map((bk) =>
+          bk.bookingReference === ref
+            ? { ...bk, confirmationSent: "Yes", confirmationSentAt: new Date().toISOString() }
+            : bk,
         ),
       );
     } catch {
-      // Best-effort tracking — don't block the admin
+      // Errors are surfaced via apiFetch — don't block the admin UI
     } finally {
       setConfirmBusy(null);
     }
@@ -1799,8 +1788,6 @@ export default function AdminBookingsPage() {
                     {(() => {
                       const email = parseEmailFromContactMethod(booking.contactMethod);
                       if (!email) return null;
-                      const subject       = `Updated Booking Confirmation — ${booking.bookingReference}`;
-                      const confirmHref   = buildConfirmationEmailHref(booking, form);
                       const alreadySent   = booking.confirmationSent === "Yes";
                       const isConfirmBusy = confirmBusy === ref;
                       return (
@@ -1811,23 +1798,20 @@ export default function AdminBookingsPage() {
                               ✓ Confirmation sent{booking.confirmationSentAt ? ` on ${new Date(booking.confirmationSentAt).toLocaleDateString("en-GB")}` : ""}.
                             </p>
                           )}
-                          <div className="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-xs text-amber-700 mb-3">
-                            ⚠ This opens Gmail compose. Verify the sender is <strong>move4u.uk@gmail.com</strong> before sending.
+                          <div className="bg-purple-50 border border-purple-100 rounded-lg px-3 py-2 text-xs text-purple-700 mb-3">
+                            Emails are sent from <strong>info@move4u.uk</strong>
                           </div>
-                          <a
-                            href={confirmHref}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => {
-                              void recordConfirmationSent(ref, subject, email);
-                            }}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-700 text-white text-sm font-semibold rounded-xl hover:bg-purple-800 transition-colors"
+                          <button
+                            type="button"
+                            disabled={isConfirmBusy}
+                            onClick={() => void sendConfirmationEmail(ref, booking, form)}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-700 text-white text-sm font-semibold rounded-xl hover:bg-purple-800 transition-colors disabled:opacity-60"
                           >
                             {isConfirmBusy
-                              ? <><span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Recording…</>
+                              ? <><span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Sending…</>
                               : <><Mail className="w-3.5 h-3.5" /> {alreadySent ? "Re-send Confirmation" : "Send Updated Confirmation"}</>
                             }
-                          </a>
+                          </button>
                         </section>
                       );
                     })()}

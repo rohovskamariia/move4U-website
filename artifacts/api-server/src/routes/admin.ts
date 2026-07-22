@@ -15,6 +15,7 @@ import { Router, type Request, type Response, type NextFunction } from "express"
 const Stripe = require("stripe").default ?? require("stripe");
 import { getAllBookings, updateBookingAdmin, getBookingByRef, writeAuditLog, type BookingRecord } from "../lib/sheets";
 import { editBookingMessage, sendBookingUpdateNotification, sendInvoiceCreatedNotification, type TelegramBooking } from "../lib/telegram";
+import { sendEmail } from "../lib/email";
 import { logger } from "../lib/logger";
 
 const adminRouter = Router();
@@ -593,18 +594,34 @@ adminRouter.post("/admin/bookings/:ref/payment-link", requireAdmin, async (req: 
 });
 
 // ── POST /api/admin/bookings/:ref/send-confirmation ──────────────────────────
-// Records that a confirmation email has been sent (opened manually via Gmail).
-// Does NOT send the email itself — the admin opens a Gmail compose link in the UI.
+// Sends a booking confirmation email from info@move4u.uk via Zoho SMTP,
+// then records the send in Google Sheets and the audit log.
 adminRouter.post("/admin/bookings/:ref/send-confirmation", requireAdmin, async (req: Request, res: Response) => {
   const bookingRef = req.params.ref as string;
   const {
     subject = `Updated Booking Confirmation — ${bookingRef}`,
     sentTo  = "",
+    body    = "",
   } = req.body as Record<string, string>;
 
   const sentAt = new Date().toISOString();
 
+  if (!sentTo.trim()) {
+    res.status(400).json({ error: "No recipient email address provided" });
+    return;
+  }
+
   try {
+    // Send the email via Zoho SMTP
+    const emailResult = await sendEmail({ to: sentTo, subject, text: body });
+
+    if (!emailResult.sent) {
+      logger.warn({ bookingRef, sentTo, error: emailResult.error }, "Confirmation email failed to send");
+      res.status(502).json({ error: emailResult.error ?? "Failed to send email" });
+      return;
+    }
+
+    // Record the successful send in Sheets and audit log
     await updateBookingAdmin(bookingRef, {
       confirmationSent:    "Yes",
       confirmationSentAt:  sentAt,
@@ -616,15 +633,15 @@ adminRouter.post("/admin/bookings/:ref/send-confirmation", requireAdmin, async (
       bookingRef,
       fieldChanged: "Confirmation Email",
       oldValue:     "Not sent",
-      newValue:     `Sent — Subject: ${subject}${sentTo ? ` | To: ${sentTo}` : ""}`,
+      newValue:     `Sent — Subject: ${subject} | To: ${sentTo}`,
       changedBy:    "Admin",
     }]);
 
-    logger.info({ bookingRef, subject, sentTo }, "Confirmation send recorded");
-    res.json({ success: true, sentAt });
+    logger.info({ bookingRef, subject, sentTo }, "Confirmation email sent via Zoho SMTP");
+    res.json({ success: true, emailSent: true, sentAt });
   } catch (err) {
-    logger.error({ err, bookingRef }, "Failed to record confirmation send");
-    res.status(500).json({ error: "Failed to record confirmation" });
+    logger.error({ err, bookingRef }, "Failed to send confirmation email");
+    res.status(500).json({ error: "Failed to send confirmation email" });
   }
 });
 
