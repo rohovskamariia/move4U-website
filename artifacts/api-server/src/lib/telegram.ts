@@ -780,3 +780,24 @@ export async function sendBookingToTopic(b: TelegramBooking, topicId: number): P
   logger.warn({ ref: b.bookingReference, topicId, error: result.error }, "Failed to send booking to topic (backfill)");
   return null;
 }
+
+// ── Recovery: send a booking to the Main topic only ───────────
+//
+// Used when a booking has no stored telegramMessageId (older bookings that
+// pre-date message-ID tracking). Sends a fresh message to Main and returns
+// the message_id so the caller can persist it to column V.
+// Does NOT send to New Bookings or any other topic — this is a recovery
+// send, not a new-booking notification.
+export async function sendToMainTopic(b: TelegramBooking): Promise<number | null> {
+  const { botToken, chatId } = getCredentials();
+  if (!botToken || !chatId) return null;
+  const topics = getTopicIds();
+  const text   = buildMessage(b);
+  const result = await tgSend(text, topics.main ?? undefined);
+  if (result.ok && result.messageId != null) {
+    logger.info({ ref: b.bookingReference, messageId: result.messageId }, "sendToMainTopic: fresh main message sent (recovery)");
+    return result.messageId;
+  }
+  logger.warn({ ref: b.bookingReference, error: result.error }, "sendToMainTopic: failed to send recovery message");
+  return null;
+}

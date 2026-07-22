@@ -1,0 +1,94 @@
+Please do this in two stages.
+
+Stage 1 — Find and fix the duplicate-booking bug first
+
+Deleted bookings are being recreated later as brand-new bookings with new MV4U references.
+
+This must be investigated and fixed before changing the selection UI.
+
+Please trace every code path that can create a booking:
+
+* website submission
+* Google Sheets import or sync
+* server startup
+* migration
+* backfill
+* admin reload
+* Telegram backfill
+* any scheduled process
+
+Find the exact function that recreates deleted bookings.
+
+Requirements:
+
+* deleted bookings must remain part of duplicate detection;
+* the same customer submission must never receive a second MV4U reference;
+* only genuinely new website submissions may generate a new booking reference;
+* sync, migration, reload, restart and backfill must never create new bookings;
+* use a stable immutable source ID or legacy fingerprint;
+* preserve isDeleted = true unless I explicitly restore the booking.
+
+Before deleting or merging duplicates, show me a preview with:
+
+* original booking reference;
+* recreated booking reference;
+* customer;
+* matching phone/email/address;
+* original deleted status;
+* suspected code path that created the duplicate.
+
+Do not change or delete any live records until the root cause is confirmed.
+
+Stage 2 — Mobile multi-select and bulk delete
+
+After the duplicate-recreation bug is fixed, improve the admin selection UI.
+
+I do not want checkboxes visible all the time.
+
+Mobile behaviour:
+
+* normal view: no checkboxes;
+* long-press any booking card to enter selection mode;
+* the pressed booking becomes selected;
+* then allow tapping other booking cards to select or deselect them;
+* show a small selection toolbar at the top;
+* show the number selected;
+* include:
+    * Delete selected
+    * Cancel selection
+    * Select all visible
+
+When Delete selected is pressed:
+
+* show confirmation: Delete X selected bookings?;
+* soft-delete all selected bookings;
+* remove them from All and status tabs;
+* move them to Deleted;
+* persist every deleted flag in Google Sheets;
+* do not create Telegram notifications;
+* do not permanently remove rows.
+
+In the Deleted tab:
+
+* long-press should also enable multi-select;
+* allow Restore selected;
+* allow Permanently delete selected only with a second strong confirmation.
+
+Desktop behaviour:
+
+* use a small Select button to enter selection mode;
+* do not show checkboxes until selection mode is active.
+
+Safety
+
+* Do not implement Stage 2 until Stage 1 is fixed and tested.
+* Do not permanently delete anything during testing.
+* Do not break Telegram, Stripe, email, Google Sheets sync or booking editing.
+
+After completion, provide:
+
+* exact duplicate-creation root cause;
+* files/functions changed;
+* proof that deleted bookings no longer return with new IDs;
+* proof that long-press multi-select works on iPhone;
+* proof that bulk soft-delete persists after closing and reopening the admin panel.

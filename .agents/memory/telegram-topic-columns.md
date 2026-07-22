@@ -15,12 +15,18 @@ description: Column layout for Telegram message IDs and topic routing rules acro
 
 Sheet read range: `A:BA` (53 columns). ensureColumnCount uses 53.
 
-## Topic routing triggers
+## Topic routing triggers — every admin save runs ALL applicable steps
 
-- **New booking created** → Main (V) + New Bookings topic (AY)
-- **Payment field change, silent save** → edit Main (V) + send/edit Payments topic (AT)
-- **Save & Notify Driver** → Booking Updates topic (AZ) [new message each time] + Completed Jobs (BA) if Completed and not already sent
-- **bookingStatus → Completed, silent save** → Completed Jobs (BA) once if not already sent
+Every `PUT /api/admin/bookings/:ref` runs these steps in order (regardless of which fields changed):
+
+- **Step A (always)**: silently edit the main Telegram message (column V). If no ID is stored (older booking), send a fresh message to Main and store the returned ID permanently — this auto-recovers old bookings on their first edit.
+- **Step B (payment fields changed)**: also send/edit the Payments topic (AT).
+- **Step C (Notify Driver checked)**: also send a new message to Booking Updates topic (AZ).
+- **Step D (status → Completed, first time)**: also send once to Completed Jobs (BA).
+
+New booking created → Main (V) + New Bookings topic (AY).
+
+**Bug that was fixed:** Previously only PAYMENT_ONLY_FIELDS triggered Main edits; all other field changes (booking status, addresses, notes, date/time, etc.) without notify=true produced zero Telegram activity. Also older bookings with no stored telegramMessageId were silently skipped with no recovery.
 
 ## Env vars required
 

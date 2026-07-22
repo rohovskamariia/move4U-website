@@ -14,7 +14,7 @@ import { Router, type Request, type Response, type NextFunction } from "express"
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Stripe = require("stripe").default ?? require("stripe");
 import { getAllBookings, updateBookingAdmin, getBookingByRef, writeAuditLog, permanentDeleteBooking, type BookingRecord } from "../lib/sheets";
-import { editBookingMessage, sendBookingUpdateNotification, sendInvoiceCreatedNotification, sendOrEditPaymentsTopic, sendCompletedJobsTopic, sendBookingToTopic, type TelegramBooking } from "../lib/telegram";
+import { editBookingMessage, sendBookingUpdateNotification, sendInvoiceCreatedNotification, sendOrEditPaymentsTopic, sendCompletedJobsTopic, sendBookingToTopic, sendToMainTopic, type TelegramBooking } from "../lib/telegram";
 import { sendEmail } from "../lib/email";
 import { logger } from "../lib/logger";
 
@@ -213,88 +213,67 @@ adminRouter.put("/admin/bookings/:ref", requireAdmin, async (req: Request, res: 
           await writeAuditLog(auditEntries);
         }
 
-        // 2. Telegram — depends on what changed
-        if (shouldNotify) {
-          // "Save & Notify Driver" → send a new full driver update message
-          const agreedNum  = parseFloat(booking.agreedQuote);
-          const depositNum = parseFloat(booking.depositAmount);
-          const remaining  = !isNaN(agreedNum) && !isNaN(depositNum) && agreedNum > 0
-            ? String(Math.max(0, agreedNum - depositNum).toFixed(2))
-            : "";
+        // 2. Telegram — multi-step approach applied on EVERY save:
+        //
+        //   Step A (always): edit the main Telegram message in-place so it
+        //     reflects the latest booking data. If no message ID is stored
+        //     (older bookings pre-dating ID tracking), send a fresh message
+        //     to Main and save the ID permanently — this auto-recovers old
+        //     bookings on their first admin edit without any manual action.
+        //
+        //   Step B (payment fields changed): also send/edit the Payments topic.
+        //
+        //   Step C (Notify Driver clicked): also send a new message to the
+        //     Booking Updates topic (a change-summary for the driver).
+        //
+        //   Step D (status → Completed, first time): also send a copy to the
+        //     Completed Jobs topic.
+        //
+        // NOTE: booking is fetched AFTER updateBookingAdmin, so it already
+        //   reflects the new values — toTelegramPayload(booking) is correct.
 
-          const bookingUpdatesMsgId = await sendBookingUpdateNotification({
-            bookingReference:  booking.bookingReference,
-            service:           update.service    ?? booking.service,
-            name:              booking.name,
-            phone:             booking.phone,
-            contactMethod:     booking.contactMethod,
-            pickup:            update.pickup     ?? booking.pickup,
-            pickupDetails:     "",
-            dropoff:           update.dropoff    ?? booking.dropoff,
-            dropoffDetails:    "",
-            extraAddress:      "",
-            vanSize:           update.vanSize    ?? booking.vanSize,
-            helpOption:        update.helpOption ?? booking.helpOption,
-            peopleCount:       "",
-            estimatedPrice:    booking.estimatedPrice,
-            estimatedTime:     update.duration   ?? booking.duration ?? "",
-            preferredDate:     booking.date,
-            timeWindow:        update.preferredTime ?? booking.timeWindow,
-            wasteAddons:       "",
-            uploadedFiles:     "",
-            notes:             update.notes      ?? booking.notes,
-            driverNotes:       update.driverNotes ?? booking.driverNotes,
-            bookingStatus:     update.bookingStatus  ?? booking.bookingStatus,
-            paymentStatus:     update.paymentStatus  ?? booking.paymentStatus,
-            confirmedDate:     update.confirmedDate  ?? booking.confirmedDate,
-            confirmedTime:     update.confirmedTime  ?? booking.confirmedTime,
-            agreedQuote:       update.agreedQuote    ?? booking.agreedQuote,
-            depositAmount:     booking.depositAmount,
-            remainingBalance:  remaining,
-            changedFields,
-            adminExtraStops:   update.adminExtraStops   ?? booking.adminExtraStops,
-            adminExtraCharges: update.adminExtraCharges ?? booking.adminExtraCharges,
-          });
-          // Store the Booking Updates topic message ID (overwrites previous — latest wins)
-          if (bookingUpdatesMsgId != null) {
-            await updateBookingAdmin(bookingRef, { telegramBookingUpdatesMessageId: String(bookingUpdatesMsgId) });
+        const payload = toTelegramPayload(booking);
+
+        // ── Step A: edit main, or recover if ID is missing ──────
+        const mainEdited = await tryEditTelegramMessage(booking);
+        if (!mainEdited) {
+          // Either no stored ID (older booking) or edit failed.
+          // Send a fresh main message and store the returned ID.
+          logger.info({ bookingRef }, "No Telegram message ID for this booking — sending recovery message to Main");
+          const recoveredId = await sendToMainTopic(payload);
+          if (recoveredId != null) {
+            await updateBookingAdmin(bookingRef, { telegramMessageId: String(recoveredId) });
+            logger.info({ bookingRef, recoveredId }, "Telegram main message recovered and ID stored");
+          } else {
+            logger.warn({ bookingRef }, "Telegram recovery send failed — will retry on next save");
           }
-          // Completed Jobs topic: fire a copy when status is now Completed (only once)
-          if (booking.bookingStatus === "Completed" && !booking.telegramCompletedJobsMessageId) {
-            const completedMsgId = await sendCompletedJobsTopic(toTelegramPayload(booking));
-            if (completedMsgId != null) {
-              await updateBookingAdmin(bookingRef, { telegramCompletedJobsMessageId: String(completedMsgId) });
-            }
-          }
-        } else if (Object.keys(update).some((k) => PAYMENT_ONLY_FIELDS.has(k))) {
-          // Silent save with payment-field changes → edit existing Main message, and
-          // send/edit the Payments forum topic message.
-          const edited = await tryEditTelegramMessage(booking);
-          if (!edited) {
-            logger.info({ bookingRef }, "No Telegram message ID stored — skipping silent payment edit (Main)");
-          }
-          // Payments topic: send or edit
+        }
+
+        // ── Step B: payment fields → also update Payments topic ─
+        if (Object.keys(update).some((k) => PAYMENT_ONLY_FIELDS.has(k))) {
           const existingPaymentsMsgId = booking.telegramPaymentsMessageId
             ? parseInt(booking.telegramPaymentsMessageId, 10)
             : null;
-          const newPaymentsMsgId = await sendOrEditPaymentsTopic(
-            toTelegramPayload(booking),
-            existingPaymentsMsgId,
-          );
+          const newPaymentsMsgId = await sendOrEditPaymentsTopic(payload, existingPaymentsMsgId);
           if (newPaymentsMsgId != null && String(newPaymentsMsgId) !== booking.telegramPaymentsMessageId) {
             await updateBookingAdmin(bookingRef, { telegramPaymentsMessageId: String(newPaymentsMsgId) });
           }
         }
 
-        // Completed Jobs on silent save: fire when bookingStatus explicitly set to "Completed"
-        // and we haven't yet sent a Completed Jobs copy for this booking.
-        if (
-          !shouldNotify &&
-          update.bookingStatus === "Completed" &&
-          booking.bookingStatus === "Completed" &&
-          !booking.telegramCompletedJobsMessageId
-        ) {
-          const completedMsgId = await sendCompletedJobsTopic(toTelegramPayload(booking));
+        // ── Step C: Notify Driver → also send to Booking Updates topic ─
+        if (shouldNotify) {
+          const bookingUpdatesMsgId = await sendBookingUpdateNotification({
+            ...payload,
+            changedFields,
+          });
+          if (bookingUpdatesMsgId != null) {
+            await updateBookingAdmin(bookingRef, { telegramBookingUpdatesMessageId: String(bookingUpdatesMsgId) });
+          }
+        }
+
+        // ── Step D: status → Completed for first time → Completed Jobs topic ─
+        if (booking.bookingStatus === "Completed" && !booking.telegramCompletedJobsMessageId) {
+          const completedMsgId = await sendCompletedJobsTopic(payload);
           if (completedMsgId != null) {
             await updateBookingAdmin(bookingRef, { telegramCompletedJobsMessageId: String(completedMsgId) });
           }
@@ -776,6 +755,30 @@ adminRouter.post("/admin/bookings/:ref/send-confirmation", requireAdmin, async (
 //
 // These endpoints help discover topic IDs, verify routing,
 // and backfill existing bookings into the correct forum topics.
+
+// GET /api/admin/telegram/missing-ids
+// Returns all genuine bookings that are missing a Telegram Main message ID (column V).
+// These are the bookings that will trigger the auto-recovery path on their next admin save.
+adminRouter.get("/admin/telegram/missing-ids", requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    const all     = await getAllBookings();
+    const missing = all
+      .filter((b) => b.isDeleted !== "true" && b.bookingStatus !== "Denied" && !b.telegramMessageId)
+      .map((b) => ({
+        ref:           b.bookingReference,
+        name:          b.name,
+        service:       b.service,
+        bookingStatus: b.bookingStatus,
+        paymentStatus: b.paymentStatus,
+        date:          b.date,
+        phone:         b.phone,
+      }));
+    res.json({ count: missing.length, bookings: missing });
+  } catch (err) {
+    logger.error({ err }, "Failed to list bookings with missing Telegram IDs");
+    res.status(500).json({ error: "Failed to load bookings" });
+  }
+});
 
 // GET /api/admin/telegram/topics
 // Calls Telegram getForumTopics to list all topics with their IDs.
